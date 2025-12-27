@@ -179,9 +179,9 @@ CREATE TABLE favour_requests
 CREATE TABLE admin_login
 (
     id            INTEGER PRIMARY KEY DEFAULT 0 CHECK ( id = 0 ),
-    password_hash TEXT NOT NULL,
+    api_key       TEXT NOT NULL,
     created_at    TEXT NOT NULL       DEFAULT (datetime('now')),
-    last_login    TEXT
+    last_used    TEXT
 );
 
 -- ----------------------------------------------------------------------------
