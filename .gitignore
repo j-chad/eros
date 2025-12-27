@@ -1,5 +1,4 @@
-*.db
-*.sqlite
+*.sqlite*
 
 # Created by https://www.toptal.com/developers/gitignore/api/linux,go,goland,windows,webstorm,macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=linux,go,goland,windows,webstorm,macos
