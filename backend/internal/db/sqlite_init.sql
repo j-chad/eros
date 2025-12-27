@@ -49,27 +49,27 @@ CREATE INDEX idx_reveals_order ON reveals (order_index);
 
 CREATE TABLE gates
 (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    reveal_id     INTEGER NOT NULL, -- Which reveal this gates
-    unlock_order  INTEGER NOT NULL, -- Evaluation order within reveal (0-indexed)
-    type          TEXT    NOT NULL, -- LOCATION | CODE | CHOICE
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    reveal_id        INTEGER NOT NULL, -- Which reveal this gates
+    unlock_order     INTEGER NOT NULL, -- Evaluation order within reveal (0-indexed)
+    type             TEXT    NOT NULL, -- LOCATION | CODE | CHOICE
 
     -- LOCATION fields
-    latitude      REAL,
-    longitude     REAL,
-    radius_meters INTEGER,
-    location_name TEXT,
+    latitude         REAL,
+    longitude        REAL,
+    radius_meters    INTEGER,
+    location_name    TEXT,
 
     -- CODE fields
-    code_hash     TEXT,
+    code_hash        TEXT,
 
     -- CHOICE fields
-    choice_prompt TEXT,
+    choice_prompt    TEXT,
     chosen_option_id INTEGER,
 
-    created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
-    updated_at    TEXT    NOT NULL DEFAULT (datetime('now')),
-    unlocked_at   TEXT,
+    created_at       TEXT    NOT NULL DEFAULT (datetime('now')),
+    updated_at       TEXT    NOT NULL DEFAULT (datetime('now')),
+    unlocked_at      TEXT,
 
     FOREIGN KEY (reveal_id) REFERENCES reveals (id) ON DELETE CASCADE,
     FOREIGN KEY (chosen_option_id) REFERENCES choice_options (id) ON DELETE SET NULL,
@@ -79,7 +79,7 @@ CREATE TABLE gates
         (type = 'LOCATION' AND latitude IS NOT NULL AND longitude IS NOT NULL AND radius_meters IS NOT NULL) OR
         (type = 'CODE' AND code_hash IS NOT NULL) OR
         (type = 'CHOICE' AND choice_prompt IS NOT NULL)
-    )
+        )
 );
 
 CREATE INDEX idx_unlocks_reveal ON gates (reveal_id, unlock_order);
@@ -88,7 +88,7 @@ CREATE INDEX idx_unlocks_reveal ON gates (reveal_id, unlock_order);
 CREATE TABLE choice_options
 (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    gate_id    INTEGER NOT NULL ,
+    gate_id      INTEGER NOT NULL,
     option_order INTEGER NOT NULL,
     label        TEXT    NOT NULL,
 
@@ -109,103 +109,122 @@ CREATE TABLE choice_options
 
 CREATE TABLE rewards
 (
-    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-    reveal_id           INTEGER NOT NULL,           -- Which reveal grants this
-    type                TEXT    NOT NULL,           -- CONTENT | PROMISE
-    title               TEXT    NOT NULL,           -- Display name
-    reward_order        INTEGER NOT NULL,           -- Display order within reveal
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    reveal_id          INTEGER NOT NULL, -- Which reveal grants this
+    type               TEXT    NOT NULL, -- CONTENT | FAVOUR
+    title              TEXT    NOT NULL, -- Display name
+    reward_order       INTEGER NOT NULL, -- Display order within reveal
 
     -- TYPE-SPECIFIC FIELDS
 
     -- CONTENT fields (also used for gift cards & experience tokens via HTML)
-    content_html        TEXT,                       -- Sanitized HTML (can include styled gift cards, etc.)
-    content_media_url   TEXT,                       -- Optional image/video/audio URL
-    content_media_type  TEXT,                       -- MIME type
+    content_html       TEXT,             -- Sanitized HTML (can include styled gift cards, etc.)
+    content_media_url  TEXT,             -- Optional image/video/audio URL
+    content_media_type TEXT,             -- MIME type
 
-    -- PROMISE fields
-    give_promises      INTEGER NOT NULL DEFAULT 0,
+    -- FAVOUR fields
+    give_favours       INTEGER NOT NULL DEFAULT 0,
 
-    created_at          TEXT    NOT NULL DEFAULT (datetime('now')),
-    updated_at          TEXT    NOT NULL DEFAULT (datetime('now')),
+    created_at         TEXT    NOT NULL DEFAULT (datetime('now')),
+    updated_at         TEXT    NOT NULL DEFAULT (datetime('now')),
+    unlocked_at        TEXT,
 
     FOREIGN KEY (reveal_id) REFERENCES reveals (id) ON DELETE CASCADE,
 
     -- Type-specific constraints
     CHECK (
         (type = 'CONTENT' AND content_html IS NOT NULL) OR
-        (type = 'PROMISE')
+        (type = 'FAVOUR' AND give_favours > 0)
         )
 );
 
 CREATE INDEX idx_rewards_reveal ON rewards (reveal_id, reward_order);
 
--- ----------------------------------------------------------------------------
--- REWARD STATE
--- ----------------------------------------------------------------------------
-
-CREATE TABLE reward_states
+-- -----------------------------------------------------------------------------
+-- FAVOURS
+-- -----------------------------------------------------------------------------
+CREATE TABLE favour_count
 (
-    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
-    reward_id          INTEGER NOT NULL UNIQUE,           -- One state per reward (single device)
-    state              TEXT    NOT NULL DEFAULT 'locked', -- locked | unlocked | redeemed | fulfilled
-
-    -- PROMISE state tracking
-    redeemed_at        TEXT,                              -- When partner redeemed promise
-    redemption_message TEXT,                              -- Optional message from partner
-    fulfilled_at       TEXT,                              -- When proposer marked as fulfilled
-
-    created_at         TEXT    NOT NULL DEFAULT (datetime('now')),
-    updated_at         TEXT    NOT NULL DEFAULT (datetime('now')),
-
-    FOREIGN KEY (reward_id) REFERENCES rewards (id) ON DELETE CASCADE
+    id            INTEGER PRIMARY KEY DEFAULT 0 CHECK ( id = 0 ),
+    total_favours INTEGER NOT NULL    DEFAULT 0,
+    created_at    TEXT    NOT NULL    DEFAULT (datetime('now')),
+    updated_at    TEXT    NOT NULL    DEFAULT (datetime('now'))
 );
 
-CREATE INDEX idx_reward_states_reward ON reward_states (reward_id);
-CREATE INDEX idx_reward_states_state ON reward_states (state);
-
--- ----------------------------------------------------------------------------
--- ADMIN OVERRIDES
--- ----------------------------------------------------------------------------
-
--- Manual unlock triggers (emergency escape hatch)
-CREATE TABLE admin_overrides
+CREATE TABLE favour_choice
 (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    unlock_id  INTEGER,       -- NULL = unlock entire reveal
-    reveal_id  INTEGER,       -- NULL = specific unlock only
-    reason     TEXT NOT NULL, -- Admin note
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    label       TEXT    NOT NULL,
+    description TEXT,
+    can_message INTEGER NOT NULL DEFAULT 1, -- Whether user can message when requesting
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+    updated_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+);
 
-    FOREIGN KEY (unlock_id) REFERENCES unlocks (id) ON DELETE CASCADE,
-    FOREIGN KEY (reveal_id) REFERENCES reveals (id) ON DELETE CASCADE,
+CREATE TABLE favour_requests
+(
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    favour_choice_id INTEGER NOT NULL,
+    message          TEXT,
+    requested_at     TEXT    NOT NULL DEFAULT (datetime('now')),
+    fulfilled_at     TEXT,
 
-    CHECK (unlock_id IS NOT NULL OR reveal_id IS NOT NULL)
+    FOREIGN KEY (favour_choice_id) REFERENCES favour_choice (id) ON DELETE CASCADE
 );
 
 -- ----------------------------------------------------------------------------
--- APP STATE
+-- ADMIN
 -- ----------------------------------------------------------------------------
 
--- Global app configuration and state
-CREATE TABLE app_state
+CREATE TABLE admin_login
 (
-    key        TEXT PRIMARY KEY, -- e.g., 'mode', 'proposal_date'
-    value      TEXT,             -- JSON or plain text
-    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    id            INTEGER PRIMARY KEY DEFAULT 0 CHECK ( id = 0 ),
+    password_hash TEXT NOT NULL,
+    created_at    TEXT NOT NULL       DEFAULT (datetime('now')),
+    last_login    TEXT
 );
 
--- Initial state: active countdown mode
-INSERT INTO app_state (key, value, updated_at)
-VALUES ('mode', 'countdown', datetime('now'));
+-- ----------------------------------------------------------------------------
+-- TRIGGERS
+-- ----------------------------------------------------------------------------
+CREATE TRIGGER trg_update_reveal_updated_at
+AFTER UPDATE ON reveals
+FOR EACH ROW
+BEGIN
+    UPDATE reveals SET updated_at = datetime('now') WHERE id = NEW.id;
+END;
 
--- ============================================================================
--- NOTES
--- ============================================================================
+CREATE TRIGGER trg_update_gate_updated_at
+AFTER UPDATE ON gates
+FOR EACH ROW
+BEGIN
+    UPDATE reveals SET updated_at = datetime('now') WHERE id = NEW.reveal_id;
+END;
 
--- 1. All timestamps are TEXT in ISO-8601 format (UTC)
--- 2. Booleans are stored as INTEGER (0/1) per SQLite convention
--- 3. Foreign keys assume PRAGMA foreign_keys = ON
--- 4. Single device model: no device_id foreign keys needed
--- 5. registration_codes are deleted after use (no soft deletes)
--- 6. Gift cards and experience tokens are HTML CONTENT rewards
--- 7. PROMISE rewards can transition: locked → unlocked → redeemed → fulfilled
+CREATE TRIGGER trg_update_choice_option_updated_at
+AFTER UPDATE ON choice_options
+FOR EACH ROW
+BEGIN
+    UPDATE reveals SET updated_at = datetime('now') WHERE id = NEW.reveal_id;
+END;
+
+CREATE TRIGGER trg_update_reward_updated_at
+AFTER UPDATE ON rewards
+FOR EACH ROW
+BEGIN
+    UPDATE reveals SET updated_at = datetime('now') WHERE id = NEW.reveal_id;
+END;
+
+CREATE TRIGGER trg_update_favour_count_updated_at
+AFTER UPDATE ON favour_count
+FOR EACH ROW
+BEGIN
+    UPDATE favour_count SET updated_at = datetime('now') WHERE id = 0;
+END;
+
+CREATE TRIGGER trg_update_favour_choice_updated_at
+AFTER UPDATE ON favour_choice
+FOR EACH ROW
+BEGIN
+    UPDATE favour_choice SET updated_at = datetime('now') WHERE id = NEW.id;
+END;
