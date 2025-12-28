@@ -31,6 +31,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/device", h.client.RegisterDevice)
 
 	adminMux := http.NewServeMux()
+	adminMux.HandleFunc("GET /api/admin/ping", h.admin.Ping)
 	adminMux.HandleFunc("POST /api/admin/registration-codes", h.admin.CreateRegistrationCode)
 	adminMux.HandleFunc("GET /api/admin/registration-codes", h.admin.GetRegistrationCode)
 	adminMux.HandleFunc("DELETE /api/admin/registration-codes", h.admin.InvalidateRegistrationCode)
