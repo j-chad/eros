@@ -18,7 +18,7 @@ func Load() (*Config, error) {
 // loadServerConfig loads server configuration
 func loadServerConfig() ServerConfig {
 	return ServerConfig{
-		Host:         getEnv("SERVER_HOST", "0.0.0.0"),
+		Host:         getEnv("SERVER_HOST", "127.0.0.1"),
 		Port:         getEnvInt("SERVER_PORT", 8080),
 		ReadTimeout:  getEnvDuration("SERVER_READ_TIMEOUT", 10*time.Second),
 		WriteTimeout: getEnvDuration("SERVER_WRITE_TIMEOUT", 10*time.Second),

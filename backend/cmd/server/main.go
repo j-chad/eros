@@ -3,10 +3,11 @@ package main
 import (
 	"backend/internal/config"
 	"backend/internal/repository/sqlite"
+	"backend/internal/service"
+	"fmt"
 	"log"
 	"net/http"
 
-	"backend/internal"
 	"backend/internal/handler"
 )
 
@@ -22,11 +23,21 @@ func main() {
 	}
 	defer database.Close()
 
-	handler := handler.NewAppHandler(database)
-	app := internal.JSONMiddleware(handler)
+	adminService := service.NewAdminService(database)
 
-	log.Println("Listening on :8080")
-	if err := http.ListenAndServe(":8080", app); err != nil {
+	app := handler.NewHandler(adminService)
+
+	serverAddr := fmt.Sprintf("%s:%d", conf.Server.Host, conf.Server.Port)
+	server := &http.Server{
+		Addr:         serverAddr,
+		Handler:      app,
+		ReadTimeout:  conf.Server.ReadTimeout,
+		WriteTimeout: conf.Server.WriteTimeout,
+		IdleTimeout:  conf.Server.IdleTimeout,
+	}
+
+	log.Println(fmt.Sprintf("Listening at %s", serverAddr))
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatalf("error starting server: %v", err)
 	}
 }
