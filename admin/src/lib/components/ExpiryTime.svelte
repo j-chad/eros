@@ -1,18 +1,11 @@
 <script lang="ts">
+    import { formatDate } from '$lib/utils';
+
     let { expiresAt }: { expiresAt: string } = $props();
 
-    function formatDate(dateString: string) {
-        return new Date(dateString).toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
+    let now = $state(new Date());
 
     function getTimeRemaining(expiresAt: string) {
-        const now = new Date();
         const expiry = new Date(expiresAt);
         const diff = expiry.getTime() - now.getTime();
 
@@ -25,7 +18,7 @@
 
         if (days > 0) return `${days}d ${hours}h`;
         if (hours > 0) return `${hours}h ${minutes}m`;
-        if (minutes > 0) return `${minutes}m ${seconds}s`;
+        if (minutes > 0) return `${minutes}m`;
         return `${seconds}s`;
     }
 
@@ -33,7 +26,7 @@
     let timeRemaining = $derived(getTimeRemaining(expiresAt));
 
     setInterval(() => {
-        timeRemaining = getTimeRemaining(expiresAt);
+        now = new Date();
     }, 1000);
 </script>
 

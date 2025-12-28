@@ -29,11 +29,11 @@ func (s *sqliteDB) DeleteRegistrationCode(ctx context.Context) error {
 
 func (s *sqliteDB) GetRegistrationCode(ctx context.Context) (model *models.RegistrationCode, err error) {
 	row := s.executor().QueryRowContext(ctx, `
-			SELECT code, expires_at FROM registration_codes WHERE id = ?;
+			SELECT code, expires_at, created_at FROM registration_codes WHERE id = ?;
 	`, RegistrationId)
 
 	model = &models.RegistrationCode{}
-	err = row.Scan(&model.Code, &model.ExpiresAt)
+	err = row.Scan(&model.Code, &model.ExpiresAt, &model.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
