@@ -45,6 +45,10 @@ func (h *Handler) registerRoutes() {
 	adminMux.HandleFunc("/", routeNotFound)
 	h.mux.Handle("/api/admin/", withAdminAuth(adminMux, *h.auth))
 
+	clientMux := http.NewServeMux()
+	clientMux.HandleFunc("GET /api/test", h.client.TestHandler)
+	h.mux.Handle("/api/", withClientAuth(clientMux, *h.auth))
+
 	h.mux.HandleFunc("/", routeNotFound)
 }
 
