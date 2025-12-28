@@ -37,6 +37,7 @@ func withClientAuth(next http.Handler, authService service.AuthService) http.Han
 		authType, token, ok := parseAuthHeader(authHeader)
 		if !ok {
 			response.Error(w, apierror.Unauthorized("invalid authorization header"))
+			return
 		}
 
 		if authType == adminAuthType {
@@ -53,6 +54,7 @@ func withClientAuth(next http.Handler, authService service.AuthService) http.Han
 			return
 		}
 
+		next.ServeHTTP(w, r)
 	})
 }
 
