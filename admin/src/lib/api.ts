@@ -50,9 +50,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 }
 
 export const api = {
+    ping: async (): Promise<void> => request<void>('/admin/ping', {method: 'GET'}),
     registration: {
-        refresh: async (): Promise<RegistrationToken> => request<RegistrationToken>('/admin/registration/refresh', {method: 'POST'}),
-        get: async (): Promise<RegistrationToken> => request<RegistrationToken>('/admin/registration', {method: 'GET'}),
-        deleteAll: async (): Promise<void> => request<void>('/admin/registration', {method: 'DELETE'}),
+        refresh: async (): Promise<RegistrationToken> => request<RegistrationToken>('/admin/registration-codes', {method: 'POST'}),
+        get: async (): Promise<RegistrationToken> => request<RegistrationToken>('/admin/registration-codes', {method: 'GET'}),
+        deleteAll: async (): Promise<void> => request<void>('/admin/registration-codes', {method: 'DELETE'}),
     }
 }

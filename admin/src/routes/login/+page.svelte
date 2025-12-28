@@ -16,7 +16,7 @@
             auth.login(key);
 
             // Test the key by making a request
-            await api.registration.get();
+            await api.ping()
 
             // Success - redirect to dashboard
             goto('/');
