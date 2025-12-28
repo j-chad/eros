@@ -52,12 +52,20 @@ async function request<T=void>(endpoint: string, options: RequestInit = {}): Pro
 export const api = {
     ping: async (): Promise<void> => request('/admin/ping', {method: 'GET'}),
     registration: {
-        refresh: async () => request<RegistrationToken>('/admin/registration-codes', {method: 'POST'}),
+        create: async () => request<RegistrationToken>('/admin/registration-codes', {method: 'POST'}),
         get: async () => request<RegistrationToken>('/admin/registration-codes', {method: 'GET'}),
         deleteAll: async () => request('/admin/registration-codes', {method: 'DELETE'}),
     },
     devices: {
         list: async () => request<Array<Device>>('/admin/devices', {method: 'GET'}),
         delete: async (deviceId: string) => request(`/admin/devices/${deviceId}`, {method: 'DELETE'}),
+        updateDeviceInfo: async (deviceId: string, deviceInfo: string) =>
+            request(`/admin/devices/${deviceId}`, {
+                method: 'PATCH',
+                body: deviceInfo,
+                headers: {
+                    'Content-Type': 'text/plain',
+                }
+            }),
     }
 }
