@@ -6,6 +6,7 @@
     import CopyableCode from "$lib/components/CopyableCode.svelte";
     import ExpiryTime from "$lib/components/ExpiryTime.svelte";
     import Table from "$lib/components/Table.svelte";
+    import PastDate from "$lib/components/PastDate.svelte";
 
     let { data } = $props();
 
@@ -69,7 +70,7 @@
             <div class="grid-2">
                 <div>
                     <label>Created</label>
-                    <div class="info-text">{formatDate(registrationCode.created_at)}</div>
+                    <PastDate datetime={registrationCode.created_at} />
                 </div>
                 <div>
                     <label>Expires</label>

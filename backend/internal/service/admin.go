@@ -19,7 +19,8 @@ func NewAdminService(repo repository.Repository) *AdminService {
 }
 
 func (s *AdminService) CreateRegistrationCode(ctx context.Context) (models.RegistrationCode, error) {
-	expiry := time.Now().Add(RegistrationExpiryDuration)
+	createdAt := time.Now()
+	expiry := createdAt.Add(RegistrationExpiryDuration)
 
 	code, err := crypto.GenerateHumanReadableCode()
 	if err != nil {
@@ -29,6 +30,7 @@ func (s *AdminService) CreateRegistrationCode(ctx context.Context) (models.Regis
 	model := models.RegistrationCode{
 		Code:      code,
 		ExpiresAt: expiry,
+		CreatedAt: createdAt,
 	}
 
 	if err := s.repo.RefreshRegistrationCode(ctx, model); err != nil {
