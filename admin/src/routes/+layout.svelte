@@ -26,7 +26,9 @@
         </nav>
 
         <main>
-            {@render children()}
+            <div class="container">
+                {@render children()}
+            </div>
         </main>
     </div>
 {:else}
@@ -108,5 +110,9 @@
         width: 100%;
         margin: 0 auto;
         padding: 2rem;
+    }
+
+    .container {
+        max-width: 100%;
     }
 </style>
