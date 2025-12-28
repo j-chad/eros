@@ -20,11 +20,11 @@ CREATE INDEX IF NOT EXISTS idx_registration_codes_code ON registration_codes (co
 -- Single registered device (the partner's phone)
 CREATE TABLE IF NOT EXISTS device
 (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    public_key      TEXT     NOT NULL, -- Ed25519 public key (base64 or hex)
-    key_fingerprint TEXT     NOT NULL, -- SHA-256 hash of public key (base64 or hex)
+    token           TEXT PRIMARY KEY, -- High-entropy device token
+    device_info     TEXT NOT NULL,
     registered_at   DATETIME NOT NULL DEFAULT (datetime('now')),
-    last_seen_at    DATETIME NOT NULL DEFAULT (datetime('now'))
+    last_seen_at    DATETIME NOT NULL DEFAULT (datetime('now')),
+    expires_at      DATETIME NOT NULL
 );
 
 -- ----------------------------------------------------------------------------

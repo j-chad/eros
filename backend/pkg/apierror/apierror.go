@@ -72,3 +72,11 @@ func NotFound(message string) *APIError {
 		StatusCode: http.StatusNotFound,
 	}
 }
+
+func BadRequest(message string) *APIError {
+	return &APIError{
+		Code:       "BAD_REQUEST",
+		Message:    message,
+		StatusCode: http.StatusBadRequest,
+	}
+}
