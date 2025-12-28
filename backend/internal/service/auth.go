@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	ErrInvalidAdminCredentials = errors.New("invalid admin credentials")
-	ErrInvalidRegistrationCode = errors.New("invalid registration code")
+	ErrInvalidAdminCredentials  = errors.New("invalid admin credentials")
+	ErrInvalidClientCredentials = errors.New("invalid device credentials")
+	ErrInvalidRegistrationCode  = errors.New("invalid registration code")
 )
 
 const TokenLength = 32
@@ -30,10 +31,23 @@ func NewAuthService(cfg config.AuthConfig, repo repository.Repository) *AuthServ
 	}
 }
 
-func (s *AuthService) ValidateAdminAPIKey(apiKey string) error {
+func (s *AuthService) ValidateAdminToken(apiKey string) error {
 	expectedKey := s.config.AdminAPIKey
 	if subtle.ConstantTimeCompare([]byte(apiKey), []byte(expectedKey)) != 1 {
 		return ErrInvalidAdminCredentials
+	}
+
+	return nil
+}
+
+func (s *AuthService) ValidateDeviceToken(token string) error {
+	expiry, err := s.repo.GetDeviceExpiryByToken(context.Background(), token)
+	if err != nil {
+		return err
+	}
+
+	if expiry == nil || expiry.Before(time.Now()) {
+		return ErrInvalidClientCredentials
 	}
 
 	return nil

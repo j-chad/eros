@@ -5,6 +5,7 @@ import (
 	"backend/pkg/apierror"
 	"backend/pkg/response"
 	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -15,7 +16,10 @@ func (h *Handler) RegisterDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deviceInfo := r.FormValue("device_info")
+	clientDeviceInfo := r.FormValue("device_info")
+	userAgent := r.UserAgent()
+	ipAddress := r.RemoteAddr
+	deviceInfo := fmt.Sprintf("UserAgent: %s; IPAddress: %s; Info: %s", userAgent, ipAddress, clientDeviceInfo)
 
 	token, err := h.authService.RegisterDevice(r.Context(), registrationCode, deviceInfo)
 	if err != nil {

@@ -22,4 +22,5 @@ type RegistrationRepository interface {
 
 type DeviceRepository interface {
 	RegisterDevice(ctx context.Context, token string, deviceInfo string, expiry time.Time) error
+	GetDeviceExpiryByToken(ctx context.Context, token string) (expiresAt *time.Time, err error)
 }
