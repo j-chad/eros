@@ -1,0 +1,13 @@
+meta {
+  name: Admin
+}
+
+auth {
+  mode: apikey
+}
+
+auth:apikey {
+  key: Authorization
+  value: {{admin_key}}
+  placement: header
+}
