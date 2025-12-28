@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"backend/internal/models"
 	"context"
 	"database/sql"
 	"errors"
@@ -27,4 +28,35 @@ func (s *sqliteDB) GetDeviceExpiryByToken(ctx context.Context, token string) (ex
 	}
 
 	return expiresAt, err
+}
+
+func (s *sqliteDB) ListDevices(ctx context.Context) ([]models.Device, error) {
+	rows, err := s.executor().QueryContext(ctx, `
+		SELECT id, device_info, expires_at, registered_at, last_seen_at
+		FROM device
+		ORDER BY registered_at DESC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var devices []models.Device
+	for rows.Next() {
+		var device models.Device
+		if err := rows.Scan(&device.ID, &device.DeviceInfo, &device.ExpiresAt, &device.RegisteredAt, &device.LastSeenAt); err != nil {
+			return nil, err
+		}
+		devices = append(devices, device)
+	}
+
+	return devices, rows.Err()
+}
+
+func (s *sqliteDB) DeleteDevice(ctx context.Context, deviceID string) error {
+	_, err := s.executor().ExecContext(ctx, `
+		DELETE FROM device
+		WHERE id = ?
+	`, deviceID)
+	return err
 }

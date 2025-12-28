@@ -1,4 +1,4 @@
-import type {APIError, RegistrationToken} from "$lib/types";
+import type {APIError, Device, RegistrationToken} from "$lib/types";
 import {auth} from "$lib/auth.svelte";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api';
@@ -14,7 +14,7 @@ class APIException extends Error {
     }
 }
 
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+async function request<T=void>(endpoint: string, options: RequestInit = {}): Promise<T> {
     if (!auth.apiKey) {
         throw new APIException('Not authenticated', 401);
     }
@@ -50,13 +50,14 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 }
 
 export const api = {
-    ping: async (): Promise<void> => request<void>('/admin/ping', {method: 'GET'}),
+    ping: async (): Promise<void> => request('/admin/ping', {method: 'GET'}),
     registration: {
-        refresh: async (): Promise<RegistrationToken> => request<RegistrationToken>('/admin/registration-codes', {method: 'POST'}),
-        get: async (): Promise<RegistrationToken> => request<RegistrationToken>('/admin/registration-codes', {method: 'GET'}),
-        deleteAll: async (): Promise<void> => request<void>('/admin/registration-codes', {method: 'DELETE'}),
+        refresh: async () => request<RegistrationToken>('/admin/registration-codes', {method: 'POST'}),
+        get: async () => request<RegistrationToken>('/admin/registration-codes', {method: 'GET'}),
+        deleteAll: async () => request('/admin/registration-codes', {method: 'DELETE'}),
     },
     devices: {
-        list: async (): Promise<Array<{id: string; name: string;}>> => request<Array<{id: string; name: string;}>>('/admin/devices', {method: 'GET'}),
+        list: async () => request<Array<Device>>('/admin/devices', {method: 'GET'}),
+        delete: async (deviceId: string) => request(`/admin/devices/${deviceId}`, {method: 'DELETE'}),
     }
 }
