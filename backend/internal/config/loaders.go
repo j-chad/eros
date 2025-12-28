@@ -9,7 +9,7 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		Server:   loadServerConfig(),
 		Database: loadDatabaseConfig(),
-		Admin:    loadAdminConfig(),
+		Auth:     loadAuthConfig(),
 	}
 
 	return cfg, nil
@@ -35,9 +35,9 @@ func loadDatabaseConfig() DatabaseConfig {
 	}
 }
 
-// loadAdminConfig loads admin configuration
-func loadAdminConfig() AdminConfig {
-	return AdminConfig{
-		APIKey: requireEnv("ADMIN_API_KEY"),
+// loadAuthConfig loads authentication configuration
+func loadAuthConfig() AuthConfig {
+	return AuthConfig{
+		AdminAPIKey: requireEnv("ADMIN_API_KEY"),
 	}
 }
