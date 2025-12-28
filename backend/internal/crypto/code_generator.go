@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"math/big"
 )
@@ -22,4 +23,13 @@ func GenerateHumanReadableCode() (string, error) {
 	}
 
 	return fmt.Sprintf("%s-%s-%s", string(result[0:4]), string(result[4:8]), string(result[8:12])), nil
+}
+
+func GenerateSecureToken(n int) (string, error) {
+	bytes := make([]byte, n)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	// Encode as URL-safe base64 without padding
+	return base64.RawURLEncoding.EncodeToString(bytes), nil
 }

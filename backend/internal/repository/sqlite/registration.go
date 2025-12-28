@@ -12,7 +12,7 @@ import (
 const RegistrationId = 1
 
 func (s *sqliteDB) RefreshRegistrationCode(ctx context.Context, model models.RegistrationCode) error {
-	_, err := s.db.ExecContext(ctx, `
+	_, err := s.executor().ExecContext(ctx, `
 			INSERT OR REPLACE INTO registration_codes (id, code, expires_at)
 			VALUES (?, ?, ?);
 
@@ -21,14 +21,14 @@ func (s *sqliteDB) RefreshRegistrationCode(ctx context.Context, model models.Reg
 }
 
 func (s *sqliteDB) DeleteRegistrationCode(ctx context.Context) error {
-	_, err := s.db.ExecContext(ctx, `
+	_, err := s.executor().ExecContext(ctx, `
 			DELETE FROM registration_codes WHERE id = ?;
 	`, RegistrationId)
 	return err
 }
 
 func (s *sqliteDB) GetRegistrationCode(ctx context.Context) (model *models.RegistrationCode, err error) {
-	row := s.db.QueryRowContext(ctx, `
+	row := s.executor().QueryRowContext(ctx, `
 			SELECT code, expires_at FROM registration_codes WHERE id = ?;
 	`, RegistrationId)
 

@@ -54,7 +54,7 @@ func NewSQLiteDB(conf config.DatabaseConfig) (repository.Repository, error) {
 }
 
 type sqliteDB struct {
-	db *sql.DB
+	db *sql.DB // DEPRECATED: use executor() instead to support transactions
 	tx *sql.Tx
 }
 
