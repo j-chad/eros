@@ -16,4 +16,5 @@ export interface Device {
     registered_at: string; // ISO 8601 date string
     last_seen_at: string; // ISO 8601 date string
     expires_at: string; // ISO 8601 date string
+    device_info: string
 }
