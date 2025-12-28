@@ -38,3 +38,7 @@ func Error(w http.ResponseWriter, err *apierror.APIError) {
 
 	JSON(w, err.StatusCode, errorResponse)
 }
+
+func NoContent(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNoContent)
+}

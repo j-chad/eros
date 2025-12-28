@@ -58,13 +58,13 @@ type sqliteDB struct {
 	tx *sql.Tx
 }
 
-func (s sqliteDB) Close() {
+func (s *sqliteDB) Close() {
 	if err := s.db.Close(); err != nil {
 		fmt.Printf("error closing database: %v\n", err)
 	}
 }
 
-func (s sqliteDB) WithTx(ctx context.Context, fn func(repository.Repository) error) error {
+func (s *sqliteDB) WithTx(ctx context.Context, fn func(repository.Repository) error) error {
 	if s.tx != nil {
 		return fmt.Errorf("nested transactions are not supported")
 	}
@@ -93,7 +93,7 @@ func (s sqliteDB) WithTx(ctx context.Context, fn func(repository.Repository) err
 	return nil
 }
 
-func (s sqliteDB) executor() executor {
+func (s *sqliteDB) executor() executor {
 	if s.tx != nil {
 		return s.tx
 	}

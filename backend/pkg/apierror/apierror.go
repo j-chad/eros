@@ -48,7 +48,15 @@ func Unauthorized(message string) *APIError {
 	}
 }
 
-// Forbidden creates a 403 error
+func UnknownInternalError(err error) *APIError {
+	return &APIError{
+		Code:       "UNKNOWN_INTERNAL_ERROR",
+		Message:    "An unknown internal error occurred",
+		StatusCode: http.StatusInternalServerError,
+		Err:        err,
+	}
+}
+
 func Forbidden(message string) *APIError {
 	return &APIError{
 		Code:       "FORBIDDEN",

@@ -13,6 +13,7 @@ func withAdminAuth(next http.Handler, authService service.AuthService) http.Hand
 		apiKey := r.Header.Get("Authorization")
 		if apiKey == "" {
 			response.Error(w, apierror.Unauthorized("api key not provided"))
+			return
 		}
 
 		if err := authService.ValidateAdminAPIKey(apiKey); err != nil {

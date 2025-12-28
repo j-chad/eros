@@ -34,8 +34,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) registerRoutes() {
 	adminMux := http.NewServeMux()
-	//adminMux.HandleFunc("POST /api/admin/registration-codes", h.admin.CreateRegistrationCode)
-	//adminMux.HandleFunc("GET /api/admin/registration-codes", h.admin.ListRegistrationCodes)
+	adminMux.HandleFunc("POST /api/admin/registration-codes", h.admin.CreateRegistrationCode)
+	adminMux.HandleFunc("GET /api/admin/registration-codes", h.admin.GetRegistrationCode)
+	adminMux.HandleFunc("DELETE /api/admin/registration-codes", h.admin.InvalidateRegistrationCode)
 	adminMux.HandleFunc("/", routeNotFound)
 
 	h.mux.Handle("/api/admin/", withAdminAuth(adminMux, *h.auth))

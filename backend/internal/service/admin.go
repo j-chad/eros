@@ -1,6 +1,14 @@
 package service
 
-import "backend/internal/repository"
+import (
+	"backend/internal/crypto"
+	"backend/internal/models"
+	"backend/internal/repository"
+	"context"
+	"time"
+)
+
+const RegistrationExpiryDuration = 10 * time.Minute
 
 type AdminService struct {
 	repo repository.Repository
@@ -8,4 +16,32 @@ type AdminService struct {
 
 func NewAdminService(repo repository.Repository) *AdminService {
 	return &AdminService{repo: repo}
+}
+
+func (s *AdminService) CreateRegistrationCode(ctx context.Context) (models.RegistrationCode, error) {
+	expiry := time.Now().Add(RegistrationExpiryDuration)
+
+	code, err := crypto.GenerateHumanReadableCode()
+	if err != nil {
+		return models.RegistrationCode{}, err
+	}
+
+	model := models.RegistrationCode{
+		Code:      code,
+		ExpiresAt: expiry,
+	}
+
+	if err := s.repo.RefreshRegistrationCode(ctx, model); err != nil {
+		return model, err
+	}
+
+	return model, nil
+}
+
+func (s *AdminService) InvalidateRegistrationCode(ctx context.Context) error {
+	return s.repo.DeleteRegistrationCode(ctx)
+}
+
+func (s *AdminService) GetRegistrationCode(ctx context.Context) (*models.RegistrationCode, error) {
+	return s.repo.GetRegistrationCode(ctx)
 }
