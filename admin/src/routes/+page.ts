@@ -10,7 +10,7 @@ export async function load({fetch}) {
         };
     }
 
-    const [registration] = await Promise.all([
+    const [registration, devices] = await Promise.all([
         api.registration.get().catch((err) => {
             if (err.status === 404) {
                 return null;
@@ -18,7 +18,8 @@ export async function load({fetch}) {
 
             throw err;
         }),
+        api.devices.list()
     ]);
 
-    return {registration, devices: [] as Device[]};
+    return {registration, devices};
 }

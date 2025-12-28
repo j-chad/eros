@@ -47,3 +47,11 @@ func (s *AdminService) InvalidateRegistrationCode(ctx context.Context) error {
 func (s *AdminService) GetRegistrationCode(ctx context.Context) (*models.RegistrationCode, error) {
 	return s.repo.GetRegistrationCode(ctx)
 }
+
+func (s *AdminService) ListDevices(ctx context.Context) ([]models.Device, error) {
+	return s.repo.ListDevices(ctx)
+}
+
+func (s *AdminService) RevokeDevice(ctx context.Context, deviceID string) error {
+	return s.repo.DeleteDevice(ctx, deviceID)
+}

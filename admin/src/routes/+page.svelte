@@ -4,9 +4,8 @@
     import Card from "$lib/components/Card.svelte";
     import Button from "$lib/components/Button.svelte";
     import CopyableCode from "$lib/components/CopyableCode.svelte";
-    import ExpiryTime from "$lib/components/ExpiryTime.svelte";
+    import Date from "$lib/components/Date.svelte";
     import Table from "$lib/components/Table.svelte";
-    import PastDate from "$lib/components/PastDate.svelte";
 
     let { data } = $props();
 
@@ -36,8 +35,7 @@
 
     async function handleDeleteDevice(deviceId: string) {
         if (confirm('Are you sure you want to remove this device? It will need to re-register.')) {
-            // Replace with actual API call
-            console.log('Deleting device:', deviceId);
+            await api.devices.delete(deviceId);
             devices = devices.filter(d => d.id !== deviceId);
         }
     }
@@ -70,11 +68,11 @@
             <div class="grid-2">
                 <div>
                     <label>Created</label>
-                    <PastDate datetime={registrationCode.created_at} />
+                    <Date datetime={registrationCode.created_at} inline />
                 </div>
                 <div>
                     <label>Expires</label>
-                    <ExpiryTime expiresAt={registrationCode.expires_at} />
+                    <Date expiry datetime={registrationCode.expires_at} inline />
                 </div>
             </div>
         {:else}
@@ -89,10 +87,14 @@
                 {#each devices as device}
                     <tr>
                         <td><div class="device-info">{device.device_info}</div></td>
-                        <td class="nowrap">{formatDate(device.registered_at)}</td>
-                        <td class="nowrap">{formatDate(device.last_seen_at)}</td>
                         <td class="nowrap">
-                            <ExpiryTime expiresAt={device.expires_at} />
+                            <Date datetime={device.registered_at} />
+                        </td>
+                        <td class="nowrap">
+                            <Date datetime={device.last_seen_at} />
+                        </td>
+                        <td class="nowrap">
+                            <Date datetime={device.expires_at} expiry />
                         </td>
                         <td>
                             <Button
