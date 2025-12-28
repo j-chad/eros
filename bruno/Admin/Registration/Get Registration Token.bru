@@ -12,10 +12,10 @@ get {
 
 script:post-response {
   if (res.body.error) {
-    bru.setEnvVar("registrationCode", "")
+    bru.setEnvVar("registration_code", "")
   } else {
     const code = res.body.code;
-  bru.setEnvVar("registrationCode", code)
+  bru.setEnvVar("registration_code", code)
   }
 }
 
