@@ -8,7 +8,7 @@ import (
 type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
-	Admin    AdminConfig
+	Auth     AuthConfig
 }
 
 // ServerConfig contains HTTP server settings
@@ -27,7 +27,7 @@ type DatabaseConfig struct {
 	WAL         bool
 }
 
-// AdminConfig contains admin interface settings
-type AdminConfig struct {
-	APIKey string
+// AuthConfig contains auth settings
+type AuthConfig struct {
+	AdminAPIKey string
 }
