@@ -4,36 +4,30 @@ import (
 	"backend/internal/models"
 	"backend/pkg/apierror"
 	"backend/pkg/response"
+	"encoding/json"
 	"net/http"
 	"time"
 )
 
 func (h *Handler) CreateFavourChoice(w http.ResponseWriter, r *http.Request) {
-	label := r.FormValue("label")
-	if label == "" {
+	var choice models.FavourChoice
+
+	if err := json.NewDecoder(r.Body).Decode(&choice); err != nil {
+		response.Error(w, apierror.BadRequest("invalid request body"))
+		return
+	}
+
+	if choice.Label == "" {
 		response.Error(w, apierror.BadRequest("label is required"))
 		return
 	}
 
-	description := r.FormValue("description")
-	descriptionPtr := &description
-	if description == "" {
-		descriptionPtr = nil
+	if choice.Description != nil && *choice.Description == "" {
+		choice.Description = nil
 	}
 
-	canMessage := r.FormValue("can_message")
-	canMessageBool := false
-	if canMessage == "true" {
-		canMessageBool = true
-	}
-
-	choice := models.FavourChoice{
-		Label:       label,
-		Description: descriptionPtr,
-		CanMessage:  canMessageBool,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
+	choice.CreatedAt = time.Now()
+	choice.UpdatedAt = time.Now()
 
 	if err := h.adminService.CreateFavourChoice(r.Context(), &choice); err != nil {
 		response.Error(w, apierror.UnknownInternalError(err))
@@ -50,37 +44,30 @@ func (h *Handler) UpdateFavourChoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	label := r.FormValue("label")
-	if label == "" {
+	var choice models.FavourChoice
+	if err := json.NewDecoder(r.Body).Decode(&choice); err != nil {
+		response.Error(w, apierror.BadRequest("invalid request body"))
+		return
+	}
+
+	if choice.Label == "" {
 		response.Error(w, apierror.BadRequest("label is required"))
 		return
 	}
 
-	description := r.FormValue("description")
-	descriptionPtr := &description
-	if description == "" {
-		descriptionPtr = nil
+	if choice.Description != nil && *choice.Description == "" {
+		choice.Description = nil
 	}
 
-	canMessage := r.FormValue("can_message")
-	canMessageBool := false
-	if canMessage == "true" {
-		canMessageBool = true
-	}
-
-	choice := models.FavourChoice{
-		ID:          choiceID,
-		Label:       label,
-		Description: descriptionPtr,
-		CanMessage:  canMessageBool,
-	}
+	choice.ID = choiceID
+	choice.UpdatedAt = time.Now()
 
 	if err := h.adminService.UpdateFavourChoice(r.Context(), choice); err != nil {
 		response.Error(w, apierror.UnknownInternalError(err))
 		return
 	}
 
-	response.NoContent(w)
+	response.JSON(w, http.StatusOK, choice)
 }
 
 func (h *Handler) DeleteFavourChoice(w http.ResponseWriter, r *http.Request) {

@@ -6,6 +6,7 @@
     import Table from '$lib/components/Table.svelte';
     import EditableField from '$lib/components/EditableField.svelte';
     import DateDisplay from "$lib/components/DateDisplay.svelte";
+    import type {CreateFavourChoicePayload} from "$lib/types";
 
     let { data } = $props();
 
@@ -15,14 +16,14 @@
     let newChoice = $state({
         label: '',
         description: '',
-        allowMessaging: false
-    });
+        can_message: false
+    } as CreateFavourChoicePayload);
 
     function resetNewFavourChoiceForm() {
         newChoice = {
             label: '',
             description: '',
-            allowMessaging: false
+            can_message: false
         };
         showAddChoiceForm = false;
     }
@@ -34,8 +35,8 @@
         }
 
         try {
-            // const created = await api.favours.create(newChoice);
-            // favours = [...favours, created];
+            const created = await api.favours.createChoice(newChoice);
+            choices = [created, ...choices];
             resetNewFavourChoiceForm();
         } catch (err) {
             console.error('Failed to create favour:', err);
@@ -43,32 +44,42 @@
         }
     }
 
-    async function handleUpdateChoiceLabel(favourId: string, newLabel: string) {
+    async function handleUpdateChoiceLabel(choiceID: string, newLabel: string) {
         if (!newLabel.trim()) {
             alert('Label cannot be empty');
             throw new Error('Label required');
         }
 
-        // await api.favours.update(favourId, { label: newLabel });
+        const choice = choices.find(f => f.id === choiceID);
+        if (!choice) return;
+
+        await api.favours.updateChoice(choiceID, { ...choice, label: newLabel });
         choices = choices.map(f =>
-            f.id === favourId ? { ...f, label: newLabel, updated_at: new Date().toISOString() } : f
+            f.id === choiceID ? { ...f, label: newLabel, updated_at: new Date().toISOString() } : f
         );
     }
 
-    async function handleUpdateChoiceDescription(favourId: string, newDescription: string) {
-        // await api.favours.update(favourId, { description: newDescription });
+    async function handleUpdateChoiceDescription(choiceID: string, newDescription: string) {
+        const choice = choices.find(f => f.id === choiceID);
+        if (!choice) return;
+
+        await api.favours.updateChoice(choiceID, { ...choice, description: newDescription });
         choices = choices.map(f =>
-            f.id === favourId ? { ...f, description: newDescription, updated_at: new Date().toISOString() } : f
+            f.id === choiceID ? { ...f, description: newDescription, updated_at: new Date().toISOString() } : f
         );
     }
 
-    async function handleToggleMessaging(favourId: string, currentValue: boolean) {
+    async function handleToggleChoiceMessaging(choiceID: string) {
+        const choice = choices.find(f => f.id === choiceID);
+        if (!choice) return;
+
+        const currentValue = choice.can_message;
         const newValue = !currentValue;
 
         try {
-            // await api.favours.update(favourId, { allowMessaging: newValue });
+            await api.favours.updateChoice(choiceID, { ...choice, can_message: newValue });
             choices = choices.map(f =>
-                f.id === favourId ? { ...f, allowMessaging: newValue, updated_at: new Date().toISOString() } : f
+                f.id === choiceID ? { ...f, can_message: newValue, updated_at: new Date().toISOString() } : f
             );
         } catch (err) {
             console.error('Failed to update messaging setting:', err);
@@ -76,14 +87,14 @@
         }
     }
 
-    async function handleDeleteFavour(favourId: string) {
+    async function handleDeleteChoice(choiceID: string) {
         if (!confirm('Are you sure you want to delete this favour choice? This cannot be undone.')) {
             return;
         }
 
         try {
-            // await api.favours.delete(favourId);
-            choices = choices.filter(f => f.id !== favourId);
+            await api.favours.deleteChoice(choiceID);
+            choices = choices.filter(f => f.id !== choiceID);
         } catch (err) {
             console.error('Failed to delete favour:', err);
             alert('Failed to delete favour');
@@ -131,7 +142,7 @@
                     <label>
                         <input
                                 type="checkbox"
-                                bind:checked={newChoice.allowMessaging}
+                                bind:checked={newChoice.can_message}
                         />
                         Allow messaging after reveal
                     </label>
@@ -172,7 +183,7 @@
                             <button
                                     class="toggle-btn"
                                     class:active={choice.can_message}
-                                    onclick={() => handleToggleMessaging(choice.id, choice.can_message)}
+                                    onclick={() => handleToggleChoiceMessaging(choice.id)}
                             >
                                 {choice.can_message ? 'Yes' : 'No'}
                             </button>
@@ -187,7 +198,7 @@
                             <Button
                                     variant="danger"
                                     size="sm"
-                                    onclick={() => handleDeleteFavour(choice.id)}
+                                    onclick={() => handleDeleteChoice(choice.id)}
                             >
                                 {#snippet icon()}<Trash2 size={14} />{/snippet}
                                 Delete

@@ -1,4 +1,4 @@
-import type {APIError, Device, FavourChoice, RegistrationToken} from "$lib/types";
+import type {APIError, CreateFavourChoicePayload, Device, FavourChoice, RegistrationToken} from "$lib/types";
 import {auth} from "$lib/auth.svelte";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api';
@@ -14,7 +14,7 @@ class APIException extends Error {
     }
 }
 
-async function request<T=void>(endpoint: string, options: RequestInit = {}): Promise<T> {
+async function request<T = void>(endpoint: string, options: RequestInit = {}): Promise<T> {
     if (!auth.apiKey) {
         throw new APIException('Not authenticated', 401);
     }
@@ -69,6 +69,17 @@ export const api = {
             }),
     },
     favours: {
-        listChoices: async () => [] as FavourChoice[]
+        listChoices: async () => request<Array<FavourChoice>>('/favours/choices', {method: 'GET'}),
+        createChoice: async (choice: CreateFavourChoicePayload) =>
+            request<FavourChoice>('/admin/favours/choices', {
+                method: 'POST',
+                body: JSON.stringify(choice),
+            }),
+        deleteChoice: async (choiceId: string) => request(`/admin/favours/choices/${choiceId}`, {method: 'DELETE'}),
+        updateChoice: async (choiceId: string, choice: FavourChoice) =>
+            request<FavourChoice>(`/admin/favours/choices/${choiceId}`, {
+                method: 'PUT',
+                body: JSON.stringify(choice),
+            }),
     }
 }
