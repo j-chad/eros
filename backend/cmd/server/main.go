@@ -1,6 +1,7 @@
 package main
 
 import (
+	"backend/internal/config"
 	"backend/internal/repository/sqlite"
 	"log"
 	"net/http"
@@ -10,7 +11,12 @@ import (
 )
 
 func main() {
-	database, err := sqlite.NewSQLiteDB()
+	conf, err := config.Load()
+	if err != nil {
+		log.Fatalf("error loading config: %v", err)
+	}
+
+	database, err := sqlite.NewSQLiteDB(conf.Database)
 	if err != nil {
 		log.Fatalf("error opening repository: %v", err)
 	}

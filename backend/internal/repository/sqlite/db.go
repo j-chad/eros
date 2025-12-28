@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"backend/internal/config"
 	"backend/internal/repository"
 	"context"
 	"database/sql"
@@ -17,15 +18,28 @@ type executor interface {
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 }
 
-func NewSQLiteDB() (repository.Repository, error) {
+func NewSQLiteDB(conf config.DatabaseConfig) (repository.Repository, error) {
 	//goland:noinspection GoResourceLeak connection is designed to be long-lived
-	db, err := sql.Open("sqlite", "./repository.sqlite")
+	db, err := sql.Open("sqlite", conf.Path)
 	if err != nil {
 		return nil, err
 	}
 
 	if err := db.Ping(); err != nil {
 		return nil, err
+	}
+
+	if conf.WAL {
+		if _, err := db.Exec("PRAGMA journal_mode = WAL;"); err != nil {
+			return nil, fmt.Errorf("error setting WAL mode: %w", err)
+		}
+	}
+
+	if conf.BusyTimeout > 0 {
+		busyTimeoutMS := int(conf.BusyTimeout.Milliseconds())
+		if _, err := db.Exec("PRAGMA busy_timeout = $0;", busyTimeoutMS); err != nil {
+			return nil, fmt.Errorf("error setting busy timeout: %w", err)
+		}
 	}
 
 	// initialize the database schema
