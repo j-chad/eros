@@ -18,6 +18,7 @@ type ServerConfig struct {
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
 	IdleTimeout  time.Duration
+	CORS_Origins []string
 }
 
 // DatabaseConfig contains database settings
