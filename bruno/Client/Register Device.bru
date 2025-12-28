@@ -1,0 +1,30 @@
+meta {
+  name: Register Device
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{scheme}}{{host}}/api/device
+  body: multipartForm
+  auth: none
+}
+
+body:text {
+  My Device
+}
+
+body:multipart-form {
+  registration_code: {{registration_code}}
+  device_info: 
+}
+
+script:post-response {
+  const token = res.body.token;
+  bru.setEnvVar("auth_token", token)
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
