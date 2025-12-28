@@ -1,4 +1,4 @@
-import type {APIError, Device, RegistrationToken} from "$lib/types";
+import type {APIError, Device, FavourChoice, RegistrationToken} from "$lib/types";
 import {auth} from "$lib/auth.svelte";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api';
@@ -67,5 +67,8 @@ export const api = {
                     'Content-Type': 'text/plain',
                 }
             }),
+    },
+    favours: {
+        listChoices: async () => [] as FavourChoice[]
     }
 }

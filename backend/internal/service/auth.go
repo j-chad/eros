@@ -50,6 +50,11 @@ func (s *AuthService) ValidateDeviceToken(token string) error {
 		return ErrInvalidClientCredentials
 	}
 
+	// Update last seen timestamp
+	if err := s.repo.UpdateDeviceLastSeenByToken(context.Background(), token, time.Now()); err != nil {
+		return err
+	}
+
 	return nil
 }
 

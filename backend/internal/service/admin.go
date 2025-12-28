@@ -59,3 +59,15 @@ func (s *AdminService) RevokeDevice(ctx context.Context, deviceID string) error 
 func (s *AdminService) UpdateDeviceInfo(ctx context.Context, deviceID string, deviceInfo string) error {
 	return s.repo.UpdateDeviceInfo(ctx, deviceID, deviceInfo)
 }
+
+func (s *AdminService) CreateFavourChoice(ctx context.Context, choice *models.FavourChoice) error {
+	return s.repo.CreateFavourChoice(ctx, choice)
+}
+
+func (s *AdminService) UpdateFavourChoice(ctx context.Context, choice models.FavourChoice) error {
+	return s.repo.UpdateFavourChoice(ctx, choice)
+}
+
+func (s *AdminService) DeleteFavourChoice(ctx context.Context, choiceID string) error {
+	return s.repo.DeleteFavourChoice(ctx, choiceID)
+}

@@ -4,7 +4,7 @@
     import Card from "$lib/components/Card.svelte";
     import Button from "$lib/components/Button.svelte";
     import CopyableCode from "$lib/components/CopyableCode.svelte";
-    import Date from "$lib/components/Date.svelte";
+    import DateDisplay from "$lib/components/DateDisplay.svelte";
     import Table from "$lib/components/Table.svelte";
     import EditableField from "$lib/components/EditableField.svelte";
 
@@ -76,11 +76,11 @@
             <div class="grid-2">
                 <div>
                     <label>Created</label>
-                    <Date datetime={registrationCode.created_at} inline/>
+                    <DateDisplay datetime={registrationCode.created_at} inline/>
                 </div>
                 <div>
                     <label>Expires</label>
-                    <Date expiry datetime={registrationCode.expires_at} inline/>
+                    <DateDisplay expiry datetime={registrationCode.expires_at} inline/>
                 </div>
             </div>
         {:else}
@@ -111,13 +111,13 @@
                             </div>
                         </td>
                         <td class="nowrap">
-                            <Date datetime={device.registered_at}/>
+                            <DateDisplay datetime={device.registered_at}/>
                         </td>
                         <td class="nowrap">
-                            <Date datetime={device.last_seen_at}/>
+                            <DateDisplay datetime={device.last_seen_at}/>
                         </td>
                         <td class="nowrap">
-                            <Date datetime={device.expires_at} expiry/>
+                            <DateDisplay datetime={device.expires_at} expiry/>
                         </td>
                         <td>
                             <Button

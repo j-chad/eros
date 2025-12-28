@@ -18,3 +18,12 @@ export interface Device {
     expires_at: string; // ISO 8601 date string
     device_info: string
 }
+
+export interface FavourChoice {
+    id: string;
+    label: string;
+    description: string;
+    can_message: boolean;
+    created_at: string; // ISO 8601 date string
+    updated_at: string; // ISO 8601 date string
+}

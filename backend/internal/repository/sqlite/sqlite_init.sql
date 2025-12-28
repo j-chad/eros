@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS favour_count
 CREATE TABLE IF NOT EXISTS favour_choice
 (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    label       TEXT     NOT NULL,
+    label       TEXT     NOT NULL Unique,
     description TEXT,
     can_message INTEGER  NOT NULL DEFAULT 1, -- Whether user can message when requesting
     created_at  DATETIME NOT NULL DEFAULT (datetime('now')),

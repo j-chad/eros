@@ -69,3 +69,12 @@ func (s *sqliteDB) UpdateDeviceInfo(ctx context.Context, deviceID string, device
 	`, deviceInfo, deviceID)
 	return err
 }
+
+func (s *sqliteDB) UpdateDeviceLastSeenByToken(ctx context.Context, token string, lastSeen time.Time) error {
+	_, err := s.executor().ExecContext(ctx, `
+		UPDATE device
+		SET last_seen_at = ?
+		WHERE token = ?
+	`, lastSeen, token)
+	return err
+}
