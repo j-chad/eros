@@ -5,13 +5,6 @@
 
     let {children} = $props();
 
-    // Check authentication on mount and route changes
-    $effect(() => {
-        if (!auth.isAuthenticated && page.url.pathname !== '/login') {
-            goto('/login');
-        }
-    });
-
     function handleLogout() {
         auth.logout();
         goto('/login');
@@ -25,10 +18,8 @@
             <div class="nav-content">
                 <h1>Eros Admin</h1>
                 <div class="nav-links">
-                    <a href="/" class:active={page.url.pathname === '/'}>Dashboard</a>
+                    <a href="/" class:active={page.url.pathname === '/'}>Registration</a>
                     <a href="/reveals" class:active={page.url.pathname.startsWith('/reveals')}>Reveals</a>
-                    <a href="/graph" class:active={page.url.pathname === '/graph'}>Graph</a>
-                    <a href="/devices" class:active={page.url.pathname === '/devices'}>Devices</a>
                     <button onclick={handleLogout} class="logout">Logout</button>
                 </div>
             </div>
@@ -44,6 +35,10 @@
 {/if}
 
 <style>
+    * {
+        box-sizing: border-box;
+    }
+
     :global(body) {
         margin: 0;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;

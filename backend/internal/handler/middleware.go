@@ -78,8 +78,6 @@ func withAdminAuth(next http.Handler, authService service.AuthService) http.Hand
 }
 
 func WithCORS(next http.Handler, allowedOrigins []string) http.Handler {
-	fmt.Println("CORS allowed origins:", allowedOrigins)
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
 

@@ -55,5 +55,8 @@ export const api = {
         refresh: async (): Promise<RegistrationToken> => request<RegistrationToken>('/admin/registration-codes', {method: 'POST'}),
         get: async (): Promise<RegistrationToken> => request<RegistrationToken>('/admin/registration-codes', {method: 'GET'}),
         deleteAll: async (): Promise<void> => request<void>('/admin/registration-codes', {method: 'DELETE'}),
+    },
+    devices: {
+        list: async (): Promise<Array<{id: string; name: string;}>> => request<Array<{id: string; name: string;}>>('/admin/devices', {method: 'GET'}),
     }
 }
