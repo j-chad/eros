@@ -1,11 +1,11 @@
 meta {
-  name: test
+  name: Refresh Registration Token
   type: http
   seq: 1
 }
 
-get {
-  url: {{scheme}}{{host}}/api/admin/test
+post {
+  url: {{scheme}}{{host}}/api/admin/registration-codes
   body: none
   auth: inherit
 }

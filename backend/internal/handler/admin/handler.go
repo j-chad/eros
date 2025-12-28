@@ -1,6 +1,8 @@
 package admin
 
-import "backend/internal/service"
+import (
+	"backend/internal/service"
+)
 
 type Handler struct {
 	adminService *service.AdminService

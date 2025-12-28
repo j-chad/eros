@@ -1,14 +1,19 @@
 package repository
 
-import "context"
+import (
+	"backend/internal/models"
+	"context"
+)
 
 type Repository interface {
 	Close()
 	WithTx(ctx context.Context, fn func(Repository) error) error
 
-	//RegistrationRepository
+	RegistrationRepository
 }
 
 type RegistrationRepository interface {
-	CreateRegistrationCode(ctx context.Context, token string) error
+	RefreshRegistrationCode(ctx context.Context, code models.RegistrationCode) error
+	DeleteRegistrationCode(ctx context.Context) error
+	GetRegistrationCode(ctx context.Context) (*models.RegistrationCode, error)
 }
