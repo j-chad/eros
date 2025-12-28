@@ -7,6 +7,8 @@ import (
 	"database/sql"
 	_ "embed"
 	"fmt"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 //go:embed sqlite_init.sql
@@ -20,7 +22,7 @@ type executor interface {
 
 func NewSQLiteDB(conf config.DatabaseConfig) (repository.Repository, error) {
 	//goland:noinspection GoResourceLeak connection is designed to be long-lived
-	db, err := sql.Open("sqlite", conf.Path)
+	db, err := sql.Open("sqlite3", conf.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +39,8 @@ func NewSQLiteDB(conf config.DatabaseConfig) (repository.Repository, error) {
 
 	if conf.BusyTimeout > 0 {
 		busyTimeoutMS := int(conf.BusyTimeout.Milliseconds())
-		if _, err := db.Exec("PRAGMA busy_timeout = $0;", busyTimeoutMS); err != nil {
+		query := fmt.Sprintf("PRAGMA busy_timeout = %d;", busyTimeoutMS)
+		if _, err := db.Exec(query); err != nil {
 			return nil, fmt.Errorf("error setting busy timeout: %w", err)
 		}
 	}

@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Server" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="eros" />
+    <working_directory value="$PROJECT_DIR$/backend" />
+    <envs>
+      <env name="ADMIN_API_KEY" value="test" />
+    </envs>
+    <kind value="PACKAGE" />
+    <package value="backend/cmd/server" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/backend/cmd/server/main.go" />
+    <method v="2" />
+  </configuration>
+</component>

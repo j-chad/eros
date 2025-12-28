@@ -23,9 +23,10 @@ func main() {
 	}
 	defer database.Close()
 
+	authService := service.NewAuthService(conf.Auth, database)
 	adminService := service.NewAdminService(database)
 
-	app := handler.NewHandler(adminService)
+	app := handler.NewHandler(authService, adminService)
 
 	serverAddr := fmt.Sprintf("%s:%d", conf.Server.Host, conf.Server.Port)
 	server := &http.Server{

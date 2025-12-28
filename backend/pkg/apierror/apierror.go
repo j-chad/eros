@@ -56,3 +56,11 @@ func Forbidden(message string) *APIError {
 		StatusCode: http.StatusForbidden,
 	}
 }
+
+func NotFound(message string) *APIError {
+	return &APIError{
+		Code:       "NOT_FOUND",
+		Message:    message,
+		StatusCode: http.StatusNotFound,
+	}
+}
