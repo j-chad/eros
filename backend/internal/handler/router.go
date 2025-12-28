@@ -10,7 +10,6 @@ import (
 )
 
 type Handler struct {
-	mux    *http.ServeMux
 	auth   *service.AuthService
 	admin  *admin.Handler
 	client *client.Handler
@@ -21,35 +20,28 @@ func NewHandler(
 	adminService *service.AdminService,
 ) *Handler {
 	handler := &Handler{
-		mux:    http.NewServeMux(),
 		auth:   authService,
 		admin:  admin.NewHandler(adminService),
 		client: client.NewHandler(authService),
 	}
-
-	handler.registerRoutes()
 	return handler
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.mux.ServeHTTP(w, r)
-}
-
-func (h *Handler) registerRoutes() {
-	h.mux.HandleFunc("POST /api/device", h.client.RegisterDevice)
+func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("POST /api/device", h.client.RegisterDevice)
 
 	adminMux := http.NewServeMux()
 	adminMux.HandleFunc("POST /api/admin/registration-codes", h.admin.CreateRegistrationCode)
 	adminMux.HandleFunc("GET /api/admin/registration-codes", h.admin.GetRegistrationCode)
 	adminMux.HandleFunc("DELETE /api/admin/registration-codes", h.admin.InvalidateRegistrationCode)
 	adminMux.HandleFunc("/", routeNotFound)
-	h.mux.Handle("/api/admin/", withAdminAuth(adminMux, *h.auth))
+	mux.Handle("/api/admin/", withAdminAuth(adminMux, *h.auth))
 
 	clientMux := http.NewServeMux()
 	clientMux.HandleFunc("GET /api/test", h.client.TestHandler)
-	h.mux.Handle("/api/", withClientAuth(clientMux, *h.auth))
+	mux.Handle("/api/", withClientAuth(clientMux, *h.auth))
 
-	h.mux.HandleFunc("/", routeNotFound)
+	mux.HandleFunc("/", routeNotFound)
 }
 
 func routeNotFound(w http.ResponseWriter, r *http.Request) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -41,6 +42,18 @@ func getEnvDuration(key string, defaultValue time.Duration) time.Duration {
 		if duration, err := time.ParseDuration(value); err == nil {
 			return duration
 		}
+	}
+	return defaultValue
+}
+
+func getEnvAsSlice(key, sep string, defaultValue []string) []string {
+	if value := os.Getenv(key); value != "" {
+		split := strings.Split(value, sep)
+		trimmed := make([]string, 0, len(split))
+		for _, v := range split {
+			trimmed = append(trimmed, strings.TrimSpace(v))
+		}
+		return trimmed
 	}
 	return defaultValue
 }

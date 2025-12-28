@@ -1,7 +1,9 @@
+import { browser } from "$app/environment";
+
 const STORAGE_KEY = 'admin_api_key';
 
 class AuthState {
-    apiKey = $state(localStorage.getItem(STORAGE_KEY));
+    apiKey = $state(browser ? localStorage.getItem(STORAGE_KEY) : null);
 
     login(key: string) {
         this.apiKey = key;

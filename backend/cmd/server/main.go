@@ -26,12 +26,15 @@ func main() {
 	authService := service.NewAuthService(conf.Auth, database)
 	adminService := service.NewAdminService(database)
 
-	app := handler.NewHandler(authService, adminService)
+	h := handler.NewHandler(authService, adminService)
+
+	mux := http.NewServeMux()
+	h.RegisterRoutes(mux)
 
 	serverAddr := fmt.Sprintf("%s:%d", conf.Server.Host, conf.Server.Port)
 	server := &http.Server{
 		Addr:         serverAddr,
-		Handler:      app,
+		Handler:      handler.WithCORS(mux, conf.Server.CORS_Origins),
 		ReadTimeout:  conf.Server.ReadTimeout,
 		WriteTimeout: conf.Server.WriteTimeout,
 		IdleTimeout:  conf.Server.IdleTimeout,

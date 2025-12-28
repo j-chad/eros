@@ -23,6 +23,7 @@ func loadServerConfig() ServerConfig {
 		ReadTimeout:  getEnvDuration("SERVER_READ_TIMEOUT", 10*time.Second),
 		WriteTimeout: getEnvDuration("SERVER_WRITE_TIMEOUT", 10*time.Second),
 		IdleTimeout:  getEnvDuration("SERVER_IDLE_TIMEOUT", 120*time.Second),
+		CORS_Origins: getEnvAsSlice("CORS_ALLOWED_ORIGINS", ",", []string{}),
 	}
 }
 
