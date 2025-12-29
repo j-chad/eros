@@ -1,0 +1,20 @@
+meta {
+  name: Update Favour Count
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{scheme}}{{host}}/api/admin/favours
+  body: json
+  auth: inherit
+}
+
+body:json {
+  2
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
