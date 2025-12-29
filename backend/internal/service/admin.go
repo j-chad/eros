@@ -55,3 +55,7 @@ func (s *AdminService) ListDevices(ctx context.Context) ([]models.Device, error)
 func (s *AdminService) RevokeDevice(ctx context.Context, deviceID string) error {
 	return s.repo.DeleteDevice(ctx, deviceID)
 }
+
+func (s *AdminService) UpdateDeviceInfo(ctx context.Context, deviceID string, deviceInfo string) error {
+	return s.repo.UpdateDeviceInfo(ctx, deviceID, deviceInfo)
+}

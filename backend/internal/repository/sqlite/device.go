@@ -41,7 +41,7 @@ func (s *sqliteDB) ListDevices(ctx context.Context) ([]models.Device, error) {
 	}
 	defer rows.Close()
 
-	var devices []models.Device
+	devices := make([]models.Device, 0)
 	for rows.Next() {
 		var device models.Device
 		if err := rows.Scan(&device.ID, &device.DeviceInfo, &device.ExpiresAt, &device.RegisteredAt, &device.LastSeenAt); err != nil {
@@ -58,5 +58,14 @@ func (s *sqliteDB) DeleteDevice(ctx context.Context, deviceID string) error {
 		DELETE FROM device
 		WHERE id = ?
 	`, deviceID)
+	return err
+}
+
+func (s *sqliteDB) UpdateDeviceInfo(ctx context.Context, deviceID string, deviceInfo string) error {
+	_, err := s.executor().ExecContext(ctx, `
+		UPDATE device
+		SET device_info = ?
+		WHERE id = ?
+	`, deviceInfo, deviceID)
 	return err
 }

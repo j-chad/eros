@@ -1,29 +1,24 @@
 <script lang="ts">
-    import { RefreshCw, Trash2 } from 'lucide-svelte';
+    import {Plus, RefreshCw, Trash2} from 'lucide-svelte';
     import {api} from "$lib/api";
     import Card from "$lib/components/Card.svelte";
     import Button from "$lib/components/Button.svelte";
     import CopyableCode from "$lib/components/CopyableCode.svelte";
     import Date from "$lib/components/Date.svelte";
     import Table from "$lib/components/Table.svelte";
+    import EditableField from "$lib/components/EditableField.svelte";
 
-    let { data } = $props();
+    let {data} = $props();
 
     let registrationCode = $state(data.registration);
     let devices = $state(data.devices);
 
-    function formatDate(dateString: string) {
-        return new Date(dateString).toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+    async function handleRefreshDevices() {
+        devices = await api.devices.list();
     }
 
-    async function handleRefreshCode() {
-        registrationCode = await api.registration.refresh();
+    async function handleCreateCode() {
+        registrationCode = await api.registration.create();
     }
 
     async function handleDeleteCode() {
@@ -39,6 +34,15 @@
             devices = devices.filter(d => d.id !== deviceId);
         }
     }
+
+    async function handleUpdateDeviceInfo(id: string, newValue: string) {
+        await api.devices.updateDeviceInfo(id, newValue);
+
+        const device = devices.find(d => d.id === id);
+        if (device) {
+            device.device_info = newValue;
+        }
+    }
 </script>
 
 <div class="container">
@@ -47,13 +51,17 @@
     <!-- Registration Code Section -->
     <Card title="Registration Code">
         {#snippet actions()}
-            <Button variant="primary" onclick={handleRefreshCode}>
-                {#snippet icon()}<RefreshCw size={16} />{/snippet}
-                Refresh
+            <Button variant="primary" onclick={handleCreateCode}>
+                {#snippet icon()}
+                    <Plus size={16}/>
+                {/snippet}
+                New Code
             </Button>
             {#if registrationCode}
                 <Button variant="danger" onclick={handleDeleteCode}>
-                    {#snippet icon()}<Trash2 size={16} />{/snippet}
+                    {#snippet icon()}
+                        <Trash2 size={16}/>
+                    {/snippet}
                     Delete
                 </Button>
             {/if}
@@ -62,39 +70,54 @@
         {#if registrationCode}
             <div class="form-group">
                 <label>Code</label>
-                <CopyableCode code={registrationCode.code} />
+                <CopyableCode code={registrationCode.code}/>
             </div>
 
             <div class="grid-2">
                 <div>
                     <label>Created</label>
-                    <Date datetime={registrationCode.created_at} inline />
+                    <Date datetime={registrationCode.created_at} inline/>
                 </div>
                 <div>
                     <label>Expires</label>
-                    <Date expiry datetime={registrationCode.expires_at} inline />
+                    <Date expiry datetime={registrationCode.expires_at} inline/>
                 </div>
             </div>
         {:else}
-            <div class="empty">No active registration code. Click "Refresh" to generate one.</div>
+            <div class="empty">No active registration code. Click "New Code" to generate one.</div>
         {/if}
     </Card>
 
     <!-- Devices Section -->
     <Card title="Registered Devices">
+        {#snippet actions()}
+            <Button variant="secondary" onclick={handleRefreshDevices}>
+                {#snippet icon()}
+                    <RefreshCw size={16}/>
+                {/snippet}
+                Refresh
+            </Button>
+        {/snippet}
         {#if devices.length > 0}
             <Table headers={['Device Info', 'Registered', 'Last Seen', 'Expires', 'Actions']}>
                 {#each devices as device}
                     <tr>
-                        <td><div class="device-info">{device.device_info}</div></td>
-                        <td class="nowrap">
-                            <Date datetime={device.registered_at} />
+                        <td>
+                            <div class="device-info">
+                                <EditableField bind:value={device.device_info}
+                                               onSave={(newValue) => handleUpdateDeviceInfo(device.id, newValue)}
+                                               multiline={true}
+                                />
+                            </div>
                         </td>
                         <td class="nowrap">
-                            <Date datetime={device.last_seen_at} />
+                            <Date datetime={device.registered_at}/>
                         </td>
                         <td class="nowrap">
-                            <Date datetime={device.expires_at} expiry />
+                            <Date datetime={device.last_seen_at}/>
+                        </td>
+                        <td class="nowrap">
+                            <Date datetime={device.expires_at} expiry/>
                         </td>
                         <td>
                             <Button
@@ -102,7 +125,9 @@
                                     size="sm"
                                     onclick={() => handleDeleteDevice(device.id)}
                             >
-                                {#snippet icon()}<Trash2 size={14} />{/snippet}
+                                {#snippet icon()}
+                                    <Trash2 size={14}/>
+                                {/snippet}
                                 Remove
                             </Button>
                         </td>

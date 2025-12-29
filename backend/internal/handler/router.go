@@ -37,6 +37,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	adminMux.HandleFunc("DELETE /api/admin/registration-codes", h.admin.InvalidateRegistrationCode)
 	adminMux.HandleFunc("GET /api/admin/devices", h.admin.ListDevices)
 	adminMux.HandleFunc("DELETE /api/admin/devices/{id}", h.admin.RevokeDevice)
+	adminMux.HandleFunc("PATCH /api/admin/devices/{id}", h.admin.UpdateDeviceInfo)
 	adminMux.HandleFunc("/", routeNotFound)
 	mux.Handle("/api/admin/", withAdminAuth(adminMux, *h.auth))
 

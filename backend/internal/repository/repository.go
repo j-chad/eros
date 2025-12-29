@@ -25,4 +25,5 @@ type DeviceRepository interface {
 	GetDeviceExpiryByToken(ctx context.Context, token string) (expiresAt *time.Time, err error)
 	ListDevices(ctx context.Context) ([]models.Device, error)
 	DeleteDevice(ctx context.Context, deviceID string) error
+	UpdateDeviceInfo(ctx context.Context, deviceID string, deviceInfo string) error
 }
