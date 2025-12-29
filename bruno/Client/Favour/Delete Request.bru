@@ -1,0 +1,27 @@
+meta {
+  name: Delete Request
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{scheme}}{{host}}/api/favours/request/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 1
+}
+
+body:json {
+  {
+    "choice_id": "6",
+    "message": "test"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
