@@ -2,6 +2,8 @@
     import {auth} from "$lib/auth.svelte";
     import {goto} from "$app/navigation";
     import {page} from '$app/state';
+    import Health from "$lib/components/Health.svelte";
+    import Impersonate from "$lib/components/Impersonate.svelte";
 
     let {children} = $props();
 
@@ -16,7 +18,12 @@
     <div class="app">
         <nav>
             <div class="nav-content">
-                <h1>Eros Admin</h1>
+                <div class="left-section">
+                    <h1>Eros Admin</h1>
+                    <Impersonate/>
+                    <Health/>
+                </div>
+
                 <div class="nav-links">
                     <a href="/" class:active={page.url.pathname === '/'}>Registration</a>
                     <a href="/favours" class:active={page.url.pathname === '/favours'}>Favours</a>
@@ -73,6 +80,12 @@
     h1 {
         margin: 0;
         font-size: 1.25rem;
+    }
+
+    .left-section {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
     }
 
     .nav-links {

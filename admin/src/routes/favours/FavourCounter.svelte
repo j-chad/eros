@@ -5,7 +5,7 @@
         count = $bindable(0),
         onUpdate,
         min = 0,
-        max = 999
+        max = 10
     }: {
         count?: number;
         onUpdate?: (newCount: number) => Promise<void>;
