@@ -8,7 +8,10 @@ export async function load() {
         };
     }
 
-    const choices = await api.favours.listChoices();
+    const [choices, favourCount] = await Promise.all([
+        api.favours.listChoices(),
+        api.favours.getFavourCount()
+    ]);
 
-    return { choices };
+    return { choices, favourCount };
 }

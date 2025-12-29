@@ -17,3 +17,7 @@ func NewFavourService(repo repository.Repository) *FavourService {
 func (s *FavourService) ListFavourChoices(ctx context.Context) ([]models.FavourChoice, error) {
 	return s.repo.ListFavourChoices(ctx)
 }
+
+func (s *FavourService) GetFavourCount(ctx context.Context) (int, error) {
+	return s.repo.GetFavourCount(ctx)
+}

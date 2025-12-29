@@ -35,4 +35,6 @@ type FavourChoiceRepository interface {
 	UpdateFavourChoice(ctx context.Context, choice models.FavourChoice) error
 	DeleteFavourChoice(ctx context.Context, choiceID string) error
 	ListFavourChoices(ctx context.Context) ([]models.FavourChoice, error)
+	GetFavourCount(ctx context.Context) (int, error)
+	UpdateFavourCount(ctx context.Context, count int) error
 }

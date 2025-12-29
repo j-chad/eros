@@ -81,5 +81,11 @@ export const api = {
                 method: 'PUT',
                 body: JSON.stringify(choice),
             }),
+        getFavourCount: async () => request<number>('/favours', {method: 'GET'}),
+        updateFavourCount: async (count: number) =>
+            request('/admin/favours', {
+                method: 'PUT',
+                body: JSON.stringify(count),
+            }),
     }
 }

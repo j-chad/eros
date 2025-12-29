@@ -71,3 +71,7 @@ func (s *AdminService) UpdateFavourChoice(ctx context.Context, choice models.Fav
 func (s *AdminService) DeleteFavourChoice(ctx context.Context, choiceID string) error {
 	return s.repo.DeleteFavourChoice(ctx, choiceID)
 }
+
+func (s *AdminService) UpdateFavourCount(ctx context.Context, count int) error {
+	return s.repo.UpdateFavourCount(ctx, count)
+}

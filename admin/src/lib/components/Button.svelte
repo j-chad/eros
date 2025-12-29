@@ -4,12 +4,14 @@
     let {
         variant = 'primary',
         size = 'md',
+        disabled = false,
         onclick,
         children,
         icon
     }: {
         variant?: 'primary' | 'danger' | 'secondary';
         size?: 'sm' | 'md';
+        disabled?: boolean;
         onclick?: () => void;
         children: Snippet;
         icon?: Snippet;
@@ -17,6 +19,7 @@
 </script>
 
 <button
+        disabled={disabled}
         class="btn btn-{variant} btn-{size}"
         {onclick}
 >

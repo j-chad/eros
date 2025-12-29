@@ -84,3 +84,23 @@ func (h *Handler) DeleteFavourChoice(w http.ResponseWriter, r *http.Request) {
 
 	response.NoContent(w)
 }
+
+func (h *Handler) UpdateFavourCount(w http.ResponseWriter, r *http.Request) {
+	var count int
+	if err := json.NewDecoder(r.Body).Decode(&count); err != nil {
+		response.Error(w, apierror.BadRequest("invalid request body"))
+		return
+	}
+
+	if count < 0 {
+		response.Error(w, apierror.BadRequest("favour count cannot be negative"))
+		return
+	}
+
+	if err := h.adminService.UpdateFavourCount(r.Context(), count); err != nil {
+		response.Error(w, apierror.UnknownInternalError(err))
+		return
+	}
+
+	response.NoContent(w)
+}
