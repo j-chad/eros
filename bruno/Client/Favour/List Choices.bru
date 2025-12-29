@@ -1,0 +1,16 @@
+meta {
+  name: List Choices
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{scheme}}{{host}}/api/favours/choices
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
