@@ -4,16 +4,19 @@
     let {
         onclick,
         title,
-        children
+        children,
+        variant
     }: {
         onclick?: () => void;
         title?: string;
         children: Snippet;
+        variant?: 'default' | 'primary'; // default is normal, primary is purple button
     } = $props();
 </script>
 
 <button
         class="icon-btn"
+        class:primary={variant === 'primary'}
         {onclick}
         {title}
 >
@@ -35,5 +38,15 @@
 
     .icon-btn:hover {
         background: #e5e7eb;
+    }
+
+    .icon-btn.primary {
+        background: #8b5cf6;
+        border-color: #7c3aed;
+        color: white;
+    }
+
+    .icon-btn.primary:hover {
+        background: #7c3aed;
     }
 </style>
