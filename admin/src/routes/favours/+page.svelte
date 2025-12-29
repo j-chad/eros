@@ -8,15 +8,16 @@
 
     let {data} = $props();
 
+    let requests = $state(data.requests);
+
     async function handleFavourUpdate(newCount: number) {
         await api.favours.updateFavourCount(newCount)
     }
 
     async function handleFulfilmentChange(favourId: string, fulfilled: boolean) {
-        let favour = data.requests.find(f => f.id === favourId);
-        if (favour) {
-            favour.fulfilled = fulfilled;
-        }
+        requests = requests.map(favour =>
+            favour.id === favourId ? {...favour, fulfilled} : favour
+        );
         // await api.favours.updateFulfilmentStatus(favourId, fulfilled);
     }
 </script>
@@ -27,7 +28,7 @@
     <FavourCounter count={data.favourCount} onUpdate={handleFavourUpdate}/>
     <FavourChoiceTable choices={data.choices}/>
     <Card title="Fulfilment Requests">
-        <FulfilmentTable onToggleFulfilled={handleFulfilmentChange} favours={data.requests}/>
+        <FulfilmentTable onToggleFulfilled={handleFulfilmentChange} favours={requests}/>
     </Card>
 </div>
 
