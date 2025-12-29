@@ -28,3 +28,11 @@ export interface FavourChoice {
     updated_at: string; // ISO 8601 date string
 }
 export type CreateFavourChoicePayload = Omit<FavourChoice, 'id' | 'created_at' | 'updated_at'>;
+
+export type Favour = {
+    id: string;
+    choice: string;
+    message: string | null;
+    requestedAt: string;
+    fulfilled: boolean;
+};
