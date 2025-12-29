@@ -18,11 +18,12 @@ type Handler struct {
 func NewHandler(
 	authService *service.AuthService,
 	adminService *service.AdminService,
+	favourService *service.FavourService,
 ) *Handler {
 	handler := &Handler{
 		auth:   authService,
 		admin:  admin.NewHandler(adminService),
-		client: client.NewHandler(authService),
+		client: client.NewHandler(authService, favourService),
 	}
 	return handler
 }
@@ -38,11 +39,14 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	adminMux.HandleFunc("GET /api/admin/devices", h.admin.ListDevices)
 	adminMux.HandleFunc("DELETE /api/admin/devices/{id}", h.admin.RevokeDevice)
 	adminMux.HandleFunc("PATCH /api/admin/devices/{id}", h.admin.UpdateDeviceInfo)
+	adminMux.HandleFunc("POST /api/admin/favours/choices", h.admin.CreateFavourChoice)
+	adminMux.HandleFunc("PUT /api/admin/favours/choices/{id}", h.admin.UpdateFavourChoice)
+	adminMux.HandleFunc("DELETE /api/admin/favours/choices/{id}", h.admin.DeleteFavourChoice)
 	adminMux.HandleFunc("/", routeNotFound)
 	mux.Handle("/api/admin/", withAdminAuth(adminMux, *h.auth))
 
 	clientMux := http.NewServeMux()
-	clientMux.HandleFunc("GET /api/test", h.client.TestHandler)
+	clientMux.HandleFunc("GET /api/favours/choices", h.client.ListFavourChoices)
 	mux.Handle("/api/", withClientAuth(clientMux, *h.auth))
 
 	mux.HandleFunc("/", routeNotFound)

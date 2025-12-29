@@ -1,0 +1,22 @@
+meta {
+  name: Create Favour
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{scheme}}{{host}}/api/admin/favours/choices
+  body: multipartForm
+  auth: inherit
+}
+
+body:multipart-form {
+  label: test
+  description: 
+  can_message: true
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

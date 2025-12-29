@@ -12,6 +12,7 @@ type Repository interface {
 
 	RegistrationRepository
 	DeviceRepository
+	FavourChoiceRepository
 }
 
 type RegistrationRepository interface {
@@ -26,4 +27,12 @@ type DeviceRepository interface {
 	ListDevices(ctx context.Context) ([]models.Device, error)
 	DeleteDevice(ctx context.Context, deviceID string) error
 	UpdateDeviceInfo(ctx context.Context, deviceID string, deviceInfo string) error
+	UpdateDeviceLastSeenByToken(ctx context.Context, token string, lastSeen time.Time) error
+}
+
+type FavourChoiceRepository interface {
+	CreateFavourChoice(ctx context.Context, choice *models.FavourChoice) error // The ID of the newly created choice is set in the provided choice object.
+	UpdateFavourChoice(ctx context.Context, choice models.FavourChoice) error
+	DeleteFavourChoice(ctx context.Context, choiceID string) error
+	ListFavourChoices(ctx context.Context) ([]models.FavourChoice, error)
 }

@@ -1,0 +1,26 @@
+meta {
+  name: Update Favour
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{scheme}}{{host}}/api/admin/favours/choices/:id
+  body: multipartForm
+  auth: inherit
+}
+
+params:path {
+  id: 1
+}
+
+body:multipart-form {
+  label: test
+  description: asdads
+  can_message: true
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
