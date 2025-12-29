@@ -7,6 +7,7 @@
     import DateDisplay from "$lib/components/DateDisplay.svelte";
     import Table from "$lib/components/Table.svelte";
     import EditableField from "$lib/components/EditableField.svelte";
+    import Header from "$lib/components/Header.svelte";
 
     let {data} = $props();
 
@@ -45,113 +46,100 @@
     }
 </script>
 
-<div class="container">
-    <h2>Registration</h2>
+<Header title="Registration Management"/>
 
-    <!-- Registration Code Section -->
-    <Card title="Registration Code">
-        {#snippet actions()}
-            <Button variant="primary" onclick={handleCreateCode}>
-                {#snippet icon()}
-                    <Plus size={16}/>
-                {/snippet}
-                New Code
-            </Button>
-            {#if registrationCode}
-                <Button variant="danger" onclick={handleDeleteCode}>
-                    {#snippet icon()}
-                        <Trash2 size={16}/>
-                    {/snippet}
-                    Delete
-                </Button>
-            {/if}
-        {/snippet}
-
+<!-- Registration Code Section -->
+<Card title="Registration Code">
+    {#snippet actions()}
+        <Button variant="primary" onclick={handleCreateCode}>
+            {#snippet icon()}
+                <Plus size={16}/>
+            {/snippet}
+            New Code
+        </Button>
         {#if registrationCode}
-            <div class="form-group">
-                <label>Code</label>
-                <CopyableCode code={registrationCode.code}/>
-            </div>
-
-            <div class="grid-2">
-                <div>
-                    <label>Created</label>
-                    <DateDisplay datetime={registrationCode.created_at} inline/>
-                </div>
-                <div>
-                    <label>Expires</label>
-                    <DateDisplay expiry datetime={registrationCode.expires_at} inline/>
-                </div>
-            </div>
-        {:else}
-            <div class="empty">No active registration code. Click "New Code" to generate one.</div>
-        {/if}
-    </Card>
-
-    <!-- Devices Section -->
-    <Card title="Registered Devices">
-        {#snippet actions()}
-            <Button variant="secondary" onclick={handleRefreshDevices}>
+            <Button variant="danger" onclick={handleDeleteCode}>
                 {#snippet icon()}
-                    <RefreshCw size={16}/>
+                    <Trash2 size={16}/>
                 {/snippet}
-                Refresh
+                Delete
             </Button>
-        {/snippet}
-        {#if devices.length > 0}
-            <Table headers={['Device Info', 'Registered', 'Last Seen', 'Expires', 'Actions']}>
-                {#each devices as device}
-                    <tr>
-                        <td>
-                            <div class="device-info">
-                                <EditableField bind:value={device.device_info}
-                                               onSave={(newValue) => handleUpdateDeviceInfo(device.id, newValue)}
-                                               multiline={true}
-                                />
-                            </div>
-                        </td>
-                        <td class="nowrap">
-                            <DateDisplay datetime={device.registered_at}/>
-                        </td>
-                        <td class="nowrap">
-                            <DateDisplay datetime={device.last_seen_at}/>
-                        </td>
-                        <td class="nowrap">
-                            <DateDisplay datetime={device.expires_at} expiry/>
-                        </td>
-                        <td>
-                            <Button
-                                    variant="danger"
-                                    size="sm"
-                                    onclick={() => handleDeleteDevice(device.id)}
-                            >
-                                {#snippet icon()}
-                                    <Trash2 size={14}/>
-                                {/snippet}
-                                Remove
-                            </Button>
-                        </td>
-                    </tr>
-                {/each}
-            </Table>
-        {:else}
-            <div class="empty">No devices registered yet.</div>
         {/if}
-    </Card>
-</div>
+    {/snippet}
+
+    {#if registrationCode}
+        <div class="form-group">
+            <label>Code</label>
+            <CopyableCode code={registrationCode.code}/>
+        </div>
+
+        <div class="grid-2">
+            <div>
+                <label>Created</label>
+                <DateDisplay datetime={registrationCode.created_at} inline/>
+            </div>
+            <div>
+                <label>Expires</label>
+                <DateDisplay expiry datetime={registrationCode.expires_at} inline/>
+            </div>
+        </div>
+    {:else}
+        <div class="empty">No active registration code. Click "New Code" to generate one.</div>
+    {/if}
+</Card>
+
+<!-- Devices Section -->
+<Card title="Registered Devices">
+    {#snippet actions()}
+        <Button variant="secondary" onclick={handleRefreshDevices}>
+            {#snippet icon()}
+                <RefreshCw size={16}/>
+            {/snippet}
+            Refresh
+        </Button>
+    {/snippet}
+    {#if devices.length > 0}
+        <Table headers={['Device Info', 'Registered', 'Last Seen', 'Expires', 'Actions']}>
+            {#each devices as device}
+                <tr>
+                    <td>
+                        <div class="device-info">
+                            <EditableField bind:value={device.device_info}
+                                           onSave={(newValue) => handleUpdateDeviceInfo(device.id, newValue)}
+                                           multiline={true}
+                            />
+                        </div>
+                    </td>
+                    <td class="nowrap">
+                        <DateDisplay datetime={device.registered_at}/>
+                    </td>
+                    <td class="nowrap">
+                        <DateDisplay datetime={device.last_seen_at}/>
+                    </td>
+                    <td class="nowrap">
+                        <DateDisplay datetime={device.expires_at} expiry/>
+                    </td>
+                    <td>
+                        <Button
+                                variant="danger"
+                                size="sm"
+                                onclick={() => handleDeleteDevice(device.id)}
+                        >
+                            {#snippet icon()}
+                                <Trash2 size={14}/>
+                            {/snippet}
+                            Remove
+                        </Button>
+                    </td>
+                </tr>
+            {/each}
+        </Table>
+    {:else}
+        <div class="empty">No devices registered yet.</div>
+    {/if}
+</Card>
 
 <style>
-    .container {
-        max-width: 100%;
-    }
-
-    h2 {
-        font-size: 2rem;
-        font-weight: bold;
-        color: #1f2937;
-        margin-bottom: 1.5rem;
-    }
-
     .empty {
         text-align: center;
         color: #6b7280;
@@ -173,11 +161,6 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1.5rem;
-    }
-
-    .info-text {
-        font-size: 0.875rem;
-        color: #1f2937;
     }
 
     td {
