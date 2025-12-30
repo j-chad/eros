@@ -43,12 +43,16 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	adminMux.HandleFunc("PUT /api/admin/favours/choices/{id}", h.admin.UpdateFavourChoice)
 	adminMux.HandleFunc("DELETE /api/admin/favours/choices/{id}", h.admin.DeleteFavourChoice)
 	adminMux.HandleFunc("PUT /api/admin/favours", h.admin.UpdateFavourCount)
+	adminMux.HandleFunc("PATCH /api/admin/favours/requests/{id}", h.admin.UpdateFavourRequestStatus)
 	adminMux.HandleFunc("/", routeNotFound)
 	mux.Handle("/api/admin/", withAdminAuth(adminMux, *h.auth))
 
 	clientMux := http.NewServeMux()
 	clientMux.HandleFunc("GET /api/favours/choices", h.client.ListFavourChoices)
 	clientMux.HandleFunc("GET /api/favours", h.client.GetFavourCount)
+	clientMux.HandleFunc("GET /api/favours/requests", h.client.ListFavourRequests)
+	clientMux.HandleFunc("POST /api/favours/request", h.client.RequestFavour)
+	clientMux.HandleFunc("DELETE /api/favours/request/{id}", h.client.DeleteFavourRequest)
 	mux.Handle("/api/", withClientAuth(clientMux, *h.auth))
 
 	mux.HandleFunc("/", routeNotFound)
