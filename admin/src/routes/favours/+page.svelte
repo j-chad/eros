@@ -10,14 +10,16 @@
 
     let requests = $state(data.requests);
 
-    async function handleFavourUpdate(newCount: number) {
-        await api.favours.updateFavourCount(newCount)
+    async function handleFavourCountDelta(delta: number) {
+        const newTotal = data.favourCount.total + delta;
+        await api.favours.updateFavourCount(newTotal)
     }
 
     async function handleFulfilmentChange(favourId: string, fulfilled: boolean) {
         await api.favours.updateFavourRequestFulfilment(favourId, fulfilled);
+        const fulfilled_at = fulfilled ? new Date().toISOString() : null;
         requests = requests.map(favour =>
-            favour.id === favourId ? {...favour, fulfilled_at: fulfilled ? new Date().toISOString() : null} : favour
+            favour.id === favourId ? {...favour, fulfilled_at} : favour
         );
     }
 </script>
@@ -25,7 +27,7 @@
 <Header title="Favour Management"/>
 
 <div class="stack">
-    <FavourCounter count={data.favourCount} onUpdate={handleFavourUpdate}/>
+    <FavourCounter count={data.favourCount.remaining} onUpdate={handleFavourCountDelta}/>
     <FavourChoiceTable choices={data.choices}/>
     <Card title="Fulfilment Requests">
         <FulfilmentTable onToggleFulfilled={handleFulfilmentChange} favours={requests}/>
