@@ -29,10 +29,17 @@ export interface FavourChoice {
 }
 export type CreateFavourChoicePayload = Omit<FavourChoice, 'id' | 'created_at' | 'updated_at'>;
 
+export type FavourCount = {
+    total: number;
+    remaining: number;
+};
+
 export type Favour = {
     id: string;
-    choice: string;
+    choice_id: string;
+    choice_label: string;
+    choice_description: string | null;
     message: string | null;
-    requestedAt: string;
-    fulfilled: boolean;
+    requested_at: string;
+    fulfilled_at: boolean | null;
 };

@@ -1,4 +1,12 @@
-import type {APIError, CreateFavourChoicePayload, Device, FavourChoice, RegistrationToken} from "$lib/types";
+import type {
+    APIError,
+    CreateFavourChoicePayload,
+    Device,
+    Favour,
+    FavourChoice,
+    FavourCount,
+    RegistrationToken
+} from "$lib/types";
 import {auth} from "$lib/auth.svelte";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api';
@@ -81,11 +89,19 @@ export const api = {
                 method: 'PUT',
                 body: JSON.stringify(choice),
             }),
-        getFavourCount: async () => request<number>('/favours', {method: 'GET'}),
-        updateFavourCount: async (count: number) =>
+        getFavourCount: async () => request<FavourCount>('/favours', {method: 'GET'}),
+        updateFavourCount: async (total: number) =>
             request('/admin/favours', {
                 method: 'PUT',
-                body: JSON.stringify(count),
+                body: JSON.stringify({
+                    count: total,
+                }),
             }),
+        updateFavourRequestFulfilment: async (favourId: string, fulfilled: boolean) =>
+            request(`/admin/favours/requests/${favourId}`, {
+                method: 'PATCH',
+                body: JSON.stringify({fulfilled}),
+            }),
+        listFavourRequests: async () => request<Array<Favour>>('/favours/requests', {method: 'GET'}),
     }
 }

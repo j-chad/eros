@@ -15,10 +15,10 @@
     }
 
     async function handleFulfilmentChange(favourId: string, fulfilled: boolean) {
+        await api.favours.updateFavourRequestFulfilment(favourId, fulfilled);
         requests = requests.map(favour =>
-            favour.id === favourId ? {...favour, fulfilled} : favour
+            favour.id === favourId ? {...favour, fulfilled_at: fulfilled ? new Date().toISOString() : null} : favour
         );
-        // await api.favours.updateFulfilmentStatus(favourId, fulfilled);
     }
 </script>
 

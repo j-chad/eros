@@ -17,9 +17,11 @@ type FavourCount struct {
 }
 
 type FavourRequest struct {
-	ID          string     `json:"id"`
-	ChoiceID    string     `json:"choice_id"`
-	Message     *string    `json:"message"`
-	RequestedAt time.Time  `json:"requested_at"`
-	FulfilledAt *time.Time `json:"fulfilled_at"`
+	ID                string     `json:"id"`
+	ChoiceID          string     `json:"choice_id"`
+	ChoiceLabel       string     `json:"choice_label"`
+	ChoiceDescription *string    `json:"choice_description"`
+	Message           *string    `json:"message"`
+	RequestedAt       time.Time  `json:"requested_at"`
+	FulfilledAt       *time.Time `json:"fulfilled_at"`
 }

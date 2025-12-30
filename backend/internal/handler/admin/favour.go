@@ -112,20 +112,19 @@ func (h *Handler) UpdateFavourRequestStatus(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	fulfil := r.FormValue("fulfil")
-	if fulfil == "" {
-		response.Error(w, apierror.BadRequest("fulfil parameter is required"))
+	var model struct {
+		Fulfilled bool `json:"fulfilled"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&model); err != nil {
+		response.Error(w, apierror.BadRequest("invalid request body"))
 		return
 	}
 
 	var err error
-	if fulfil == "true" {
+	if model.Fulfilled {
 		err = h.adminService.FulfilFavourRequest(r.Context(), requestID)
-	} else if fulfil == "false" {
-		err = h.adminService.UnfulfilFavourRequest(r.Context(), requestID)
 	} else {
-		response.Error(w, apierror.BadRequest("fulfil parameter must be 'true' or 'false'"))
-		return
+		err = h.adminService.UnfulfilFavourRequest(r.Context(), requestID)
 	}
 
 	if err != nil {
