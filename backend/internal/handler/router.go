@@ -50,8 +50,8 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	clientMux := http.NewServeMux()
 	clientMux.HandleFunc("GET /api/favours/choices", h.client.ListFavourChoices)
 	clientMux.HandleFunc("GET /api/favours", h.client.GetFavourCount)
-	clientMux.HandleFunc("GET /api/favours/requests", h.client.ListFavourRequests)
 	clientMux.HandleFunc("POST /api/favours/request", h.client.RequestFavour)
+	clientMux.HandleFunc("GET /api/favours/requests", h.client.ListFavourRequests)
 	clientMux.HandleFunc("DELETE /api/favours/request/{id}", h.client.DeleteFavourRequest)
 	mux.Handle("/api/", withClientAuth(clientMux, *h.auth))
 

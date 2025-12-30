@@ -104,3 +104,34 @@ func (h *Handler) UpdateFavourCount(w http.ResponseWriter, r *http.Request) {
 
 	response.NoContent(w)
 }
+
+func (h *Handler) UpdateFavourRequestStatus(w http.ResponseWriter, r *http.Request) {
+	requestID := r.PathValue("id")
+	if requestID == "" {
+		response.Error(w, apierror.BadRequest("favour request ID is required"))
+		return
+	}
+
+	fulfil := r.FormValue("fulfil")
+	if fulfil == "" {
+		response.Error(w, apierror.BadRequest("fulfil parameter is required"))
+		return
+	}
+
+	var err error
+	if fulfil == "true" {
+		err = h.adminService.FulfilFavourRequest(r.Context(), requestID)
+	} else if fulfil == "false" {
+		err = h.adminService.UnfulfilFavourRequest(r.Context(), requestID)
+	} else {
+		response.Error(w, apierror.BadRequest("fulfil parameter must be 'true' or 'false'"))
+		return
+	}
+
+	if err != nil {
+		response.Error(w, apierror.UnknownInternalError(err))
+		return
+	}
+
+	response.NoContent(w)
+}

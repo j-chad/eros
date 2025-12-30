@@ -75,3 +75,10 @@ func (s *AdminService) DeleteFavourChoice(ctx context.Context, choiceID string) 
 func (s *AdminService) UpdateFavourCount(ctx context.Context, count int) error {
 	return s.repo.UpdateFavourCount(ctx, count)
 }
+
+func (s *AdminService) FulfilFavourRequest(ctx context.Context, requestID string) error {
+	return s.repo.FulfilFavourRequest(ctx, requestID)
+}
+func (s *AdminService) UnfulfilFavourRequest(ctx context.Context, requestID string) error {
+	return s.repo.UnfulfilFavourRequest(ctx, requestID)
+}
