@@ -93,9 +93,7 @@ export const api = {
         updateFavourCount: async (total: number) =>
             request('/admin/favours', {
                 method: 'PUT',
-                body: JSON.stringify({
-                    count: total,
-                }),
+                body: JSON.stringify(total),
             }),
         updateFavourRequestFulfilment: async (favourId: string, fulfilled: boolean) =>
             request(`/admin/favours/requests/${favourId}`, {

@@ -41,5 +41,5 @@ export type Favour = {
     choice_description: string | null;
     message: string | null;
     requested_at: string;
-    fulfilled_at: boolean | null;
+    fulfilled_at: string | null;
 };

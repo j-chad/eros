@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Plus, Minus, Check, X } from 'lucide-svelte';
+    import { Plus, Minus } from 'lucide-svelte';
 
     let {
         count = $bindable(0),
@@ -47,7 +47,7 @@
 
         try {
             if (onUpdate) {
-                await onUpdate(pendingCount);
+                await onUpdate(delta);
             }
             count = pendingCount;
             originalCount = pendingCount;
