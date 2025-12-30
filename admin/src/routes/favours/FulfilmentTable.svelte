@@ -1,4 +1,3 @@
-<!-- src/lib/components/FulfilmentTable.svelte -->
 <script lang="ts">
     import { Check, X, MessageSquare } from 'lucide-svelte';
     import Table from "$lib/components/Table.svelte";
@@ -18,7 +17,7 @@
     let loading = $state<string | null>(null);
 
     let filteredFavours = $derived(
-        favours.filter(f => f.fulfilled === showFulfilled)
+        favours.filter(f => showFulfilled ? f.fulfilled_at !== null : f.fulfilled_at === null)
     );
 
     async function handleToggle(favourId: string, currentState: boolean) {
@@ -39,14 +38,14 @@
                     class:active={!showFulfilled}
                     onclick={() => showFulfilled = false}
             >
-                Pending ({favours.filter(f => !f.fulfilled).length})
+                Pending ({favours.filter(f => f.fulfilled_at === null).length})
             </button>
             <button
                     class="toggle-btn"
                     class:active={showFulfilled}
                     onclick={() => showFulfilled = true}
             >
-                Fulfilled ({favours.filter(f => f.fulfilled).length})
+                Fulfilled ({favours.filter(f => f.fulfilled_at !== null).length})
             </button>
         </div>
     </div>
@@ -55,8 +54,8 @@
         <Table headers={['Choice', 'Message', 'Requested', 'Status']}>
             {#each filteredFavours as favour}
                 <tr>
-                    <td>
-                        <div class="choice">{favour.choice}</div>
+                    <td title={favour.choice_description ?? ''}>
+                        <div class="choice">{favour.choice_label}</div>
                     </td>
                     <td>
                         {#if favour.message}
@@ -68,17 +67,17 @@
                             <span class="no-message">No message</span>
                         {/if}
                     </td>
-                    <td class="nowrap"><DateDisplay datetime={favour.requestedAt}/></td>
+                    <td class="nowrap"><DateDisplay datetime={favour.requested_at}/></td>
                     <td>
                         <Button
-                                variant={favour.fulfilled ? 'secondary' : 'primary'}
+                                variant={favour.fulfilled_at !== null ? 'secondary' : 'primary'}
                                 size="sm"
-                                onclick={() => handleToggle(favour.id, favour.fulfilled)}
+                                onclick={() => handleToggle(favour.id, favour.fulfilled_at !== null)}
                         >
                             {#snippet icon()}
                                 {#if loading === favour.id}
                                     <div class="spinner"></div>
-                                {:else if favour.fulfilled}
+                                {:else if favour.fulfilled_at !== null}
                                     <X size={14} />
                                 {:else}
                                     <Check size={14} />
@@ -86,7 +85,7 @@
                             {/snippet}
                             {loading === favour.id
                                 ? 'Updating...'
-                                : favour.fulfilled
+                                : favour.fulfilled_at !== null
                                     ? 'Mark Pending'
                                     : 'Mark Fulfilled'}
                         </Button>

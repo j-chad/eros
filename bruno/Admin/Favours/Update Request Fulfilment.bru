@@ -6,12 +6,18 @@ meta {
 
 patch {
   url: {{scheme}}{{host}}/api/admin/favours/requests/:id
-  body: formUrlEncoded
+  body: json
   auth: inherit
 }
 
 params:path {
   id: 2
+}
+
+body:json {
+  {
+    "fulfilled": true
+  }
 }
 
 body:form-urlencoded {

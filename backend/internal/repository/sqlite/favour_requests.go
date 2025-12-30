@@ -26,8 +26,9 @@ func (s *sqliteDB) CreateFavourRequest(ctx context.Context, request *models.Favo
 
 func (s *sqliteDB) ListFavourRequests(ctx context.Context) ([]models.FavourRequest, error) {
 	rows, err := s.executor().QueryContext(ctx, `
-		SELECT id, favour_choice_id, message, requested_at, fulfilled_at
-		FROM favour_requests
+		SELECT fr.id, fr.favour_choice_id, fr.message, fr.requested_at, fr.fulfilled_at, fc.label, fc.description
+		FROM favour_requests as fr
+		INNER JOIN main.favour_choice fc on fc.id = fr.favour_choice_id
 		ORDER BY requested_at DESC
 	`)
 	if err != nil {
@@ -38,7 +39,7 @@ func (s *sqliteDB) ListFavourRequests(ctx context.Context) ([]models.FavourReque
 	requests := make([]models.FavourRequest, 0)
 	for rows.Next() {
 		var request models.FavourRequest
-		if err := rows.Scan(&request.ID, &request.ChoiceID, &request.Message, &request.RequestedAt, &request.FulfilledAt); err != nil {
+		if err := rows.Scan(&request.ID, &request.ChoiceID, &request.Message, &request.RequestedAt, &request.FulfilledAt, &request.ChoiceLabel, &request.ChoiceDescription); err != nil {
 			return nil, err
 		}
 		requests = append(requests, request)
