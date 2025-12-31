@@ -32,9 +32,8 @@ CREATE TABLE IF NOT EXISTS device
 -- GRAPH NODES AND EDGES
 -- -----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS nodes (
+CREATE TABLE IF NOT EXISTS node (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    reveal_id   INTEGER NOT NULL,
 
     type        TEXT NOT NULL, -- E.G. START | LOCATION | CODE | CHOICE | REWARD
 
@@ -58,17 +57,18 @@ CREATE TABLE IF NOT EXISTS edge (
     created_at   DATETIME NOT NULL DEFAULT (datetime('now')),
     updated_at   DATETIME NOT NULL DEFAULT (datetime('now')),
 
-    FOREIGN KEY (from_node_id) REFERENCES nodes(id) ON DELETE CASCADE,
-    FOREIGN KEY (to_node_id) REFERENCES nodes(id) ON DELETE CASCADE,
+    FOREIGN KEY (from_node_id) REFERENCES node(id) ON DELETE CASCADE,
+    FOREIGN KEY (to_node_id) REFERENCES node(id) ON DELETE CASCADE,
 
-    UNIQUE (from_node_id, choice_label)
+    UNIQUE (from_node_id, choice_label),
+    CHECK (from_node_id != to_node_id)
 );
 
 CREATE TABLE IF NOT EXISTS node_start (
     node_id INTEGER PRIMARY KEY,
     starting_at DATETIME NOT NULL,
 
-    FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE
+    FOREIGN KEY (node_id) REFERENCES node(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS node_location_gate (
@@ -78,10 +78,7 @@ CREATE TABLE IF NOT EXISTS node_location_gate (
     longitude REAL NOT NULL,
     radius_meters INTEGER NOT NULL,
 
-    location_name TEXT NOT NULL,
-    description TEXT,
-
-    FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE
+    FOREIGN KEY (node_id) REFERENCES node(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS node_code_gate (
@@ -89,30 +86,20 @@ CREATE TABLE IF NOT EXISTS node_code_gate (
 
     code TEXT NOT NULL,
 
-    FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS node_choice (
-    node_id INTEGER PRIMARY KEY,
-
-    prompt TEXT NOT NULL,
-
-    FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE
+    FOREIGN KEY (node_id) REFERENCES node(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS node_reward (
     node_id INTEGER PRIMARY KEY,
 
     reward_type TEXT NOT NULL,
-    title TEXT NOT NULL,
 
     content_html TEXT,
-    content_media_url TEXT,
     content_media_type TEXT,
 
     give_favours INTEGER NOT NULL DEFAULT 0,
 
-    FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE
+    FOREIGN KEY (node_id) REFERENCES node(id) ON DELETE CASCADE
 );
 
 -- -----------------------------------------------------------------------------
@@ -168,10 +155,10 @@ END;
 
 CREATE TRIGGER IF NOT EXISTS trg_update_node_updated_at
     AFTER UPDATE
-    ON nodes
+    ON node
     FOR EACH ROW
 BEGIN
-    UPDATE nodes SET updated_at = datetime('now') WHERE id = NEW.id;
+    UPDATE node SET updated_at = datetime('now') WHERE id = NEW.id;
 END;
 
 CREATE TRIGGER IF NOT EXISTS trg_update_edge_updated_at
