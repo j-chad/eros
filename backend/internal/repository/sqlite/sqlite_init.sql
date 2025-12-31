@@ -28,118 +28,92 @@ CREATE TABLE IF NOT EXISTS device
     expires_at    DATETIME NOT NULL
 );
 
--- ----------------------------------------------------------------------------
--- REVEALS
--- ----------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
+-- GRAPH NODES AND EDGES
+-- -----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS reveals
-(
+CREATE TABLE IF NOT EXISTS nodes (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    order_index INTEGER  NOT NULL, -- Explicit ordering (allows ties)
-    title       TEXT     NOT NULL, -- Display name
-    description TEXT,              -- Optional flavor text
-    not_before  DATE,              -- Can be null if it can only be revealed by a choice
+    reveal_id   INTEGER NOT NULL,
+
+    type        TEXT NOT NULL, -- E.G. START | LOCATION | CODE | CHOICE | REWARD
+
+    title       TEXT,
+    description TEXT,
+
+    -- Common state
+    unlocked_at DATETIME,
+
     created_at  DATETIME NOT NULL DEFAULT (datetime('now')),
     updated_at  DATETIME NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE INDEX IF NOT EXISTS idx_reveals_order ON reveals (order_index);
+CREATE TABLE IF NOT EXISTS edge (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    from_node_id INTEGER NOT NULL,
+    to_node_id   INTEGER NOT NULL,
 
--- ----------------------------------------------------------------------------
--- UNLOCKS (Gates)
--- ----------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS gates
-(
-    id               INTEGER PRIMARY KEY AUTOINCREMENT,
-    reveal_id        INTEGER  NOT NULL, -- Which reveal this gates
-    unlock_order     INTEGER  NOT NULL, -- Evaluation order within reveal (0-indexed)
-    type             TEXT     NOT NULL, -- LOCATION | CODE | CHOICE
-
-    -- LOCATION fields
-    latitude         REAL,
-    longitude        REAL,
-    radius_meters    INTEGER,
-    location_name    TEXT,
-
-    -- CODE fields
-    code_hash        TEXT,
-
-    -- CHOICE fields
-    choice_prompt    TEXT,
-    chosen_option_id INTEGER,
-
-    created_at       DATETIME NOT NULL DEFAULT (datetime('now')),
-    updated_at       DATETIME NOT NULL DEFAULT (datetime('now')),
-    unlocked_at      DATETIME,
-
-    FOREIGN KEY (reveal_id) REFERENCES reveals (id) ON DELETE CASCADE,
-    FOREIGN KEY (chosen_option_id) REFERENCES choice_options (id) ON DELETE SET NULL,
-
-    -- Enforce type-specific constraints
-    CHECK (
-        (type = 'LOCATION' AND latitude IS NOT NULL AND longitude IS NOT NULL AND radius_meters IS NOT NULL) OR
-        (type = 'CODE' AND code_hash IS NOT NULL) OR
-        (type = 'CHOICE' AND choice_prompt IS NOT NULL)
-        )
-);
-
-CREATE INDEX IF NOT EXISTS idx_unlocks_reveal ON gates (reveal_id, unlock_order);
-
--- Choice options (only for CHOICE gates)
-CREATE TABLE IF NOT EXISTS choice_options
-(
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    gate_id      INTEGER  NOT NULL,
-    option_order INTEGER  NOT NULL,
-    label        TEXT     NOT NULL,
-
-    reveal_id    INTEGER  NOT NULL,
+    choice_label    TEXT, -- For choice edges
 
     created_at   DATETIME NOT NULL DEFAULT (datetime('now')),
     updated_at   DATETIME NOT NULL DEFAULT (datetime('now')),
 
-    FOREIGN KEY (gate_id) REFERENCES gates (id) ON DELETE CASCADE,
-    FOREIGN KEY (reveal_id) REFERENCES reveals (id) ON DELETE SET NULL,
+    FOREIGN KEY (from_node_id) REFERENCES nodes(id) ON DELETE CASCADE,
+    FOREIGN KEY (to_node_id) REFERENCES nodes(id) ON DELETE CASCADE,
 
-    UNIQUE (gate_id, option_order)
+    UNIQUE (from_node_id, choice_label)
 );
 
--- ----------------------------------------------------------------------------
--- REWARDS
--- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS node_start (
+    node_id INTEGER PRIMARY KEY,
+    starting_at DATETIME NOT NULL,
 
-CREATE TABLE IF NOT EXISTS rewards
-(
-    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
-    type               TEXT     NOT NULL, -- CONTENT | FAVOUR
-    title              TEXT     NOT NULL, -- Display name
-    reward_order       INTEGER  NOT NULL, -- Display order within reveal
-
-    -- TYPE-SPECIFIC FIELDS
-
-    -- CONTENT fields (also used for gift cards & experience tokens via HTML)
-    content_html       TEXT,              -- Sanitized HTML (can include styled gift cards, etc.)
-    content_media_url  TEXT,              -- Optional image/video/audio URL
-    content_media_type TEXT,              -- MIME type
-
-    -- FAVOUR fields
-    give_favours       INTEGER  NOT NULL DEFAULT 0,
-
-    created_at         DATETIME NOT NULL DEFAULT (datetime('now')),
-    updated_at         DATETIME NOT NULL DEFAULT (datetime('now')),
-    unlocked_at        DATETIME,
-
-    FOREIGN KEY (reveal_id) REFERENCES reveals (id) ON DELETE CASCADE,
-
-    -- Type-specific constraints
-    CHECK (
-        (type = 'CONTENT' AND content_html IS NOT NULL) OR
-        (type = 'FAVOUR' AND give_favours > 0)
-        )
+    FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_rewards_reveal ON rewards (reveal_id, reward_order);
+CREATE TABLE IF NOT EXISTS node_location_gate (
+    node_id INTEGER PRIMARY KEY,
+
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
+    radius_meters INTEGER NOT NULL,
+
+    location_name TEXT NOT NULL,
+    description TEXT,
+
+    FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS node_code_gate (
+    node_id INTEGER PRIMARY KEY,
+
+    code TEXT NOT NULL,
+
+    FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS node_choice (
+    node_id INTEGER PRIMARY KEY,
+
+    prompt TEXT NOT NULL,
+
+    FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS node_reward (
+    node_id INTEGER PRIMARY KEY,
+
+    reward_type TEXT NOT NULL,
+    title TEXT NOT NULL,
+
+    content_html TEXT,
+    content_media_url TEXT,
+    content_media_type TEXT,
+
+    give_favours INTEGER NOT NULL DEFAULT 0,
+
+    FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE
+);
 
 -- -----------------------------------------------------------------------------
 -- FAVOURS
@@ -176,38 +150,6 @@ CREATE TABLE IF NOT EXISTS favour_requests
 -- ----------------------------------------------------------------------------
 -- TRIGGERS
 -- ----------------------------------------------------------------------------
-CREATE TRIGGER IF NOT EXISTS trg_update_reveal_updated_at
-    AFTER UPDATE
-    ON reveals
-    FOR EACH ROW
-BEGIN
-    UPDATE reveals SET updated_at = datetime('now') WHERE id = NEW.id;
-END;
-
-CREATE TRIGGER IF NOT EXISTS trg_update_gate_updated_at
-    AFTER UPDATE
-    ON gates
-    FOR EACH ROW
-BEGIN
-    UPDATE reveals SET updated_at = datetime('now') WHERE id = NEW.reveal_id;
-END;
-
-CREATE TRIGGER IF NOT EXISTS trg_update_choice_option_updated_at
-    AFTER UPDATE
-    ON choice_options
-    FOR EACH ROW
-BEGIN
-    UPDATE reveals SET updated_at = datetime('now') WHERE id = NEW.reveal_id;
-END;
-
-CREATE TRIGGER IF NOT EXISTS trg_update_reward_updated_at
-    AFTER UPDATE
-    ON rewards
-    FOR EACH ROW
-BEGIN
-    UPDATE reveals SET updated_at = datetime('now') WHERE id = NEW.reveal_id;
-END;
-
 CREATE TRIGGER IF NOT EXISTS trg_update_favour_count_updated_at
     AFTER UPDATE
     ON favour_count
@@ -222,4 +164,20 @@ CREATE TRIGGER IF NOT EXISTS trg_update_favour_choice_updated_at
     FOR EACH ROW
 BEGIN
     UPDATE favour_choice SET updated_at = datetime('now') WHERE id = NEW.id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_update_node_updated_at
+    AFTER UPDATE
+    ON nodes
+    FOR EACH ROW
+BEGIN
+    UPDATE nodes SET updated_at = datetime('now') WHERE id = NEW.id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_update_edge_updated_at
+    AFTER UPDATE
+    ON edge
+    FOR EACH ROW
+BEGIN
+    UPDATE edge SET updated_at = datetime('now') WHERE id = NEW.id;
 END;
