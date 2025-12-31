@@ -112,7 +112,6 @@ CREATE TABLE IF NOT EXISTS choice_options
 CREATE TABLE IF NOT EXISTS rewards
 (
     id                 INTEGER PRIMARY KEY AUTOINCREMENT,
-    reveal_id          INTEGER  NOT NULL, -- Which reveal grants this
     type               TEXT     NOT NULL, -- CONTENT | FAVOUR
     title              TEXT     NOT NULL, -- Display name
     reward_order       INTEGER  NOT NULL, -- Display order within reveal
