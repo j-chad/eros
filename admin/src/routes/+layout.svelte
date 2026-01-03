@@ -27,6 +27,7 @@
                 <div class="nav-links">
                     <a href="/" class:active={page.url.pathname === '/'}>Registration</a>
                     <a href="/favours" class:active={page.url.pathname === '/favours'}>Favours</a>
+                    <a href="/flows" class:active={page.url.pathname.startsWith('/flows')}>Flows</a>
                     <button onclick={handleLogout} class="logout">Logout</button>
                 </div>
             </div>

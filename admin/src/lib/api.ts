@@ -8,23 +8,13 @@ import type {
     RegistrationToken
 } from "$lib/types";
 import {auth} from "$lib/auth.svelte";
+import { error } from "@sveltejs/kit";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api';
 
-class APIException extends Error {
-    constructor(
-        message: string,
-        public status: number,
-        public data?: APIError
-    ) {
-        super(message);
-        this.name = 'APIException';
-    }
-}
-
 async function request<T = void>(endpoint: string, options: RequestInit = {}): Promise<T> {
     if (!auth.apiKey) {
-        throw new APIException('Not authenticated', 401);
+        throw error(401, 'Unauthorized: No API key provided');
     }
 
     const headers: HeadersInit = {
@@ -39,15 +29,17 @@ async function request<T = void>(endpoint: string, options: RequestInit = {}): P
     });
 
     const contentType = response.headers.get('content-type');
-    const isJson = contentType?.includes('application/json');
+    const isJson = !!contentType?.includes('application/json');
 
     if (!response.ok) {
-        const error = isJson ? await response.json() : {message: response.statusText};
-        throw new APIException(
-            error.error?.message ?? error.message ?? 'Request failed',
-            response.status,
-            error
-        );
+        const body: APIError | string = isJson ? (await response.json()).error : await response.text()
+
+        throw error(response.status, {
+            message: typeof body === 'string' ? body : body.message,
+            path: endpoint,
+            method: options.method ?? 'GET',
+            body
+        } as App.Error);
     }
 
     if (response.status === 204) {
