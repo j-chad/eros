@@ -43,3 +43,22 @@ export type Favour = {
     requested_at: string;
     fulfilled_at: string | null;
 };
+
+export enum NodeType {
+    START = 'start',
+}
+
+export interface Node {
+    id: string;
+    type: NodeType,
+    title: string;
+    description: string | null;
+    unlocked_at: string | null; // ISO 8601 date string
+    created_at: string; // ISO 8601 date string
+    updated_at: string; // ISO 8601 date string
+}
+
+export interface StartNode extends Node {
+    type: NodeType.START;
+    starting_at: string; // ISO 8601 date string
+}
