@@ -8,7 +8,7 @@ import (
 )
 
 func (s *sqliteDB) GetFavourCount(ctx context.Context) (models.FavourCount, error) {
-	var count models.FavourCount
+	var total, remaining sql.NullInt64
 	err := s.executor().QueryRowContext(ctx, `
 		SELECT
 			fc.total_favours AS total_favours,
@@ -17,13 +17,16 @@ func (s *sqliteDB) GetFavourCount(ctx context.Context) (models.FavourCount, erro
 		LEFT JOIN favour_requests fr
 			ON 1 = 1
 		WHERE fc.id = 0;
-	`).Scan(&count.Total, &count.Remaining)
+	`).Scan(&total, &remaining)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return models.FavourCount{Total: 0, Remaining: 0}, nil
 	}
 
-	return count, err
+	return models.FavourCount{
+		Total:     int(total.Int64),
+		Remaining: int(remaining.Int64),
+	}, err
 }
 
 func (s *sqliteDB) UpdateFavourCount(ctx context.Context, count int) error {

@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="sqlite_init.sql" type="DatabaseScript" nameIsGenerated="true">
+    <script-file value="$PROJECT_DIR$/backend/internal/repository/sqlite/sqlite_init.sql" />
+    <script-mode>FILE</script-mode>
+    <data-source id="c0cf4d4b-28f8-465a-9ff7-180f88c58312" />
+    <method v="2" />
+  </configuration>
+</component>
