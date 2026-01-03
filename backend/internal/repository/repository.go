@@ -43,3 +43,9 @@ type FavourRepository interface {
 	FulfilFavourRequest(ctx context.Context, requestID string) error
 	UnfulfilFavourRequest(ctx context.Context, requestID string) error
 }
+
+type GraphRepository interface {
+	ListStartNodes(ctx context.Context) ([]models.Node, error)
+	GetNodeByID(ctx context.Context, nodeID int64) (*models.Node, error)
+	CreateNode(ctx context.Context, node *models.Node) error
+}

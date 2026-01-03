@@ -39,8 +39,6 @@ CREATE TABLE IF NOT EXISTS node (
 
     title       TEXT,
     description TEXT,
-
-    -- Common state
     unlocked_at DATETIME,
 
     created_at  DATETIME NOT NULL DEFAULT (datetime('now')),
