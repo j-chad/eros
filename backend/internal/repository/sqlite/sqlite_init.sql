@@ -166,3 +166,35 @@ CREATE TRIGGER IF NOT EXISTS trg_update_edge_updated_at
 BEGIN
     UPDATE edge SET updated_at = datetime('now') WHERE id = NEW.id;
 END;
+
+-- ----------------------------------------------------------------------------
+-- VIEWS
+-- ----------------------------------------------------------------------------
+
+CREATE VIEW IF NOT EXISTS node_full AS
+SELECT
+    n.id,
+    n.type,
+    n.title,
+    n.description,
+    n.created_at,
+    n.updated_at,
+    n.unlocked_at,
+
+    ns.starting_at,
+
+    nlg.latitude,
+    nlg.longitude,
+    nlg.radius_meters,
+
+    ncg.code,
+
+    nr.reward_type,
+    nr.content_html,
+    nr.content_media_type,
+    nr.give_favours
+FROM node n
+         LEFT JOIN node_start ns ON n.id = ns.node_id
+         LEFT JOIN node_location_gate nlg ON n.id = nlg.node_id
+         LEFT JOIN node_code_gate ncg ON n.id = ncg.node_id
+         LEFT JOIN node_reward nr ON n.id = nr.node_id;

@@ -123,3 +123,33 @@ func (s *sqliteDB) CreateGraph(ctx context.Context, req models.NewGraphRequest) 
 
 	return fmt.Sprintf("%d", startNodeID), nil
 }
+
+func (s *sqliteDB) GetGraph(ctx context.Context, startNodeID string) (*models.Graph, error) {
+	nodesMap, nodeIDs, err := s.getCompleteNodes(ctx, startNodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get all edges for those nodes
+	edges, err := s.getCompleteEdges(ctx, nodeIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, edge := range edges {
+		if node, exists := nodesMap[edge.From]; exists {
+			node.Edges = append(node.Edges, edge)
+		}
+	}
+
+	nodes := make([]models.Node, 0, len(nodesMap))
+	for _, node := range nodesMap {
+		nodes = append(nodes, *node)
+	}
+
+	return &models.Graph{
+		StartNode: *nodesMap[startNodeID],
+		Nodes:     nodes,
+		Edges:     edges,
+	}, nil
+}
