@@ -52,3 +52,19 @@ func (h *Handler) CreateGraph(w http.ResponseWriter, r *http.Request) {
 
 	response.JSON(w, http.StatusCreated, createdGraphID)
 }
+
+func (h *Handler) GetGraph(w http.ResponseWriter, r *http.Request) {
+	startNodeID := r.PathValue("id")
+	if startNodeID == "" {
+		response.Error(w, apierror.BadRequest("Start node ID is required"))
+		return
+	}
+
+	graph, err := h.adminService.GetGraph(r.Context(), startNodeID)
+	if err != nil {
+		response.Error(w, apierror.UnknownInternalError(err))
+		return
+	}
+
+	response.JSON(w, http.StatusOK, graph)
+}
