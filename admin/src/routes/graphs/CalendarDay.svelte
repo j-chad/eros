@@ -2,14 +2,14 @@
     import type {StartNode} from "$lib/types";
     import {Edit, Plus, Trash2} from "lucide-svelte";
 
-    let { nodes, day, date, isCurrentMonth, onDeleteFlow, onCreateFlow, onEditFlow }: {
+    let { nodes, day, date, isCurrentMonth, onDeleteGraph, onCreateGraph, onEditGraph }: {
         nodes: StartNode[];
         day: number;
         date: Date;
         isCurrentMonth: boolean;
-        onCreateFlow?: (date: Date) => Promise<void>;
-        onEditFlow?: (id: string) => Promise<void>;
-        onDeleteFlow?: (id: string) => Promise<void>;
+        onCreateGraph?: (date: Date) => Promise<void>;
+        onEditGraph?: (id: string) => Promise<void>;
+        onDeleteGraph?: (id: string) => Promise<void>;
     } = $props();
 
     function isToday(date: Date): boolean {
@@ -27,27 +27,27 @@
 
     {#if isCurrentMonth}
         {#if nodes.length > 0}
-            <div class="flows">
-                {#each nodes as flow}
-                    <div class="flow-item">
-                        <div class="flow-content">
-                            <div class="flow-title">{flow.title}</div>
-                            {#if flow.description}
-                                <div class="flow-description">{flow.description}</div>
+            <div class="graphs">
+                {#each nodes as graph}
+                    <div class="graph-item">
+                        <div class="graph-content">
+                            <div class="graph-title">{graph.title}</div>
+                            {#if graph.description}
+                                <div class="graph-description">{graph.description}</div>
                             {/if}
                         </div>
-                        <div class="flow-actions">
+                        <div class="graph-actions">
                             <button
                                     class="action-btn edit"
-                                    onclick={() => onEditFlow?.(flow.id)}
-                                    title="Edit flow"
+                                    onclick={() => onEditGraph?.(graph.id)}
+                                    title="Edit graph"
                             >
                                 <Edit size={12} />
                             </button>
                             <button
                                     class="action-btn delete"
-                                    onclick={() => onDeleteFlow?.(flow.id)}
-                                    title="Delete flow"
+                                    onclick={() => onDeleteGraph?.(graph.id)}
+                                    title="Delete graph"
                             >
                                 <Trash2 size={12} />
                             </button>
@@ -58,9 +58,9 @@
         {/if}
 
         <button
-                class="add-flow-btn"
-                onclick={() => onCreateFlow?.(date)}
-                title="Create flow"
+                class="add-graph-btn"
+                onclick={() => onCreateGraph?.(date)}
+                title="Create graph"
         >
             <Plus size={14} />
         </button>
@@ -104,7 +104,7 @@
         border-radius: 50%;
     }
 
-    .flows {
+    .graphs {
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
@@ -112,7 +112,7 @@
         overflow-y: auto;
     }
 
-    .flow-item {
+    .graph-item {
         background: #f0f9ff;
         border: 1px solid #bae6fd;
         border-radius: 4px;
@@ -124,17 +124,17 @@
         transition: all 0.2s;
     }
 
-    .flow-item:hover {
+    .graph-item:hover {
         background: #e0f2fe;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
-    .flow-content {
+    .graph-content {
         flex: 1;
         min-width: 0;
     }
 
-    .flow-title {
+    .graph-title {
         font-weight: 600;
         color: #0c4a6e;
         margin-bottom: 0.25rem;
@@ -143,7 +143,7 @@
         white-space: nowrap;
     }
 
-    .flow-description {
+    .graph-description {
         color: #475569;
         font-size: 0.6875rem;
         line-height: 1.3;
@@ -154,12 +154,12 @@
         overflow: hidden;
     }
 
-    .flow-time {
+    .graph-time {
         color: #64748b;
         font-size: 0.6875rem;
     }
 
-    .flow-actions {
+    .graph-actions {
         display: flex;
         gap: 0.25rem;
         flex-shrink: 0;
@@ -200,7 +200,7 @@
         background: #fecaca;
     }
 
-    .add-flow-btn {
+    .add-graph-btn {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -216,7 +216,7 @@
         font-size: 0.75rem;
     }
 
-    .add-flow-btn:hover {
+    .add-graph-btn:hover {
         background: #e5e7eb;
         border-color: #9ca3af;
         color: #374151;
@@ -227,7 +227,7 @@
             min-height: 100px;
         }
 
-        .flow-description {
+        .graph-description {
             display: none;
         }
     }
@@ -242,11 +242,11 @@
             font-size: 0.75rem;
         }
 
-        .flow-item {
+        .graph-item {
             padding: 0.375rem;
         }
 
-        .flow-title {
+        .graph-title {
             font-size: 0.6875rem;
         }
     }

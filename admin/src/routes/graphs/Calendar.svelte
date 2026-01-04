@@ -5,11 +5,11 @@
     import type {StartNode} from "$lib/types";
     import CalendarDay from "./CalendarDay.svelte";
 
-    let {nodes, onDeleteFlow, onCreateFlow, onEditFlow}: {
+    let {nodes, onDeleteGraph, onCreateGraph, onEditGraph}: {
         nodes: StartNode[];
-        onCreateFlow?: (date: Date) => Promise<void>;
-        onEditFlow?: (id: string) => Promise<void>;
-        onDeleteFlow?: (id: string) => Promise<void>;
+        onCreateGraph?: (date: Date) => Promise<void>;
+        onEditGraph?: (id: string) => Promise<void>;
+        onDeleteGraph?: (id: string) => Promise<void>;
     } = $props();
 
     let currentDate = $state(new Date());
@@ -63,8 +63,8 @@
     function getNodesForDate(date: Date): StartNode[] {
         const dateStr = date.toISOString().split('T')[0];
         return nodes.filter(node => {
-            const flowDate = new Date(node.start.starting_at).toISOString().split('T')[0];
-            return flowDate === dateStr;
+            const graphDate = new Date(node.start.starting_at).toISOString().split('T')[0];
+            return graphDate === dateStr;
         });
     }
 
@@ -110,8 +110,8 @@
         <div class="calendar-grid">
             {#each calendarDays() as {day, isCurrentMonth, date}}
                 <CalendarDay nodes={getNodesForDate(date)} day={day} date={date}
-                             isCurrentMonth={isCurrentMonth} onCreateFlow={onCreateFlow}
-                             onDeleteFlow={onDeleteFlow} onEditFlow={onEditFlow}></CalendarDay>
+                             isCurrentMonth={isCurrentMonth} onCreateGraph={onCreateGraph}
+                             onDeleteGraph={onDeleteGraph} onEditGraph={onEditGraph}></CalendarDay>
             {/each}
         </div>
     </div>
