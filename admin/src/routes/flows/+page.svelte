@@ -3,17 +3,12 @@
     import Header from '$lib/components/Header.svelte';
     import { api } from '$lib/api';
     import Calendar from "./Calendar.svelte";
-
-    type FlowStart = {
-        id: number;
-        title: string;
-        description: string | null;
-        startingAt: string;
-    };
+    import type {StartNode} from "$lib/types";
+    import {goto} from "$app/navigation";
 
     let { data } = $props();
 
-    let nodes = $state<FlowStart[]>(data.nodes);
+    let nodes = $state<StartNode[]>(data.nodes);
 
     $effect(() => {
         nodes = data.nodes;
@@ -26,8 +21,7 @@
     }
 
     async function handleEditFlow(flowId: string) {
-        console.log('Edit flow:', flowId);
-        // window.location.href = `/flows/${flowId}/edit`;
+        await goto(`/flows/${flowId}`);
     }
 
     async function handleDeleteFlow(flowId: string) {
