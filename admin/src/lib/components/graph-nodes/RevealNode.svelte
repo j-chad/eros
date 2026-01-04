@@ -1,4 +1,4 @@
-<!-- src/lib/components/flow-nodes/RevealNode.svelte -->
+<!-- src/lib/components/graph-nodes/RevealNode.svelte -->
 <script lang="ts">
     import { Handle, Position } from '@xyflow/svelte';
     import { Eye, Hash, Edit } from 'lucide-svelte';

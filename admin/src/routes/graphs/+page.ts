@@ -12,7 +12,7 @@ export async function load() {
         const nodes = await api.graph.list();
         return { nodes };
     } catch (error) {
-        console.error('Failed to load flows:', error);
+        console.error('Failed to load graphs:', error);
         return { nodes: [] };
     }
 }

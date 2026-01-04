@@ -1,4 +1,4 @@
-<!-- src/routes/flows/+page.svelte -->
+<!-- src/routes/graphs/+page.svelte -->
 <script lang="ts">
     import Header from '$lib/components/Header.svelte';
     import {api} from '$lib/api';
@@ -37,28 +37,28 @@
             }
 
             nodes = [...nodes, newGraph];
-            await goto(`/flows/${graphId}`);
+            await handleEditGraph(graphId)
         } catch (error) {
-            console.error('Failed to create flow:', error);
+            console.error('Failed to create graph:', error);
         }
     }
 
-    async function handleEditFlow(flowId: string) {
-        await goto(`/flows/${flowId}`);
+    async function handleEditGraph(graphId: string) {
+        await goto(`/graphs/${graphId}`);
     }
 
-    async function handleDeleteFlow(flowId: string) {
-        if (confirm('Are you sure you want to delete this flow?')) {
+    async function handleDeleteGraph(graphId: string) {
+        if (confirm('Are you sure you want to delete this graph?')) {
             try {
-                await api.graph.delete(flowId);
-                nodes = nodes.filter(f => f.id !== flowId);
+                await api.graph.delete(graphId);
+                nodes = nodes.filter(f => f.id !== graphId);
             } catch (error) {
-                console.error('Failed to delete flow:', error);
+                console.error('Failed to delete graph:', error);
             }
         }
     }
 </script>
 
-<Header title="Reward Flows Calendar" />
+<Header title="Reward Graphs Calendar" />
 
-<Calendar nodes={nodes} onCreateFlow={handleCreateGraph} onEditFlow={handleEditFlow} onDeleteFlow={handleDeleteFlow} />
+<Calendar nodes={nodes} onCreateGraph={handleCreateGraph} onEditGraph={handleEditGraph} onDeleteGraph={handleDeleteGraph} />
