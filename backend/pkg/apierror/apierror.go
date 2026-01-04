@@ -1,6 +1,7 @@
 package apierror
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -49,6 +50,11 @@ func Unauthorized(message string) *APIError {
 }
 
 func UnknownInternalError(err error) *APIError {
+	var apiError *APIError
+	if errors.As(err, &apiError) {
+		return apiError
+	}
+
 	return &APIError{
 		Code:       "UNKNOWN_INTERNAL_ERROR",
 		Message:    "An unknown internal error occurred",

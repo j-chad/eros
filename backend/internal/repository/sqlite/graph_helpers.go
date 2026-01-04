@@ -168,7 +168,7 @@ func (s *sqliteDB) getCompleteEdges(ctx context.Context, nodeIDs []int64) ([]mod
 	}
 	defer rows.Close()
 
-	var edges []models.Edge
+	edges := make([]models.Edge, 0)
 	for rows.Next() {
 		var edge models.Edge
 

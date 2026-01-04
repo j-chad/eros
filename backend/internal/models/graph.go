@@ -19,8 +19,6 @@ type Node struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 
-	Edges []Edge `json:"edges,omitempty"`
-
 	// Only one of the following will be populated based on the NodeType
 	Start    *StartData    `json:"start,omitempty"`
 	Location *LocationData `json:"location,omitempty"`
@@ -30,6 +28,11 @@ type Node struct {
 	CreatedAt  time.Time  `json:"created_at"`
 	UpdatedAt  time.Time  `json:"updated_at"`
 	UnlockedAt *time.Time `json:"unlocked_at,omitempty"`
+}
+
+type NodeWithEdges struct {
+	Node  Node   `json:"node"`
+	Edges []Edge `json:"edges"`
 }
 
 type NewGraphRequest struct {
@@ -50,7 +53,7 @@ type Edge struct {
 }
 
 type Graph struct {
-	StartNode Node   `json:"start_node"`
-	Nodes     []Node `json:"nodes"`
-	Edges     []Edge `json:"edges"`
+	StartNode NodeWithEdges `json:"start_node"`
+	Nodes     []Node        `json:"nodes"`
+	Edges     []Edge        `json:"edges"`
 }

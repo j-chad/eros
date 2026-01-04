@@ -1,0 +1,28 @@
+meta {
+  name: Get Graph
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{scheme}}{{host}}/api/admin/graphs/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 6
+}
+
+body:json {
+  {
+    "title": "my new graph",
+    "description": null,
+    "starting_at": "2026-01-03T11:00:00Z"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

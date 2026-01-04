@@ -4,6 +4,7 @@ import (
 	"backend/internal/crypto"
 	"backend/internal/models"
 	"backend/internal/repository"
+	"backend/pkg/apierror"
 	"context"
 	"time"
 )
@@ -93,4 +94,17 @@ func (s *AdminService) CreateGraph(ctx context.Context, req models.NewGraphReque
 
 func (s *AdminService) DeleteGraph(ctx context.Context, startNodeID string) error {
 	return s.repo.DeleteGraph(ctx, startNodeID)
+}
+
+func (s *AdminService) GetGraph(ctx context.Context, startNodeID string) (*models.Graph, error) {
+	graph, err := s.repo.GetGraph(ctx, startNodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(graph.Nodes) == 0 {
+		return nil, apierror.NotFound("graph node not found")
+	}
+
+	return graph, nil
 }
