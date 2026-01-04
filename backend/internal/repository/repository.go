@@ -13,6 +13,7 @@ type Repository interface {
 	RegistrationRepository
 	DeviceRepository
 	FavourRepository
+	GraphRepository
 }
 
 type RegistrationRepository interface {
@@ -46,6 +47,6 @@ type FavourRepository interface {
 
 type GraphRepository interface {
 	ListStartNodes(ctx context.Context) ([]models.Node, error)
-	GetNodeByID(ctx context.Context, nodeID int64) (*models.Node, error)
-	CreateNode(ctx context.Context, node *models.Node) error
+	DeleteGraph(ctx context.Context, startNodeID string) error
+	CreateGraph(ctx context.Context, req models.NewGraphRequest) (string, error)
 }

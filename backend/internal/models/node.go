@@ -13,7 +13,7 @@ const (
 )
 
 type Node struct {
-	ID   int64    `json:"id"`
+	ID   string   `json:"id"`
 	Type NodeType `json:"type"`
 
 	Title       string `json:"title"`
@@ -22,6 +22,7 @@ type Node struct {
 	Edges []Edge `json:"edges,omitempty"`
 
 	// Only one of the following will be populated based on the NodeType
+	Start    *StartData    `json:"start,omitempty"`
 	Location *LocationData `json:"location,omitempty"`
 	Code     *CodeData     `json:"code,omitempty"`
 	Reward   *RewardData   `json:"reward,omitempty"`
@@ -29,6 +30,12 @@ type Node struct {
 	CreatedAt  time.Time  `json:"created_at"`
 	UpdatedAt  time.Time  `json:"updated_at"`
 	UnlockedAt *time.Time `json:"unlocked_at,omitempty"`
+}
+
+type NewGraphRequest struct {
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	StartingAt  time.Time `json:"starting_at"`
 }
 
 type Edge struct {
