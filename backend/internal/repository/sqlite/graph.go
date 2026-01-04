@@ -4,7 +4,6 @@ import (
 	"backend/internal/models"
 	"context"
 	"fmt"
-	"time"
 )
 
 func (s *sqliteDB) ListStartNodes(ctx context.Context) ([]models.Node, error) {
@@ -29,11 +28,11 @@ func (s *sqliteDB) ListStartNodes(ctx context.Context) ([]models.Node, error) {
 	}
 	defer rows.Close()
 
-	var nodes []models.Node
+	nodes := make([]models.Node, 0)
 
 	for rows.Next() {
 		var node models.Node
-		var startingAt time.Time
+		var startData models.StartData
 
 		err := rows.Scan(
 			&node.ID,
@@ -43,11 +42,13 @@ func (s *sqliteDB) ListStartNodes(ctx context.Context) ([]models.Node, error) {
 			&node.CreatedAt,
 			&node.UpdatedAt,
 			&node.UnlockedAt,
-			&startingAt,
+			&startData.StartingAt,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan start node: %w", err)
 		}
+
+		node.Start = &startData
 
 		nodes = append(nodes, node)
 	}

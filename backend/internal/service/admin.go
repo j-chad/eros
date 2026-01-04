@@ -82,3 +82,15 @@ func (s *AdminService) FulfilFavourRequest(ctx context.Context, requestID string
 func (s *AdminService) UnfulfilFavourRequest(ctx context.Context, requestID string) error {
 	return s.repo.UnfulfilFavourRequest(ctx, requestID)
 }
+
+func (s *AdminService) ListStartNodes(ctx context.Context) ([]models.Node, error) {
+	return s.repo.ListStartNodes(ctx)
+}
+
+func (s *AdminService) CreateGraph(ctx context.Context, req models.NewGraphRequest) (string, error) {
+	return s.repo.CreateGraph(ctx, req)
+}
+
+func (s *AdminService) DeleteGraph(ctx context.Context, startNodeID string) error {
+	return s.repo.DeleteGraph(ctx, startNodeID)
+}

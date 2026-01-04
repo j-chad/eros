@@ -249,9 +249,5 @@
         .flow-title {
             font-size: 0.6875rem;
         }
-
-        .flow-time {
-            font-size: 0.625rem;
-        }
     }
 </style>
