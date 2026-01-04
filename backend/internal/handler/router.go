@@ -44,6 +44,9 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	adminMux.HandleFunc("DELETE /api/admin/favours/choices/{id}", h.admin.DeleteFavourChoice)
 	adminMux.HandleFunc("PUT /api/admin/favours", h.admin.UpdateFavourCount)
 	adminMux.HandleFunc("PATCH /api/admin/favours/requests/{id}", h.admin.UpdateFavourRequestStatus)
+	adminMux.HandleFunc("GET /api/admin/graphs", h.admin.ListStartNodes)
+	adminMux.HandleFunc("DELETE /api/admin/graphs/{id}", h.admin.DeleteGraph)
+	adminMux.HandleFunc("POST /api/admin/graphs", h.admin.CreateGraph)
 	adminMux.HandleFunc("/", routeNotFound)
 	mux.Handle("/api/admin/", withAdminAuth(adminMux, *h.auth))
 

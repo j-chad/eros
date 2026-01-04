@@ -60,5 +60,13 @@ export interface Node {
 
 export interface StartNode extends Node {
     type: NodeType.START;
+    start: {
+        starting_at: string; // ISO 8601 date string
+    }
+}
+
+export interface NewStartNode {
+    title: string;
+    description?: string | null;
     starting_at: string; // ISO 8601 date string
 }

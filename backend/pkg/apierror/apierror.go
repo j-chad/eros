@@ -10,7 +10,7 @@ type APIError struct {
 	Message    string                 `json:"message"`
 	StatusCode int                    `json:"-"` // Not serialized to JSON
 	Details    map[string]interface{} `json:"details,omitempty"`
-	Err        error                  `json:"-"` // Original error, not exposed
+	Err        error                  `json:"err,omitempty"`
 }
 
 func (e *APIError) Error() string {

@@ -63,7 +63,7 @@
     function getNodesForDate(date: Date): StartNode[] {
         const dateStr = date.toISOString().split('T')[0];
         return nodes.filter(node => {
-            const flowDate = new Date(node.starting_at).toISOString().split('T')[0];
+            const flowDate = new Date(node.start.starting_at).toISOString().split('T')[0];
             return flowDate === dateStr;
         });
     }
