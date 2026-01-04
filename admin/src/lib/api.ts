@@ -23,10 +23,20 @@ async function request<T = void>(endpoint: string, options: RequestInit = {}): P
         ...options.headers,
     };
 
-    const response = await fetch(`${API_BASE}${endpoint}`, {
-        ...options,
-        headers,
-    });
+    let response: Response;
+    try {
+        response = await fetch(`${API_BASE}${endpoint}`, {
+            ...options,
+            headers,
+        });
+    } catch (err) {
+        throw error(503, {
+            message: `Service Unavailable: Could not reach API`,
+            base: API_BASE,
+            endpoint,
+            method: options.method ?? 'GET',
+        } as App.Error);
+    }
 
     const contentType = response.headers.get('content-type');
     const isJson = !!contentType?.includes('application/json');
