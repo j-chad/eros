@@ -39,11 +39,18 @@ type NewGraphRequest struct {
 }
 
 type Edge struct {
-	From int64 `json:"from"`
-	To   int64 `json:"to"`
+	ID   string `json:"id"`
+	From string `json:"from"`
+	To   string `json:"to"`
 
 	ChoiceLabel string `json:"choice_label,omitempty"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type Graph struct {
+	StartNode Node   `json:"start_node"`
+	Nodes     []Node `json:"nodes"`
+	Edges     []Edge `json:"edges"`
 }

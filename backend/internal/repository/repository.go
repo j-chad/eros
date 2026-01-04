@@ -49,4 +49,5 @@ type GraphRepository interface {
 	ListStartNodes(ctx context.Context) ([]models.Node, error)
 	DeleteGraph(ctx context.Context, startNodeID string) error
 	CreateGraph(ctx context.Context, req models.NewGraphRequest) (string, error)
+	GetGraph(ctx context.Context, startNodeID string) (*models.Graph, error)
 }
