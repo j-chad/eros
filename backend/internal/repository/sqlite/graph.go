@@ -48,7 +48,7 @@ func (s *sqliteDB) ListStartNodes(ctx context.Context) ([]models.Node, error) {
 			return nil, fmt.Errorf("failed to scan start node: %w", err)
 		}
 
-		node.Start = &startData
+		node.Data = startData
 
 		nodes = append(nodes, node)
 	}
@@ -135,17 +135,17 @@ func (s *sqliteDB) GetGraph(ctx context.Context, startNodeID string) (*models.Gr
 		return nil, fmt.Errorf("start node with ID %s not found", startNodeID)
 	}
 
-	startData, ok := startNode.Data.(models.StartData)
+	startData, ok := startNode.Data.(*models.StartData)
 	if !ok {
 		return nil, fmt.Errorf("node %s is not a start node", startNodeID)
 	}
 
 	var viewport *models.Viewport = nil
-	if startData.ViewportX != 0 || startData.ViewportY != 0 || startData.ViewportZoom != 0 {
+	if startData.ViewportX != nil && startData.ViewportY != nil && startData.ViewportZoom != nil {
 		viewport = &models.Viewport{
-			X:    startData.ViewportX,
-			Y:    startData.ViewportY,
-			Zoom: startData.ViewportZoom,
+			X:    *startData.ViewportX,
+			Y:    *startData.ViewportY,
+			Zoom: *startData.ViewportZoom,
 		}
 	}
 

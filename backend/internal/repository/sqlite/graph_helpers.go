@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"time"
 )
 
 // scanNodeFull scans a row from node_full view into a Node struct
@@ -15,74 +14,56 @@ func (s *sqliteDB) scanNodeFull(scanner interface {
 	Scan(dest ...interface{}) error
 }) (models.Node, error) {
 	var node models.Node
-	var startingAt sql.NullTime
-	var latitude, longitude sql.NullFloat64
-	var radiusMeters sql.NullInt64
-	var code sql.NullString
-	var rewardType, contentHTML, contentMediaType sql.NullString
-	var giveFavours sql.NullInt64
+	var uiPositionX sql.NullFloat64
+	var uiPositionY sql.NullFloat64
+	var dataJSON []byte
 
 	err := scanner.Scan(
 		&node.ID,
 		&node.Type,
 		&node.Title,
 		&node.Description,
+		&uiPositionX,
+		&uiPositionY,
 		&node.CreatedAt,
 		&node.UpdatedAt,
 		&node.UnlockedAt,
-		&startingAt,
-		&latitude,
-		&longitude,
-		&radiusMeters,
-		&code,
-		&rewardType,
-		&contentHTML,
-		&contentMediaType,
-		&giveFavours,
+
+		&dataJSON,
 	)
 	if err != nil {
 		return node, fmt.Errorf("failed to scan node: %w", err)
 	}
 
+	if uiPositionX.Valid && uiPositionY.Valid {
+		node.UIPosition = &models.NodePosition{
+			X: uiPositionX.Float64,
+			Y: uiPositionY.Float64,
+		}
+	}
+
 	// Populate type-specific data based on node type
 	switch node.Type {
 	case models.StartNode:
-		if !startingAt.Valid {
-			return node, fmt.Errorf("node %d is type START but missing starting_at data", node.ID)
+		node.Data = &models.StartData{}
+		if err := json.Unmarshal(dataJSON, &node.Data); err != nil {
+			return node, fmt.Errorf("failed to unmarshal start data: %w", err)
 		}
-		node.Data = &models.StartData{
-			StartingAt: startingAt.Time.Format(time.RFC3339),
-		}
-
 	case models.LocationGateNode:
-		if !latitude.Valid || !longitude.Valid || !radiusMeters.Valid {
-			return node, fmt.Errorf("node %d is type LOCATION but missing location data", node.ID)
+		node.Data = &models.LocationData{}
+		if err := json.Unmarshal(dataJSON, &node.Data); err != nil {
+			return node, fmt.Errorf("failed to unmarshal location data: %w", err)
 		}
-		node.Data = &models.LocationData{
-			Latitude:  latitude.Float64,
-			Longitude: longitude.Float64,
-			RadiusM:   int(radiusMeters.Int64),
-		}
-
 	case models.CodeGateNode:
-		if !code.Valid {
-			return node, fmt.Errorf("node %d is type CODE but missing code data", node.ID)
+		node.Data = &models.CodeData{}
+		if err := json.Unmarshal(dataJSON, &node.Data); err != nil {
+			return node, fmt.Errorf("failed to unmarshal code data: %w", err)
 		}
-		node.Data = &models.CodeData{
-			Code: code.String,
-		}
-
 	case models.RewardNode:
-		if !rewardType.Valid || !contentHTML.Valid || !contentMediaType.Valid || !giveFavours.Valid {
-			return node, fmt.Errorf("node %d is type REWARD but missing reward data", node.ID)
+		node.Data = &models.RewardData{}
+		if err := json.Unmarshal(dataJSON, &node.Data); err != nil {
+			return node, fmt.Errorf("failed to unmarshal reward data: %w", err)
 		}
-		node.Data = &models.RewardData{
-			RewardType:  rewardType.String,
-			Content:     contentHTML.String,
-			MediaType:   contentMediaType.String,
-			GiveFavours: int(giveFavours.Int64),
-		}
-
 	case models.ChoiceNode:
 		// Choice nodes don't have additional data (choices are in edges)
 	default:
@@ -93,7 +74,7 @@ func (s *sqliteDB) scanNodeFull(scanner interface {
 }
 
 // getCompleteNodes retrieves all nodes reachable from a start node with full data
-func (s *sqliteDB) getCompleteNodes(ctx context.Context, startNodeID string) ([]*models.Node, []int64, error) {
+func (s *sqliteDB) getCompleteNodes(ctx context.Context, startNodeID string) (map[string]*models.Node, []int64, error) {
 	query := `
         WITH RECURSIVE graph_nodes(node_id) AS (
             SELECT ? as node_id
@@ -113,7 +94,7 @@ func (s *sqliteDB) getCompleteNodes(ctx context.Context, startNodeID string) ([]
 	}
 	defer rows.Close()
 
-	nodes := make([]*models.Node, 0)
+	nodesMap := make(map[string]*models.Node)
 	nodeIDs := make([]int64, 0)
 
 	for rows.Next() {
@@ -121,7 +102,7 @@ func (s *sqliteDB) getCompleteNodes(ctx context.Context, startNodeID string) ([]
 		if err != nil {
 			return nil, nil, err
 		}
-		nodes = append(nodes, &node)
+		nodesMap[node.ID] = &node
 
 		int64ID, err := strconv.ParseInt(node.ID, 10, 64)
 		if err != nil {
@@ -134,7 +115,7 @@ func (s *sqliteDB) getCompleteNodes(ctx context.Context, startNodeID string) ([]
 		return nil, nil, fmt.Errorf("error iterating nodes: %w", err)
 	}
 
-	return nodes, nodeIDs, nil
+	return nodesMap, nodeIDs, nil
 }
 
 // getCompleteEdges retrieves all edges for the given node IDs
