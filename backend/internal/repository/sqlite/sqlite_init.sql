@@ -185,11 +185,16 @@ SELECT
     n.type,
     n.title,
     n.description,
+    n.ui_pos_x,
+    n.ui_pos_y,
     n.created_at,
     n.updated_at,
     n.unlocked_at,
 
     ns.starting_at,
+    ns.viewport_x,
+    ns.viewport_y,
+    ns.viewport_zoom,
 
     nlg.latitude,
     nlg.longitude,
