@@ -140,8 +140,13 @@ func (s *sqliteDB) GetGraph(ctx context.Context, startNodeID string) (*models.Gr
 		return nil, fmt.Errorf("node %s is not a start node", startNodeID)
 	}
 
-	viewport := &models.Viewport{
-		X: startData.StartingAt
+	var viewport *models.Viewport = nil
+	if startData.ViewportX != 0 || startData.ViewportY != 0 || startData.ViewportZoom != 0 {
+		viewport = &models.Viewport{
+			X:    startData.ViewportX,
+			Y:    startData.ViewportY,
+			Zoom: startData.ViewportZoom,
+		}
 	}
 
 	// Get all edges for those nodes
@@ -156,7 +161,8 @@ func (s *sqliteDB) GetGraph(ctx context.Context, startNodeID string) (*models.Gr
 	}
 
 	return &models.Graph{
-		Nodes: nodes,
-		Edges: edges,
+		Viewport: viewport,
+		Nodes:    nodes,
+		Edges:    edges,
 	}, nil
 }

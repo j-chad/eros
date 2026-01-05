@@ -93,7 +93,7 @@ func (s *sqliteDB) scanNodeFull(scanner interface {
 }
 
 // getCompleteNodes retrieves all nodes reachable from a start node with full data
-func (s *sqliteDB) getCompleteNodes(ctx context.Context, startNodeID string) (map[string]*models.Node, []int64, error) {
+func (s *sqliteDB) getCompleteNodes(ctx context.Context, startNodeID string) ([]*models.Node, []int64, error) {
 	query := `
         WITH RECURSIVE graph_nodes(node_id) AS (
             SELECT ? as node_id
@@ -113,7 +113,7 @@ func (s *sqliteDB) getCompleteNodes(ctx context.Context, startNodeID string) (ma
 	}
 	defer rows.Close()
 
-	nodesMap := make(map[string]*models.Node)
+	nodes := make([]*models.Node, 0)
 	nodeIDs := make([]int64, 0)
 
 	for rows.Next() {
@@ -121,7 +121,7 @@ func (s *sqliteDB) getCompleteNodes(ctx context.Context, startNodeID string) (ma
 		if err != nil {
 			return nil, nil, err
 		}
-		nodesMap[node.ID] = &node
+		nodes = append(nodes, &node)
 
 		int64ID, err := strconv.ParseInt(node.ID, 10, 64)
 		if err != nil {
@@ -134,7 +134,7 @@ func (s *sqliteDB) getCompleteNodes(ctx context.Context, startNodeID string) (ma
 		return nil, nil, fmt.Errorf("error iterating nodes: %w", err)
 	}
 
-	return nodesMap, nodeIDs, nil
+	return nodes, nodeIDs, nil
 }
 
 // getCompleteEdges retrieves all edges for the given node IDs
