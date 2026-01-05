@@ -32,10 +32,11 @@ CREATE TABLE IF NOT EXISTS device
 -- GRAPH NODES AND EDGES
 -- -----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS node (
+CREATE TABLE IF NOT EXISTS node
+(
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
 
-    type        TEXT NOT NULL, -- E.G. START | LOCATION | CODE | CHOICE | REWARD
+    type        TEXT     NOT NULL, -- E.G. START | LOCATION | CODE | CHOICE | REWARD
 
     title       TEXT,
     description TEXT,
@@ -49,63 +50,68 @@ CREATE TABLE IF NOT EXISTS node (
     updated_at  DATETIME NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE IF NOT EXISTS edge (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    from_node_id INTEGER NOT NULL,
-    to_node_id   INTEGER NOT NULL,
+CREATE TABLE IF NOT EXISTS edge
+(
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    from_node_id INTEGER  NOT NULL,
+    to_node_id   INTEGER  NOT NULL,
 
-    choice_label    TEXT, -- For choice edges
+    choice_label TEXT, -- For choice edges
 
     created_at   DATETIME NOT NULL DEFAULT (datetime('now')),
     updated_at   DATETIME NOT NULL DEFAULT (datetime('now')),
 
-    FOREIGN KEY (from_node_id) REFERENCES node(id) ON DELETE CASCADE,
-    FOREIGN KEY (to_node_id) REFERENCES node(id) ON DELETE CASCADE,
+    FOREIGN KEY (from_node_id) REFERENCES node (id) ON DELETE CASCADE,
+    FOREIGN KEY (to_node_id) REFERENCES node (id) ON DELETE CASCADE,
 
     UNIQUE (from_node_id, choice_label),
     CHECK (from_node_id != to_node_id)
 );
 
-CREATE TABLE IF NOT EXISTS node_start (
-    node_id INTEGER PRIMARY KEY,
-    starting_at DATETIME NOT NULL,
+CREATE TABLE IF NOT EXISTS node_start
+(
+    node_id       INTEGER PRIMARY KEY,
+    starting_at   DATETIME NOT NULL,
 
-    viewport_x REAL,
-    viewport_y REAL,
+    viewport_x    REAL,
+    viewport_y    REAL,
     viewport_zoom REAL,
 
-    FOREIGN KEY (node_id) REFERENCES node(id) ON DELETE CASCADE
+    FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS node_location_gate (
-    node_id INTEGER PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS node_location_gate
+(
+    node_id       INTEGER PRIMARY KEY,
 
-    latitude REAL NOT NULL,
-    longitude REAL NOT NULL,
+    latitude      REAL    NOT NULL,
+    longitude     REAL    NOT NULL,
     radius_meters INTEGER NOT NULL,
 
-    FOREIGN KEY (node_id) REFERENCES node(id) ON DELETE CASCADE
+    FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS node_code_gate (
+CREATE TABLE IF NOT EXISTS node_code_gate
+(
     node_id INTEGER PRIMARY KEY,
 
-    code TEXT NOT NULL,
+    code    TEXT NOT NULL,
 
-    FOREIGN KEY (node_id) REFERENCES node(id) ON DELETE CASCADE
+    FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS node_reward (
-    node_id INTEGER PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS node_reward
+(
+    node_id            INTEGER PRIMARY KEY,
 
-    reward_type TEXT NOT NULL,
+    reward_type        TEXT    NOT NULL,
 
-    content_html TEXT,
+    content_html       TEXT,
     content_media_type TEXT,
 
-    give_favours INTEGER NOT NULL DEFAULT 0,
+    give_favours       INTEGER NOT NULL DEFAULT 0,
 
-    FOREIGN KEY (node_id) REFERENCES node(id) ON DELETE CASCADE
+    FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE
 );
 
 -- -----------------------------------------------------------------------------
@@ -180,32 +186,40 @@ END;
 -- ----------------------------------------------------------------------------
 
 CREATE VIEW IF NOT EXISTS node_full AS
-SELECT
-    n.id,
-    n.type,
-    n.title,
-    n.description,
-    n.ui_pos_x,
-    n.ui_pos_y,
-    n.created_at,
-    n.updated_at,
-    n.unlocked_at,
+SELECT n.id,
+       n.type,
+       n.title,
+       n.description,
+       n.ui_pos_x,
+       n.ui_pos_y,
+       n.created_at,
+       n.updated_at,
+       n.unlocked_at,
 
-    ns.starting_at,
-    ns.viewport_x,
-    ns.viewport_y,
-    ns.viewport_zoom,
+       CASE n.type
+           WHEN 'start' THEN json_object(
+                   'starting_at', ns.starting_at,
+                   'viewport_x', ns.viewport_x,
+                   'viewport_y', ns.viewport_y,
+                   'viewport_zoom', ns.viewport_zoom
+                             )
+           WHEN 'location_gate' THEN json_object(
+                   'latitude', nlg.latitude,
+                   'longitude', nlg.longitude,
+                   'radius_meters', nlg.radius_meters
+                                     )
+           WHEN 'code_gate' THEN json_object(
+                   'code', ncg.code
+                                 )
+           WHEN 'reward' THEN json_object(
+                   'reward_type', nr.reward_type,
+                   'content_html', nr.content_html,
+                   'content_media_type', nr.content_media_type,
+                   'give_favours', nr.give_favours
+                              )
+           ELSE json('{}')
+           END AS data_json
 
-    nlg.latitude,
-    nlg.longitude,
-    nlg.radius_meters,
-
-    ncg.code,
-
-    nr.reward_type,
-    nr.content_html,
-    nr.content_media_type,
-    nr.give_favours
 FROM node n
          LEFT JOIN node_start ns ON n.id = ns.node_id
          LEFT JOIN node_location_gate nlg ON n.id = nlg.node_id

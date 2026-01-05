@@ -4,8 +4,8 @@
     <working_directory value="$PROJECT_DIR$/backend" />
     <envs>
       <env name="ADMIN_API_KEY" value="test" />
-      <env name="DATABASE_PATH" value="../db.sqlite" />
       <env name="CORS_ALLOWED_ORIGINS" value="*" />
+      <env name="DATABASE_PATH" value="../db.sqlite" />
     </envs>
     <kind value="PACKAGE" />
     <package value="backend/cmd/server" />
