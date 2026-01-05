@@ -18,5 +18,7 @@ type RewardData struct {
 }
 
 type StartData struct {
-	StartingAt string `json:"starting_at"`
+	StartingAt string  `json:"starting_at"`
+	ViewportX  float64 `json:"viewport_x,omitempty"`
+	ViewportY  float64 `json:"viewport_y,omitempty"`
 }

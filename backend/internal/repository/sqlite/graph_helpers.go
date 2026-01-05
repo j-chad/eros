@@ -50,7 +50,7 @@ func (s *sqliteDB) scanNodeFull(scanner interface {
 		if !startingAt.Valid {
 			return node, fmt.Errorf("node %d is type START but missing starting_at data", node.ID)
 		}
-		node.Start = &models.StartData{
+		node.Data = &models.StartData{
 			StartingAt: startingAt.Time.Format(time.RFC3339),
 		}
 
@@ -58,7 +58,7 @@ func (s *sqliteDB) scanNodeFull(scanner interface {
 		if !latitude.Valid || !longitude.Valid || !radiusMeters.Valid {
 			return node, fmt.Errorf("node %d is type LOCATION but missing location data", node.ID)
 		}
-		node.Location = &models.LocationData{
+		node.Data = &models.LocationData{
 			Latitude:  latitude.Float64,
 			Longitude: longitude.Float64,
 			RadiusM:   int(radiusMeters.Int64),
@@ -68,7 +68,7 @@ func (s *sqliteDB) scanNodeFull(scanner interface {
 		if !code.Valid {
 			return node, fmt.Errorf("node %d is type CODE but missing code data", node.ID)
 		}
-		node.Code = &models.CodeData{
+		node.Data = &models.CodeData{
 			Code: code.String,
 		}
 
@@ -76,7 +76,7 @@ func (s *sqliteDB) scanNodeFull(scanner interface {
 		if !rewardType.Valid || !contentHTML.Valid || !contentMediaType.Valid || !giveFavours.Valid {
 			return node, fmt.Errorf("node %d is type REWARD but missing reward data", node.ID)
 		}
-		node.Reward = &models.RewardData{
+		node.Data = &models.RewardData{
 			RewardType:  rewardType.String,
 			Content:     contentHTML.String,
 			MediaType:   contentMediaType.String,
@@ -121,7 +121,6 @@ func (s *sqliteDB) getCompleteNodes(ctx context.Context, startNodeID string) (ma
 		if err != nil {
 			return nil, nil, err
 		}
-		node.Edges = []models.Edge{}
 		nodesMap[node.ID] = &node
 
 		int64ID, err := strconv.ParseInt(node.ID, 10, 64)
