@@ -130,16 +130,24 @@ func (s *sqliteDB) GetGraph(ctx context.Context, startNodeID string) (*models.Gr
 		return nil, err
 	}
 
+	startNode := nodesMap[startNodeID]
+	if startNode == nil {
+		return nil, fmt.Errorf("start node with ID %s not found", startNodeID)
+	}
+
+	startData, ok := startNode.Data.(models.StartData)
+	if !ok {
+		return nil, fmt.Errorf("node %s is not a start node", startNodeID)
+	}
+
+	viewport := &models.Viewport{
+		X: startData.StartingAt
+	}
+
 	// Get all edges for those nodes
 	edges, err := s.getCompleteEdges(ctx, nodeIDs)
 	if err != nil {
 		return nil, err
-	}
-
-	for _, edge := range edges {
-		if node, exists := nodesMap[edge.From]; exists {
-			node.Edges = append(node.Edges, edge)
-		}
 	}
 
 	nodes := make([]models.Node, 0, len(nodesMap))
@@ -148,8 +156,7 @@ func (s *sqliteDB) GetGraph(ctx context.Context, startNodeID string) (*models.Gr
 	}
 
 	return &models.Graph{
-		StartNode: *nodesMap[startNodeID],
-		Nodes:     nodes,
-		Edges:     edges,
+		Nodes: nodes,
+		Edges: edges,
 	}, nil
 }

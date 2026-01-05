@@ -41,6 +41,10 @@ CREATE TABLE IF NOT EXISTS node (
     description TEXT,
     unlocked_at DATETIME,
 
+    -- UI positioning for graph editor
+    ui_pos_x    REAL,
+    ui_pos_y    REAL,
+
     created_at  DATETIME NOT NULL DEFAULT (datetime('now')),
     updated_at  DATETIME NOT NULL DEFAULT (datetime('now'))
 );
@@ -65,6 +69,10 @@ CREATE TABLE IF NOT EXISTS edge (
 CREATE TABLE IF NOT EXISTS node_start (
     node_id INTEGER PRIMARY KEY,
     starting_at DATETIME NOT NULL,
+
+    viewport_x REAL,
+    viewport_y REAL,
+    viewport_zoom REAL,
 
     FOREIGN KEY (node_id) REFERENCES node(id) ON DELETE CASCADE
 );

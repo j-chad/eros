@@ -12,6 +12,11 @@ const (
 	RewardNode       NodeType = "reward"
 )
 
+type NodePosition struct {
+	X float64 `json:"x"`
+	Y float64 `json:"y"`
+}
+
 type Node struct {
 	ID   string   `json:"id"`
 	Type NodeType `json:"type"`
@@ -19,20 +24,13 @@ type Node struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 
-	// Only one of the following will be populated based on the NodeType
-	Start    *StartData    `json:"start,omitempty"`
-	Location *LocationData `json:"location,omitempty"`
-	Code     *CodeData     `json:"code,omitempty"`
-	Reward   *RewardData   `json:"reward,omitempty"`
+	UIPosition *NodePosition `json:"ui_position,omitempty"`
+
+	Data any `json:"data"`
 
 	CreatedAt  time.Time  `json:"created_at"`
 	UpdatedAt  time.Time  `json:"updated_at"`
 	UnlockedAt *time.Time `json:"unlocked_at,omitempty"`
-}
-
-type NodeWithEdges struct {
-	Node  Node   `json:"node"`
-	Edges []Edge `json:"edges"`
 }
 
 type NewGraphRequest struct {
@@ -52,8 +50,14 @@ type Edge struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type Viewport struct {
+	X    float64 `json:"x"`
+	Y    float64 `json:"y"`
+	Zoom float64 `json:"zoom"`
+}
+
 type Graph struct {
-	StartNode NodeWithEdges `json:"start_node"`
-	Nodes     []Node        `json:"nodes"`
-	Edges     []Edge        `json:"edges"`
+	Viewport *Viewport `json:"viewport,omitempty"`
+	Nodes    []Node    `json:"nodes"`
+	Edges    []Edge    `json:"edges"`
 }
