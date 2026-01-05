@@ -166,3 +166,9 @@ func (s *sqliteDB) GetGraph(ctx context.Context, startNodeID string) (*models.Gr
 		Edges:    edges,
 	}, nil
 }
+
+func (s *sqliteDB) UpdateGraph(ctx context.Context, req models.Graph) error {
+	return s.withTx(ctx, func(txRepo *sqliteDB) error {
+		return nil
+	})
+}
