@@ -41,9 +41,10 @@ type NewGraphRequest struct {
 }
 
 type Edge struct {
-	ID   string `json:"id"`
-	From string `json:"from"`
-	To   string `json:"to"`
+	ID      string `json:"id"`
+	GraphID string `json:"-"`
+	From    string `json:"from"`
+	To      string `json:"to"`
 
 	ChoiceLabel string `json:"choice_label,omitempty"`
 

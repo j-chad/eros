@@ -167,6 +167,32 @@ func (s *sqliteDB) getNodeIDs(ctx context.Context, graphID string) ([]string, er
 	return nodeIDs, nil
 }
 
+func (s *sqliteDB) getEdgeIDs(ctx context.Context, graphID string) ([]string, error) {
+	rows, err := s.executor().QueryContext(ctx, `
+		SELECT id FROM edge
+		WHERE graph_id = ?
+	`, graphID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query edge IDs: %w", err)
+	}
+	defer rows.Close()
+
+	edgeIDs := make([]string, 0)
+	for rows.Next() {
+		var edgeID string
+		if err := rows.Scan(&edgeID); err != nil {
+			return nil, fmt.Errorf("failed to scan edge ID: %w", err)
+		}
+		edgeIDs = append(edgeIDs, edgeID)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating edge IDs: %w", err)
+	}
+
+	return edgeIDs, nil
+}
+
 func (s *sqliteDB) upsertNodeData(ctx context.Context, nodeID string, nodeType models.NodeType, data any) error {
 	switch nodeType {
 	case models.LocationGateNode:
@@ -271,6 +297,22 @@ func (s *sqliteDB) createNode(ctx context.Context, graphID string, node models.N
 	})
 }
 
+func (s *sqliteDB) createEdge(ctx context.Context, graphID string, edge models.Edge) error {
+	_, err := s.executor().ExecContext(ctx, `
+		INSERT INTO edge (
+			graph_id,
+			source_node_id,
+			destination_node_id,
+			choice_label
+		) VALUES (?, ?, ?, ?)
+	`, graphID, edge.From, edge.To, edge.ChoiceLabel)
+	if err != nil {
+		return fmt.Errorf("failed to insert edge: %w", err)
+	}
+
+	return nil
+}
+
 func (s *sqliteDB) updateNode(ctx context.Context, node models.Node) error {
 	// update node
 	var uiPositionX sql.NullFloat64
@@ -305,6 +347,21 @@ func (s *sqliteDB) updateNode(ctx context.Context, node models.Node) error {
 	return nil
 }
 
+func (s *sqliteDB) updateEdge(ctx context.Context, edge models.Edge) error {
+	_, err := s.executor().ExecContext(ctx, `
+		UPDATE edge SET
+			source_node_id = ?,
+			destination_node_id = ?,
+			choice_label = ?
+		WHERE id = ?
+	`, edge.From, edge.To, edge.ChoiceLabel, edge.ID)
+	if err != nil {
+		return fmt.Errorf("failed to update edge: %w", err)
+	}
+
+	return nil
+}
+
 func (s *sqliteDB) deleteNodes(ctx context.Context, nodeIDs []string) error {
 	jsonIDs, err := json.Marshal(nodeIDs)
 	if err != nil {
@@ -318,6 +375,24 @@ func (s *sqliteDB) deleteNodes(ctx context.Context, nodeIDs []string) error {
 
 	if err != nil {
 		return fmt.Errorf("failed to delete nodes: %w", err)
+	}
+
+	return nil
+}
+
+func (s *sqliteDB) deleteEdges(ctx context.Context, edgeIDs []string) error {
+	jsonIDs, err := json.Marshal(edgeIDs)
+	if err != nil {
+		return fmt.Errorf("failed to marshal edge IDs: %w", err)
+	}
+
+	_, err = s.executor().ExecContext(ctx, `
+		DELETE FROM edge
+		WHERE id IN (SELECT value FROM json_each(?))
+	`, string(jsonIDs))
+
+	if err != nil {
+		return fmt.Errorf("failed to delete edges: %w", err)
 	}
 
 	return nil
@@ -371,5 +446,48 @@ func (s *sqliteDB) updateNodes(ctx context.Context, graphID string, nodes []mode
 }
 
 func (s *sqliteDB) updateEdges(ctx context.Context, graphID string, edges []models.Edge) error {
-	return fmt.Errorf("not implemented")
+	existingEdgeIDs, err := s.getEdgeIDs(ctx, graphID)
+	if err != nil {
+		return fmt.Errorf("failed to get existing edge IDs: %w", err)
+	}
+
+	existingEdgeIDSet := make(map[string]struct{}, len(existingEdgeIDs))
+	deletedEdgeIDSet := make(map[string]struct{}, len(existingEdgeIDs))
+	for _, id := range existingEdgeIDs {
+		existingEdgeIDSet[id] = struct{}{}
+		deletedEdgeIDSet[id] = struct{}{}
+	}
+
+	return s.withTx(ctx, func(tx *sqliteDB) error {
+		for _, edge := range edges {
+			// since the edge still exists, remove it from the deleted set
+			delete(deletedEdgeIDSet, edge.ID)
+
+			if edge.GraphID != "" && existingEdgeIDSet[edge.ID] == struct{}{} {
+				err := tx.updateEdge(ctx, edge)
+				if err != nil {
+					return fmt.Errorf("failed to update edge %s: %w", edge.ID, err)
+				}
+			} else {
+				err := tx.createEdge(ctx, graphID, edge)
+				if err != nil {
+					return fmt.Errorf("failed to create edge %s: %w", edge.ID, err)
+				}
+			}
+		}
+
+		if len(deletedEdgeIDSet) > 0 {
+			idsToDelete := make([]string, 0, len(deletedEdgeIDSet))
+			for id := range deletedEdgeIDSet {
+				idsToDelete = append(idsToDelete, id)
+			}
+
+			err := tx.deleteEdges(ctx, idsToDelete)
+			if err != nil {
+				return fmt.Errorf("failed to delete edges: %w", err)
+			}
+		}
+
+		return nil
+	})
 }
