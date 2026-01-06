@@ -19,6 +19,7 @@ func (s *sqliteDB) scanNodeFull(scanner interface {
 
 	err := scanner.Scan(
 		&node.ID,
+		&node.GraphID,
 		&node.Type,
 		&node.Title,
 		&node.Description,
@@ -58,8 +59,8 @@ func (s *sqliteDB) scanNodeFull(scanner interface {
 		if err := json.Unmarshal(dataJSON, &node.Data); err != nil {
 			return node, fmt.Errorf("failed to unmarshal reward data: %w", err)
 		}
-	case models.StartNode:
-	case models.ChoiceNode:
+	case models.StartNode, models.ChoiceNode:
+		// No additional data for these types
 	default:
 		return node, fmt.Errorf("unknown node type: %s", node.Type)
 	}
