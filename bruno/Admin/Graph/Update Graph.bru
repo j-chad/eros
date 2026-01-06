@@ -1,0 +1,39 @@
+meta {
+  name: Update Graph
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{scheme}}{{host}}/api/admin/graphs/:id
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 1
+}
+
+body:json {
+  {
+    "title": "my new graph",
+    "starting_at": "2026-01-03T11:00:00Z",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "start",
+        "title": "Start"
+      },
+      {
+        "type": "choice",
+        "title": "a"
+      }
+    ],
+    "edges": []
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
