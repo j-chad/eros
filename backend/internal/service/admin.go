@@ -5,10 +5,15 @@ import (
 	"backend/internal/models"
 	"backend/internal/repository"
 	"context"
+	"errors"
 	"time"
 )
 
 const RegistrationExpiryDuration = 10 * time.Minute
+
+var (
+	ErrInvalidGraph = errors.New("invalid graph data")
+)
 
 type AdminService struct {
 	repo repository.Repository
@@ -102,4 +107,35 @@ func (s *AdminService) GetGraph(ctx context.Context, graphID string) (*models.Gr
 	}
 
 	return graph, nil
+}
+
+func (s *AdminService) UpdateGraph(ctx context.Context, graph models.Graph) error {
+	nodes := graph.Nodes
+	if nodes != nil {
+		startNodeSeen := false
+		for _, node := range *nodes {
+			if node.GraphID != graph.ID {
+				return ErrInvalidGraph
+			}
+
+			if node.Type == models.StartNode {
+				if startNodeSeen {
+					return ErrInvalidGraph
+				} else {
+					startNodeSeen = true
+				}
+			}
+		}
+	}
+
+	edges := graph.Edges
+	if edges != nil {
+		for _, edge := range *edges {
+			if edge.GraphID != graph.ID {
+				return ErrInvalidGraph
+			}
+		}
+	}
+
+	return s.repo.UpdateGraph(ctx, graph)
 }

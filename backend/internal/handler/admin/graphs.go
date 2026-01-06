@@ -2,9 +2,11 @@ package admin
 
 import (
 	"backend/internal/models"
+	"backend/internal/service"
 	"backend/pkg/apierror"
 	"backend/pkg/response"
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -72,4 +74,33 @@ func (h *Handler) GetGraph(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.JSON(w, http.StatusOK, graph)
+}
+
+func (h *Handler) UpdateGraph(w http.ResponseWriter, r *http.Request) {
+	var graphID = r.PathValue("id")
+	if graphID == "" {
+		response.Error(w, apierror.BadRequest("Graph ID is required"))
+		return
+	}
+
+	var graph models.Graph
+	if err := json.NewDecoder(r.Body).Decode(&graph); err != nil {
+		response.Error(w, apierror.BadRequest("invalid request body"))
+		return
+	}
+
+	graph.ID = graphID
+
+	err := h.adminService.UpdateGraph(r.Context(), graph)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidGraph) {
+			response.Error(w, apierror.BadRequest("invalid graph data"))
+			return
+		}
+
+		response.Error(w, apierror.UnknownInternalError(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
