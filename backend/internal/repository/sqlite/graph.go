@@ -156,6 +156,39 @@ func (s *sqliteDB) GetGraph(ctx context.Context, graphID string) (*models.Graph,
 
 func (s *sqliteDB) UpdateGraph(ctx context.Context, req models.Graph) error {
 	return s.withTx(ctx, func(txRepo *sqliteDB) error {
+		// update graph details
+		var viewportX, viewportY, viewportZoom sql.NullFloat64
+		if req.Viewport != nil {
+			viewportX = sql.NullFloat64{Float64: req.Viewport.X, Valid: true}
+			viewportY = sql.NullFloat64{Float64: req.Viewport.Y, Valid: true}
+			viewportZoom = sql.NullFloat64{Float64: req.Viewport.Zoom, Valid: true}
+		}
+		result, err := txRepo.executor().ExecContext(ctx, `
+			UPDATE graph 
+			SET title = ?, description = ?, starting_at = ?, viewport_x = ?, viewport_y = ?, viewport_zoom = ?
+			WHERE id = ?;
+		`, req.Title, req.Description, req.StartingAt, viewportX, viewportY, viewportZoom, req.ID)
+		if err != nil {
+			return fmt.Errorf("failed to update graph: %w", err)
+		}
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			return fmt.Errorf("failed to get rows affected for graph update: %w", err)
+		}
+		if rowsAffected == 0 {
+			return fmt.Errorf("no graph found with ID %s", req.ID)
+		}
+
+		err = txRepo.updateEdges(ctx, req.ID, *req.Edges)
+		if err != nil {
+			return fmt.Errorf("failed to update edges: %w", err)
+		}
+
+		err = txRepo.updateNodes(ctx, req.ID, *req.Nodes)
+		if err != nil {
+			return fmt.Errorf("failed to update nodes: %w", err)
+		}
+
 		return nil
 	})
 }

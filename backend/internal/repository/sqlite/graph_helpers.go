@@ -140,45 +140,10 @@ func (s *sqliteDB) getEdges(ctx context.Context, graphID string) ([]models.Edge,
 	return edges, nil
 }
 
-//func (s *sqliteDB) updateNode(ctx context.Context, node models.Node) error {
-//	return s.withTx(ctx, func(txRepo *sqliteDB) error {
-//		// update node data
-//		var result sql.Result
-//		var err error
-//		switch node.Type {
-//		case models.StartNode:
-//			data, ok := node.Data.(*models.StartData)
-//			if !ok || data == nil {
-//				return fmt.Errorf("invalid start data")
-//			}
-//
-//			result, err = s.executor().ExecContext(ctx, `
-//				UPDATE node_start SET viewport_x = ?, viewport_y = ?, viewport_zoom = ?
-//				WHERE node_id = ?
-//			`, data.ViewportX, data.ViewportY, data.ViewportZoom, node.ID)
-//		case models.LocationGateNode:
-//			data, ok := node.Data.(*models.LocationData)
-//			if !ok || data == nil {
-//				return fmt.Errorf("invalid location data")
-//			}
-//
-//			result, err = s.executor().ExecContext(ctx, `
-//				INSERT INTO node_location_gate (node_id, latitude, longitude, radius_meters) VALUES (?, ?, ?, ?)
-//			    ON CONFLICT DO UPDATE SET latitude = ?2, longitude = ?3, radius_meters = ?4
-//			`, node.ID, data.Latitude, data.Longitude, data.RadiusM)
-//		default:
-//			return fmt.Errorf("unknown node type: %s", node.Type)
-//		}
-//
-//		if err != nil {
-//			return fmt.Errorf("failed to update node data: %w", err)
-//		}
-//
-//		affected, err := result.RowsAffected()
-//		if err != nil || affected == 0 {
-//			return fmt.Errorf("no node data updated: %w", err)
-//		}
-//
-//		return nil
-//	})
-//}
+func (s *sqliteDB) updateNodes(ctx context.Context, nodes []models.Node) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (s *sqliteDB) updateEdges(ctx context.Context, edges []models.Edge) error {
+	return fmt.Errorf("not implemented")
+}
