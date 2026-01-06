@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strconv"
 )
 
 // scanNodeFull scans a row from node_full view into a Node struct
@@ -140,10 +141,183 @@ func (s *sqliteDB) getEdges(ctx context.Context, graphID string) ([]models.Edge,
 	return edges, nil
 }
 
-func (s *sqliteDB) updateNodes(ctx context.Context, nodes []models.Node) error {
-	return fmt.Errorf("not implemented")
+func (s *sqliteDB) getNodeIDs(ctx context.Context, graphID string) ([]string, error) {
+	rows, err := s.executor().QueryContext(ctx, `
+		SELECT id FROM node
+		WHERE graph_id = ?
+	`, graphID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query node IDs: %w", err)
+	}
+	defer rows.Close()
+
+	nodeIDs := make([]string, 0)
+	for rows.Next() {
+		var nodeID string
+		if err := rows.Scan(&nodeID); err != nil {
+			return nil, fmt.Errorf("failed to scan node ID: %w", err)
+		}
+		nodeIDs = append(nodeIDs, nodeID)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating node IDs: %w", err)
+	}
+
+	return nodeIDs, nil
 }
 
-func (s *sqliteDB) updateEdges(ctx context.Context, edges []models.Edge) error {
+func (s *sqliteDB) insertNodeData(ctx context.Context, nodeID string, nodeType models.NodeType, data any) error {
+	switch nodeType {
+	case models.LocationGateNode:
+		locationData, ok := data.(*models.LocationData)
+		if !ok {
+			return fmt.Errorf("invalid data type for location node")
+		}
+		_, err := s.executor().ExecContext(ctx, `
+			INSERT INTO node_location_gate (
+				node_id,
+				latitude,
+				longitude,
+				radius_meters
+			) VALUES (?, ?, ?, ?)
+			ON CONFLICT (node_id) DO UPDATE SET
+				latitude = excluded.latitude,
+				longitude = excluded.longitude,
+				radius_meters = excluded.radius_meters
+		`, nodeID, locationData.Latitude, locationData.Longitude, locationData.RadiusM)
+		return err
+	case models.CodeGateNode:
+		codeData, ok := data.(*models.CodeData)
+		if !ok {
+			return fmt.Errorf("invalid data type for code node")
+		}
+		_, err := s.executor().ExecContext(ctx, `
+			INSERT INTO node_code_gate (
+				node_id,
+				code
+			) VALUES (?, ?)
+			ON CONFLICT (node_id) DO UPDATE SET
+				code = excluded.code
+		`, nodeID, codeData.Code)
+		return err
+	case models.RewardNode:
+		rewardData, ok := data.(*models.RewardData)
+		if !ok {
+			return fmt.Errorf("invalid data type for reward node")
+		}
+		_, err := s.executor().ExecContext(ctx, `
+			INSERT INTO node_reward (
+				node_id,
+				reward_type,
+			    content_html,
+			    content_media_type,
+				give_favours
+			) VALUES (?, ?, ?, ?, ?)
+			ON CONFLICT (node_id) DO UPDATE SET
+				reward_type = excluded.reward_type,
+				content_html = excluded.content_html,
+				content_media_type = excluded.content_media_type,
+				give_favours = excluded.give_favours
+		`, nodeID, rewardData.RewardType, rewardData.Content, rewardData.MediaType, rewardData.GiveFavours)
+		return err
+	case models.StartNode, models.ChoiceNode:
+		// No additional data to insert
+		return nil
+	default:
+		return fmt.Errorf("unknown node type: %s", nodeType)
+	}
+}
+
+func (s *sqliteDB) createNode(ctx context.Context, graphID string, node models.Node) error {
+	return s.withTx(ctx, func(tx *sqliteDB) error {
+		// insert node
+		var uiPositionX sql.NullFloat64
+		var uiPositionY sql.NullFloat64
+		if node.UIPosition != nil {
+			uiPositionX = sql.NullFloat64{Float64: node.UIPosition.X, Valid: true}
+			uiPositionY = sql.NullFloat64{Float64: node.UIPosition.Y, Valid: true}
+		} else {
+			uiPositionX = sql.NullFloat64{Valid: false}
+			uiPositionY = sql.NullFloat64{Valid: false}
+		}
+
+		result, err := tx.executor().ExecContext(ctx, `
+			INSERT INTO node (
+				graph_id,
+				type,
+				title,
+				description,
+				ui_pos_x,
+				ui_pos_y  
+		  	) VALUES (?, ?, ?, ?, ?, ?)
+		`, graphID, node.Type, node.Title, node.Description, uiPositionX, uiPositionY)
+		if err != nil {
+			return fmt.Errorf("failed to insert node: %w", err)
+		}
+
+		nodeID, err := result.LastInsertId()
+		if err != nil {
+			return fmt.Errorf("failed to get last insert ID for node: %w", err)
+		}
+
+		// insert type-specific data
+		err = tx.insertNodeData(ctx, strconv.FormatInt(nodeID, 10), node.Type, node.Data)
+		if err != nil {
+			return fmt.Errorf("failed to insert node data: %w", err)
+		}
+
+		return nil
+	})
+}
+
+func (s *sqliteDB) updateNodes(ctx context.Context, graphID string, nodes []models.Node) error {
+	existingNodeIDs, err := s.getNodeIDs(ctx, graphID)
+	if err != nil {
+		return fmt.Errorf("failed to get existing node IDs: %w", err)
+	}
+
+	existingNodeIDSet := make(map[string]struct{}, len(existingNodeIDs))
+	deletedNodeIDSet := make(map[string]struct{}, len(existingNodeIDs))
+	for _, id := range existingNodeIDs {
+		existingNodeIDSet[id] = struct{}{}
+		deletedNodeIDSet[id] = struct{}{}
+	}
+
+	return s.withTx(ctx, func(tx *sqliteDB) error {
+		for _, node := range nodes {
+			// since the node still exists, remove it from the deleted set
+			delete(deletedNodeIDSet, node.ID)
+
+			if node.GraphID != "" && existingNodeIDSet[node.ID] == struct{}{} {
+				err := tx.updateNode(ctx, node)
+				if err != nil {
+					return fmt.Errorf("failed to update node %s: %w", node.ID, err)
+				}
+			} else {
+				err := tx.createNode(ctx, graphID, node)
+				if err != nil {
+					return fmt.Errorf("failed to create node %s: %w", node.ID, err)
+				}
+			}
+		}
+
+		if len(deletedNodeIDSet) > 0 {
+			idsToDelete := make([]string, 0, len(deletedNodeIDSet))
+			for id := range deletedNodeIDSet {
+				idsToDelete = append(idsToDelete, id)
+			}
+
+			err := tx.deleteNodes(ctx, idsToDelete)
+			if err != nil {
+				return fmt.Errorf("failed to delete nodes: %w", err)
+			}
+		}
+
+		return nil
+	})
+}
+
+func (s *sqliteDB) updateEdges(ctx context.Context, graphID string, edges []models.Edge) error {
 	return fmt.Errorf("not implemented")
 }
