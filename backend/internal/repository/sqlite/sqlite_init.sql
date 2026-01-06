@@ -32,9 +32,26 @@ CREATE TABLE IF NOT EXISTS device
 -- GRAPH NODES AND EDGES
 -- -----------------------------------------------------------------------------
 
+CREATE TABLE IF NOT EXISTS graph (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    title       TEXT     NOT NULL,
+    description TEXT,
+
+    starting_at DATETIME,
+
+    viewport_x    REAL,
+    viewport_y    REAL,
+    viewport_zoom REAL,
+
+    created_at  DATETIME NOT NULL DEFAULT (datetime('now')),
+    updated_at  DATETIME NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS node
 (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    graph_id    INTEGER  NOT NULL,
 
     type        TEXT     NOT NULL, -- E.G. START | LOCATION | CODE | CHOICE | REWARD
 
@@ -47,37 +64,34 @@ CREATE TABLE IF NOT EXISTS node
     ui_pos_y    REAL,
 
     created_at  DATETIME NOT NULL DEFAULT (datetime('now')),
-    updated_at  DATETIME NOT NULL DEFAULT (datetime('now'))
+    updated_at  DATETIME NOT NULL DEFAULT (datetime('now')),
+
+    FOREIGN KEY (graph_id) REFERENCES graph (id) ON DELETE CASCADE
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_one_start_per_graph
+    ON node(graph_id)
+    WHERE type = 'start';
 
 CREATE TABLE IF NOT EXISTS edge
 (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    from_node_id INTEGER  NOT NULL,
-    to_node_id   INTEGER  NOT NULL,
+
+    graph_id     INTEGER  NOT NULL,
+    source_node_id INTEGER  NOT NULL,
+    destination_node_id   INTEGER  NOT NULL,
 
     choice_label TEXT, -- For choice edges
 
     created_at   DATETIME NOT NULL DEFAULT (datetime('now')),
     updated_at   DATETIME NOT NULL DEFAULT (datetime('now')),
 
-    FOREIGN KEY (from_node_id) REFERENCES node (id) ON DELETE CASCADE,
-    FOREIGN KEY (to_node_id) REFERENCES node (id) ON DELETE CASCADE,
+    FOREIGN KEY (graph_id) REFERENCES graph (id) ON DELETE CASCADE,
+    FOREIGN KEY (source_node_id) REFERENCES node (id) ON DELETE CASCADE,
+    FOREIGN KEY (destination_node_id) REFERENCES node (id) ON DELETE CASCADE,
 
-    UNIQUE (from_node_id, choice_label),
-    CHECK (from_node_id != to_node_id)
-);
-
-CREATE TABLE IF NOT EXISTS node_start
-(
-    node_id       INTEGER PRIMARY KEY,
-    starting_at   DATETIME NOT NULL,
-
-    viewport_x    REAL,
-    viewport_y    REAL,
-    viewport_zoom REAL,
-
-    FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE
+    UNIQUE (source_node_id, choice_label),
+    CHECK (source_node_id != destination_node_id)
 );
 
 CREATE TABLE IF NOT EXISTS node_location_gate
@@ -181,12 +195,21 @@ BEGIN
     UPDATE edge SET updated_at = datetime('now') WHERE id = NEW.id;
 END;
 
+CREATE TRIGGER IF NOT EXISTS trg_update_graph_updated_at
+    AFTER UPDATE
+    ON graph
+    FOR EACH ROW
+BEGIN
+    UPDATE graph SET updated_at = datetime('now') WHERE id = NEW.id;
+END;
+
 -- ----------------------------------------------------------------------------
 -- VIEWS
 -- ----------------------------------------------------------------------------
 
 CREATE VIEW IF NOT EXISTS node_full AS
 SELECT n.id,
+       n.graph_id,
        n.type,
        n.title,
        n.description,
@@ -197,12 +220,6 @@ SELECT n.id,
        n.unlocked_at,
 
        CASE n.type
-           WHEN 'start' THEN json_object(
-                   'starting_at', ns.starting_at,
-                   'viewport_x', ns.viewport_x,
-                   'viewport_y', ns.viewport_y,
-                   'viewport_zoom', ns.viewport_zoom
-                             )
            WHEN 'location_gate' THEN json_object(
                    'latitude', nlg.latitude,
                    'longitude', nlg.longitude,
@@ -221,7 +238,6 @@ SELECT n.id,
            END AS data_json
 
 FROM node n
-         LEFT JOIN node_start ns ON n.id = ns.node_id
          LEFT JOIN node_location_gate nlg ON n.id = nlg.node_id
          LEFT JOIN node_code_gate ncg ON n.id = ncg.node_id
          LEFT JOIN node_reward nr ON n.id = nr.node_id;

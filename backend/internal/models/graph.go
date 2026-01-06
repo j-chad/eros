@@ -57,7 +57,18 @@ type Viewport struct {
 }
 
 type Graph struct {
+	ID string `json:"id"`
+
+	Title       string `json:"title"`
+	Description string `json:"description"`
+
+	StartingAt time.Time `json:"starting_at"`
+
 	Viewport *Viewport `json:"viewport,omitempty"`
-	Nodes    []Node    `json:"nodes"`
-	Edges    []Edge    `json:"edges"`
+
+	Nodes *[]Node `json:"nodes,omitempty"`
+	Edges *[]Edge `json:"edges,omitempty"`
+
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

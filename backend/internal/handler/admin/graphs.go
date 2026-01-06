@@ -9,7 +9,7 @@ import (
 )
 
 func (h *Handler) ListStartNodes(w http.ResponseWriter, r *http.Request) {
-	nodes, err := h.adminService.ListStartNodes(r.Context())
+	nodes, err := h.adminService.ListGraphs(r.Context())
 	if err != nil {
 		http.Error(w, "Failed to list start nodes: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -19,13 +19,13 @@ func (h *Handler) ListStartNodes(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteGraph(w http.ResponseWriter, r *http.Request) {
-	startNodeID := r.PathValue("id")
-	if startNodeID == "" {
-		response.Error(w, apierror.BadRequest("Start node ID is required"))
+	graphID := r.PathValue("id")
+	if graphID == "" {
+		response.Error(w, apierror.BadRequest("Graph ID is required"))
 		return
 	}
 
-	if err := h.adminService.DeleteGraph(r.Context(), startNodeID); err != nil {
+	if err := h.adminService.DeleteGraph(r.Context(), graphID); err != nil {
 		response.Error(w, apierror.UnknownInternalError(err))
 		return
 	}
@@ -54,15 +54,20 @@ func (h *Handler) CreateGraph(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetGraph(w http.ResponseWriter, r *http.Request) {
-	startNodeID := r.PathValue("id")
-	if startNodeID == "" {
-		response.Error(w, apierror.BadRequest("Start node ID is required"))
+	graphID := r.PathValue("id")
+	if graphID == "" {
+		response.Error(w, apierror.BadRequest("Graph ID is required"))
 		return
 	}
 
-	graph, err := h.adminService.GetGraph(r.Context(), startNodeID)
+	graph, err := h.adminService.GetGraph(r.Context(), graphID)
 	if err != nil {
 		response.Error(w, apierror.UnknownInternalError(err))
+		return
+	}
+
+	if graph == nil {
+		response.Error(w, apierror.NotFound("Graph not found"))
 		return
 	}
 
