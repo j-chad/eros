@@ -167,7 +167,7 @@ func (s *sqliteDB) getNodeIDs(ctx context.Context, graphID string) ([]string, er
 	return nodeIDs, nil
 }
 
-func (s *sqliteDB) insertNodeData(ctx context.Context, nodeID string, nodeType models.NodeType, data any) error {
+func (s *sqliteDB) upsertNodeData(ctx context.Context, nodeID string, nodeType models.NodeType, data any) error {
 	switch nodeType {
 	case models.LocationGateNode:
 		locationData, ok := data.(*models.LocationData)
@@ -262,13 +262,65 @@ func (s *sqliteDB) createNode(ctx context.Context, graphID string, node models.N
 		}
 
 		// insert type-specific data
-		err = tx.insertNodeData(ctx, strconv.FormatInt(nodeID, 10), node.Type, node.Data)
+		err = tx.upsertNodeData(ctx, strconv.FormatInt(nodeID, 10), node.Type, node.Data)
 		if err != nil {
 			return fmt.Errorf("failed to insert node data: %w", err)
 		}
 
 		return nil
 	})
+}
+
+func (s *sqliteDB) updateNode(ctx context.Context, node models.Node) error {
+	// update node
+	var uiPositionX sql.NullFloat64
+	var uiPositionY sql.NullFloat64
+	if node.UIPosition != nil {
+		uiPositionX = sql.NullFloat64{Float64: node.UIPosition.X, Valid: true}
+		uiPositionY = sql.NullFloat64{Float64: node.UIPosition.Y, Valid: true}
+	} else {
+		uiPositionX = sql.NullFloat64{Valid: false}
+		uiPositionY = sql.NullFloat64{Valid: false}
+	}
+
+	_, err := s.executor().ExecContext(ctx, `
+		UPDATE node SET
+			type = ?,
+			title = ?,
+			description = ?,
+			ui_pos_x = ?,
+			ui_pos_y = ?
+		WHERE id = ?
+	`, node.Type, node.Title, node.Description, uiPositionX, uiPositionY, node.ID)
+	if err != nil {
+		return fmt.Errorf("failed to update node: %w", err)
+	}
+
+	// update type-specific data
+	err = s.upsertNodeData(ctx, node.ID, node.Type, node.Data)
+	if err != nil {
+		return fmt.Errorf("failed to update node data: %w", err)
+	}
+
+	return nil
+}
+
+func (s *sqliteDB) deleteNodes(ctx context.Context, nodeIDs []string) error {
+	jsonIDs, err := json.Marshal(nodeIDs)
+	if err != nil {
+		return fmt.Errorf("failed to marshal node IDs: %w", err)
+	}
+
+	_, err = s.executor().ExecContext(ctx, `
+		DELETE FROM node
+		WHERE id IN (SELECT value FROM json_each(?))
+	`, string(jsonIDs))
+
+	if err != nil {
+		return fmt.Errorf("failed to delete nodes: %w", err)
+	}
+
+	return nil
 }
 
 func (s *sqliteDB) updateNodes(ctx context.Context, graphID string, nodes []models.Node) error {
