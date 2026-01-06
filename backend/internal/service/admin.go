@@ -4,7 +4,6 @@ import (
 	"backend/internal/crypto"
 	"backend/internal/models"
 	"backend/internal/repository"
-	"backend/pkg/apierror"
 	"context"
 	"time"
 )
@@ -84,26 +83,22 @@ func (s *AdminService) UnfulfilFavourRequest(ctx context.Context, requestID stri
 	return s.repo.UnfulfilFavourRequest(ctx, requestID)
 }
 
-func (s *AdminService) ListStartNodes(ctx context.Context) ([]models.Node, error) {
-	return s.repo.ListStartNodes(ctx)
+func (s *AdminService) ListGraphs(ctx context.Context) ([]models.Graph, error) {
+	return s.repo.ListGraphs(ctx)
 }
 
 func (s *AdminService) CreateGraph(ctx context.Context, req models.NewGraphRequest) (string, error) {
 	return s.repo.CreateGraph(ctx, req)
 }
 
-func (s *AdminService) DeleteGraph(ctx context.Context, startNodeID string) error {
-	return s.repo.DeleteGraph(ctx, startNodeID)
+func (s *AdminService) DeleteGraph(ctx context.Context, graphID string) error {
+	return s.repo.DeleteGraph(ctx, graphID)
 }
 
-func (s *AdminService) GetGraph(ctx context.Context, startNodeID string) (*models.Graph, error) {
-	graph, err := s.repo.GetGraph(ctx, startNodeID)
+func (s *AdminService) GetGraph(ctx context.Context, graphID string) (*models.Graph, error) {
+	graph, err := s.repo.GetGraph(ctx, graphID)
 	if err != nil {
 		return nil, err
-	}
-
-	if len(graph.Nodes) == 0 {
-		return nil, apierror.NotFound("graph node not found")
 	}
 
 	return graph, nil

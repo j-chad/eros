@@ -16,10 +16,3 @@ type RewardData struct {
 	MediaType   string `json:"media_type"`
 	GiveFavours int    `json:"give_favours"`
 }
-
-type StartData struct {
-	StartingAt   string   `json:"starting_at"`
-	ViewportX    *float64 `json:"viewport_x,omitempty"`
-	ViewportY    *float64 `json:"viewport_y,omitempty"`
-	ViewportZoom *float64 `json:"viewport_zoom,omitempty"`
-}

@@ -3,115 +3,94 @@ package sqlite
 import (
 	"backend/internal/models"
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 )
 
-func (s *sqliteDB) ListStartNodes(ctx context.Context) ([]models.Node, error) {
+func (s *sqliteDB) ListGraphs(ctx context.Context) ([]models.Graph, error) {
 	query := `
         SELECT 
-            n.id,
-            n.type,
-            n.title,
-            n.description,
-            n.created_at,
-            n.updated_at,
-            n.unlocked_at,
-            ns.starting_at
-        FROM node n
-        INNER JOIN node_start ns ON n.id = ns.node_id
-        ORDER BY n.id
+            g.id,
+            g.title,
+            g.description,
+            g.created_at,
+            g.updated_at,
+            g.starting_at
+        FROM graph g
+        ORDER BY g.starting_at DESC
     `
 
 	rows, err := s.executor().QueryContext(ctx, query)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query start nodes: %w", err)
+		return nil, fmt.Errorf("failed to query graphs: %w", err)
 	}
 	defer rows.Close()
 
-	nodes := make([]models.Node, 0)
+	graphs := make([]models.Graph, 0)
 
 	for rows.Next() {
-		var node models.Node
-		var startData models.StartData
+		var graph models.Graph
 
 		err := rows.Scan(
-			&node.ID,
-			&node.Type,
-			&node.Title,
-			&node.Description,
-			&node.CreatedAt,
-			&node.UpdatedAt,
-			&node.UnlockedAt,
-			&startData.StartingAt,
+			&graph.ID,
+			&graph.Title,
+			&graph.Description,
+			&graph.CreatedAt,
+			&graph.UpdatedAt,
+			&graph.StartingAt,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan start node: %w", err)
+			return nil, fmt.Errorf("failed to scan graph: %w", err)
 		}
 
-		node.Data = startData
-
-		nodes = append(nodes, node)
+		graphs = append(graphs, graph)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating start nodes: %w", err)
+		return nil, fmt.Errorf("error iterating graphs: %w", err)
 	}
 
-	return nodes, nil
+	return graphs, nil
 }
 
-func (s *sqliteDB) DeleteGraph(ctx context.Context, startNodeID string) error {
-	query := `
-		DELETE FROM node 
-		WHERE id IN (
-			WITH RECURSIVE graph_nodes(node_id) AS (
-				SELECT node_id 
-				FROM node_start 
-				WHERE node_id = ?
-				
-				UNION
-				
-				SELECT e.to_node_id
-				FROM graph_nodes gn
-				JOIN edge e ON gn.node_id = e.from_node_id
-			)
-			SELECT node_id FROM graph_nodes
-		);
-	`
-
-	_, err := s.executor().ExecContext(ctx, query, startNodeID)
+func (s *sqliteDB) DeleteGraph(ctx context.Context, graphID string) error {
+	_, err := s.executor().ExecContext(ctx, `
+		DELETE FROM graph 
+		WHERE id = ?
+	`, graphID)
 	if err != nil {
-		return fmt.Errorf("failed to delete graph starting from node %s: %w", startNodeID, err)
+		return fmt.Errorf("failed to delete graph %s: %w", graphID, err)
 	}
 
 	return nil
 }
 
 func (s *sqliteDB) CreateGraph(ctx context.Context, req models.NewGraphRequest) (string, error) {
-	var startNodeID int64
+	var graphID int64
 
 	err := s.withTx(ctx, func(txRepo *sqliteDB) error {
-		// Insert start node
+		// Insert graph
 		result, err := txRepo.executor().ExecContext(ctx, `
-			INSERT INTO node (type, title, description)
+			INSERT INTO graph (title, description, starting_at)
 			VALUES (?, ?, ?)
-		`, models.StartNode, req.Title, req.Description)
+		`, req.Title, req.Description, req.StartingAt)
+		if err != nil {
+			return fmt.Errorf("failed to insert graph: %w", err)
+		}
+
+		graphID, err = result.LastInsertId()
+		if err != nil {
+			return fmt.Errorf("failed to get ID for graph: %w", err)
+		}
+
+		// Insert start node
+		_, err = txRepo.executor().ExecContext(ctx, `
+			INSERT INTO node (graph_id, type, title)
+			VALUES (?, ?, ?)
+		`, graphID, models.StartNode, "Start")
 		if err != nil {
 			return fmt.Errorf("failed to insert start node: %w", err)
-		}
-
-		startNodeID, err = result.LastInsertId()
-		if err != nil {
-			return fmt.Errorf("failed to get last insert ID for start node: %w", err)
-		}
-
-		// Insert into node_start
-		_, err = txRepo.executor().ExecContext(ctx, `
-			INSERT INTO node_start (node_id, starting_at)
-			VALUES (?, ?)
-		`, startNodeID, req.StartingAt)
-		if err != nil {
-			return fmt.Errorf("failed to insert into node_start: %w", err)
 		}
 
 		return nil
@@ -121,50 +100,58 @@ func (s *sqliteDB) CreateGraph(ctx context.Context, req models.NewGraphRequest) 
 		return "", err
 	}
 
-	return fmt.Sprintf("%d", startNodeID), nil
+	return fmt.Sprintf("%d", graphID), nil
 }
 
-func (s *sqliteDB) GetGraph(ctx context.Context, startNodeID string) (*models.Graph, error) {
-	nodesMap, nodeIDs, err := s.getCompleteNodes(ctx, startNodeID)
+func (s *sqliteDB) GetGraph(ctx context.Context, graphID string) (*models.Graph, error) {
+	row := s.executor().QueryRowContext(ctx, `
+		SELECT 
+		    title,
+		    description,
+		    starting_at,
+		    viewport_x,
+		    viewport_y,
+		    viewport_zoom,
+		    created_at,
+		    updated_at
+		FROM graph
+		WHERE id = ?;
+	`, graphID, models.StartNode)
+
+	graph := &models.Graph{ID: graphID}
+	var viewportX, viewportY, viewportZoom sql.NullFloat64
+
+	err := row.Scan(&graph.Title, &graph.Description, &graph.StartingAt, &viewportX, &viewportY, &viewportZoom, &graph.CreatedAt, &graph.UpdatedAt)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to scan graph: %w", err)
 	}
 
-	startNode := nodesMap[startNodeID]
-	if startNode == nil {
-		return nil, fmt.Errorf("start node with ID %s not found", startNodeID)
-	}
-
-	startData, ok := startNode.Data.(*models.StartData)
-	if !ok {
-		return nil, fmt.Errorf("node %s is not a start node", startNodeID)
-	}
-
-	var viewport *models.Viewport = nil
-	if startData.ViewportX != nil && startData.ViewportY != nil && startData.ViewportZoom != nil {
-		viewport = &models.Viewport{
-			X:    *startData.ViewportX,
-			Y:    *startData.ViewportY,
-			Zoom: *startData.ViewportZoom,
+	if viewportX.Valid && viewportY.Valid && viewportZoom.Valid {
+		graph.Viewport = &models.Viewport{
+			X:    viewportX.Float64,
+			Y:    viewportY.Float64,
+			Zoom: viewportZoom.Float64,
 		}
 	}
 
-	// Get all edges for those nodes
-	edges, err := s.getCompleteEdges(ctx, nodeIDs)
+	nodes, err := s.getCompleteNodes(ctx, graphID)
 	if err != nil {
 		return nil, err
 	}
 
-	nodes := make([]models.Node, 0, len(nodesMap))
-	for _, node := range nodesMap {
-		nodes = append(nodes, *node)
+	// Get all edges for those nodes
+	edges, err := s.getEdges(ctx, graphID)
+	if err != nil {
+		return nil, err
 	}
 
-	return &models.Graph{
-		Viewport: viewport,
-		Nodes:    nodes,
-		Edges:    edges,
-	}, nil
+	graph.Nodes = &nodes
+	graph.Edges = &edges
+
+	return graph, nil
 }
 
 func (s *sqliteDB) UpdateGraph(ctx context.Context, req models.Graph) error {

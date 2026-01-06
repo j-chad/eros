@@ -46,8 +46,8 @@ type FavourRepository interface {
 }
 
 type GraphRepository interface {
-	ListStartNodes(ctx context.Context) ([]models.Node, error)
-	DeleteGraph(ctx context.Context, startNodeID string) error
+	ListGraphs(ctx context.Context) ([]models.Graph, error)
+	DeleteGraph(ctx context.Context, graphID string) error
 	CreateGraph(ctx context.Context, req models.NewGraphRequest) (string, error)
-	GetGraph(ctx context.Context, startNodeID string) (*models.Graph, error)
+	GetGraph(ctx context.Context, graphID string) (*models.Graph, error)
 }
