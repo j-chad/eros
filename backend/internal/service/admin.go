@@ -114,7 +114,7 @@ func (s *AdminService) UpdateGraph(ctx context.Context, graph models.Graph) erro
 	if nodes != nil {
 		startNodeSeen := false
 		for _, node := range *nodes {
-			if node.GraphID != graph.ID {
+			if node.GraphID != "" && node.GraphID != graph.ID {
 				return ErrInvalidGraph
 			}
 
@@ -131,7 +131,7 @@ func (s *AdminService) UpdateGraph(ctx context.Context, graph models.Graph) erro
 	edges := graph.Edges
 	if edges != nil {
 		for _, edge := range *edges {
-			if edge.GraphID != graph.ID {
+			if edge.GraphID != "" && edge.GraphID != graph.ID {
 				return ErrInvalidGraph
 			}
 		}

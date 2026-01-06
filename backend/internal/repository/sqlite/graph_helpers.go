@@ -416,7 +416,7 @@ func (s *sqliteDB) updateNodes(ctx context.Context, graphID string, nodes []mode
 			// since the node still exists, remove it from the deleted set
 			delete(deletedNodeIDSet, node.ID)
 
-			if node.GraphID != "" && existingNodeIDSet[node.ID] == struct{}{} {
+			if node.ID != "" && existingNodeIDSet[node.ID] == struct{}{} {
 				err := tx.updateNode(ctx, node)
 				if err != nil {
 					return fmt.Errorf("failed to update node %s: %w", node.ID, err)
@@ -463,7 +463,7 @@ func (s *sqliteDB) updateEdges(ctx context.Context, graphID string, edges []mode
 			// since the edge still exists, remove it from the deleted set
 			delete(deletedEdgeIDSet, edge.ID)
 
-			if edge.GraphID != "" && existingEdgeIDSet[edge.ID] == struct{}{} {
+			if edge.ID != "" && existingEdgeIDSet[edge.ID] == struct{}{} {
 				err := tx.updateEdge(ctx, edge)
 				if err != nil {
 					return fmt.Errorf("failed to update edge %s: %w", edge.ID, err)
