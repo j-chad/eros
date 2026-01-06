@@ -4,8 +4,8 @@ import type {
     Device,
     Favour,
     FavourChoice,
-    FavourCount, NewStartNode,
-    RegistrationToken, StartNode
+    FavourCount, Graph, NewGraph,
+    RegistrationToken
 } from "$lib/types";
 import {auth} from "$lib/auth.svelte";
 import { error } from "@sveltejs/kit";
@@ -105,12 +105,18 @@ export const api = {
         listFavourRequests: async () => request<Array<Favour>>('/favours/requests', {method: 'GET'}),
     },
     graph: {
-        list: async () => request<Array<StartNode>>('/admin/graphs', {method: 'GET'}),
+        list: async () => request<Array<Graph>>('/admin/graphs', {method: 'GET'}),
         delete: async (graphId: string) => request(`/admin/graphs/${graphId}`, {method: 'DELETE'}),
-        create: async (graphData: NewStartNode) =>
+        create: async (graphData: NewGraph) =>
             request<string>('/admin/graphs', {
                 method: 'POST',
                 body: JSON.stringify(graphData),
             }),
+        update: async (graphId: string, graphData: Graph) =>
+            request(`/admin/graphs/${graphId}`, {
+                method: 'PUT',
+                body: JSON.stringify(graphData),
+            }),
+
     }
 }

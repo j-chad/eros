@@ -1,9 +1,9 @@
 <script lang="ts">
-    import type {StartNode} from "$lib/types";
+    import type {Graph} from "$lib/types";
     import {Edit, Plus, Trash2} from "lucide-svelte";
 
-    let { nodes, day, date, isCurrentMonth, onDeleteGraph, onCreateGraph, onEditGraph }: {
-        nodes: StartNode[];
+    let { graphs, day, date, isCurrentMonth, onDeleteGraph, onCreateGraph, onEditGraph }: {
+        graphs: Graph[];
         day: number;
         date: Date;
         isCurrentMonth: boolean;
@@ -26,9 +26,9 @@
     <div class="day-number">{day}</div>
 
     {#if isCurrentMonth}
-        {#if nodes.length > 0}
+        {#if graphs.length > 0}
             <div class="graphs">
-                {#each nodes as graph}
+                {#each graphs as graph}
                     <div class="graph-item">
                         <div class="graph-content">
                             <div class="graph-title">{graph.title}</div>

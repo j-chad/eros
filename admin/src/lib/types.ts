@@ -48,24 +48,57 @@ export enum NodeType {
     START = 'start',
 }
 
-export interface Node {
+export interface Graph {
     id: string;
-    type: NodeType,
     title: string;
-    description: string | null;
-    unlocked_at: string | null; // ISO 8601 date string
+    description?: string | null;
+
+    viewport?: {
+        x: number;
+        y: number;
+        zoom: number;
+    }
+
+    nodes?: Array<Node>;
+    edges?: Array<Edge>;
+
+    starting_at: string; // ISO 8601 date string
     created_at: string; // ISO 8601 date string
     updated_at: string; // ISO 8601 date string
 }
 
-export interface StartNode extends Node {
-    type: NodeType.START;
-    start: {
-        starting_at: string; // ISO 8601 date string
-    }
+export interface Edge {
+    id: string;
+    from: string;
+    to: string;
+
+    choice_label?: string;
+
+    created_at: string; // ISO 8601 date string
+    updated_at: string; // ISO 8601 date string
 }
 
-export interface NewStartNode {
+export interface Node<T extends NodeType = NodeType, D extends Record<string, unknown> = never> {
+    id: string;
+    type: T,
+
+    title: string;
+    description?: string | null;
+
+    ui_position?: {
+        x: number;
+        y: number;
+    };
+
+    data?: D;
+
+    unlocked_at?: string | null; // ISO 8601 date string
+
+    created_at: string; // ISO 8601 date string
+    updated_at: string; // ISO 8601 date string
+}
+
+export interface NewGraph {
     title: string;
     description?: string | null;
     starting_at: string; // ISO 8601 date string
