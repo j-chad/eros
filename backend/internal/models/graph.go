@@ -18,15 +18,16 @@ type NodePosition struct {
 }
 
 type Node struct {
-	ID   string   `json:"id"`
-	Type NodeType `json:"type"`
+	ID      string   `json:"id"`
+	GraphID string   `json:"-"`
+	Type    NodeType `json:"type"`
 
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	Title       string  `json:"title"`
+	Description *string `json:"description,omitempty"`
 
 	UIPosition *NodePosition `json:"ui_position,omitempty"`
 
-	Data any `json:"data"`
+	Data any `json:"data,omitempty"`
 
 	CreatedAt  time.Time  `json:"created_at"`
 	UpdatedAt  time.Time  `json:"updated_at"`
@@ -60,7 +61,7 @@ type Graph struct {
 	ID string `json:"id"`
 
 	Title       string `json:"title"`
-	Description string `json:"description"`
+	Description string `json:"description,omitempty"`
 
 	StartingAt time.Time `json:"starting_at"`
 
