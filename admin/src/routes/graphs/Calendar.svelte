@@ -2,11 +2,11 @@
     import {ChevronLeft, ChevronRight} from 'lucide-svelte';
     import Button from '$lib/components/Button.svelte';
     import Card from '$lib/components/Card.svelte';
-    import type {StartNode} from "$lib/types";
+    import type {Graph} from "$lib/types";
     import CalendarDay from "./CalendarDay.svelte";
 
-    let {nodes, onDeleteGraph, onCreateGraph, onEditGraph}: {
-        nodes: StartNode[];
+    let {graphs, onDeleteGraph, onCreateGraph, onEditGraph}: {
+        graphs: Graph[];
         onCreateGraph?: (date: Date) => Promise<void>;
         onEditGraph?: (id: string) => Promise<void>;
         onDeleteGraph?: (id: string) => Promise<void>;
@@ -60,10 +60,10 @@
         return days;
     });
 
-    function getNodesForDate(date: Date): StartNode[] {
+    function getGraphsForDate(date: Date): Graph[] {
         const dateStr = date.toISOString().split('T')[0];
-        return nodes.filter(node => {
-            const graphDate = new Date(node.start.starting_at).toISOString().split('T')[0];
+        return graphs.filter(graph => {
+            const graphDate = new Date(graph.starting_at).toISOString().split('T')[0];
             return graphDate === dateStr;
         });
     }
@@ -109,7 +109,7 @@
         <!-- Calendar grid -->
         <div class="calendar-grid">
             {#each calendarDays() as {day, isCurrentMonth, date}}
-                <CalendarDay nodes={getNodesForDate(date)} day={day} date={date}
+                <CalendarDay graphs={getGraphsForDate(date)} day={day} date={date}
                              isCurrentMonth={isCurrentMonth} onCreateGraph={onCreateGraph}
                              onDeleteGraph={onDeleteGraph} onEditGraph={onEditGraph}></CalendarDay>
             {/each}
