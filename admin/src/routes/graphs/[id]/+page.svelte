@@ -7,6 +7,7 @@
     import DateDisplay from "$lib/components/DateDisplay.svelte";
     import type { Graph } from '$lib/types';
     import { api } from "$lib/api";
+    import GraphRenderer from "./GraphRenderer.svelte";
 
     let { data } = $props();
 
@@ -118,9 +119,7 @@
 
 <!-- Graph Canvas Section - Placeholder for now -->
 <Card title="Graph Canvas">
-    <div class="canvas-placeholder">
-        Graph visualization will go here (SvelteFlow component)
-    </div>
+    <GraphRenderer/>
 </Card>
 
 <style>
@@ -158,18 +157,6 @@
         outline: none;
         border-color: #3b82f6;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    .canvas-placeholder {
-        min-height: 500px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #f9fafb;
-        border: 2px dashed #d1d5db;
-        border-radius: 8px;
-        color: #6b7280;
-        font-size: 0.875rem;
     }
 
     @media (max-width: 768px) {
