@@ -46,6 +46,10 @@ export type Favour = {
 
 export enum NodeType {
     START = 'start',
+    LOCATION = 'location',
+    CODE = 'code',
+    CHOICE = 'choice',
+    REWARD = 'reward',
 }
 
 export interface Graph {
@@ -97,6 +101,23 @@ export interface Node<T extends NodeType = NodeType, D extends Record<string, un
     created_at: string; // ISO 8601 date string
     updated_at: string; // ISO 8601 date string
 }
+
+export type StartNode = Node<NodeType.START>;
+export type LocationNode = Node<NodeType.LOCATION, {
+    latitude: number;
+    longitude: number;
+    radius_meters: number;
+}>;
+export type CodeNode = Node<NodeType.CODE, {
+    code: string;
+}>;
+export type ChoiceNode = Node<NodeType.CHOICE>;
+export type RewardNode = Node<NodeType.REWARD, {
+    reward_type: string; // not sure what the possible types are yet
+    content: string;
+    media_type: string;
+    give_favours: number;
+}>;
 
 export interface NewGraph {
     title: string;

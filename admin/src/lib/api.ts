@@ -112,6 +112,7 @@ export const api = {
                 method: 'POST',
                 body: JSON.stringify(graphData),
             }),
+        get: async (graphId: string) => request<Graph>(`/admin/graphs/${graphId}`, {method: 'GET'}),
         update: async (graphId: string, graphData: Graph) =>
             request(`/admin/graphs/${graphId}`, {
                 method: 'PUT',
