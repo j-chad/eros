@@ -10,9 +10,9 @@ import (
 // The ID of the newly created choice is set in the provided choice object.
 func (s *sqliteDB) CreateFavourChoice(ctx context.Context, choice *models.FavourChoice) error {
 	result, err := s.executor().ExecContext(ctx, `
-		INSERT INTO favour_choice (label, description, can_message)
-		VALUES (?, ?, ?)
-	`, choice.Label, choice.Description, choice.CanMessage)
+		INSERT INTO favour_choice (label, description, cost, can_message)
+		VALUES (?, ?, ?, ?)
+	`, choice.Label, choice.Description, choice.Costs, choice.CanMessage)
 	if err != nil {
 		return err
 	}
@@ -29,9 +29,9 @@ func (s *sqliteDB) CreateFavourChoice(ctx context.Context, choice *models.Favour
 func (s *sqliteDB) UpdateFavourChoice(ctx context.Context, choice models.FavourChoice) error {
 	_, err := s.executor().ExecContext(ctx, `
 		UPDATE favour_choice
-		SET label = ?, description = ?, can_message = ?
+		SET label = ?, description = ?, can_message = ?, cost = ?
 		WHERE id = ?
-	`, choice.Label, choice.Description, choice.CanMessage, choice.ID)
+	`, choice.Label, choice.Description, choice.CanMessage, choice.Costs, choice.ID)
 	return err
 }
 
@@ -45,7 +45,7 @@ func (s *sqliteDB) DeleteFavourChoice(ctx context.Context, choiceID string) erro
 
 func (s *sqliteDB) ListFavourChoices(ctx context.Context) ([]models.FavourChoice, error) {
 	rows, err := s.executor().QueryContext(ctx, `
-		SELECT id, label, description, can_message, created_at, updated_at
+		SELECT id, label, description, cost, can_message, created_at, updated_at
 		FROM favour_choice
 		ORDER BY created_at DESC
 	`)
@@ -57,7 +57,7 @@ func (s *sqliteDB) ListFavourChoices(ctx context.Context) ([]models.FavourChoice
 	choices := make([]models.FavourChoice, 0)
 	for rows.Next() {
 		var choice models.FavourChoice
-		if err := rows.Scan(&choice.ID, &choice.Label, &choice.Description, &choice.CanMessage, &choice.CreatedAt, &choice.UpdatedAt); err != nil {
+		if err := rows.Scan(&choice.ID, &choice.Label, &choice.Description, &choice.Costs, &choice.CanMessage, &choice.CreatedAt, &choice.UpdatedAt); err != nil {
 			return nil, err
 		}
 		choices = append(choices, choice)
