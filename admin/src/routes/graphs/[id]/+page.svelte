@@ -15,16 +15,20 @@
     let hasChanges = $state(false);
     let isSaving = $state(false);
 
+    // Convert UTC datetime to local date (YYYY-MM-DD)
+    let startingAtDate = $derived(() => {
+        if (!graph.starting_at) return '';
+        const date = new Date(graph.starting_at);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    });
+
     async function handleSave() {
         isSaving = true;
         try {
-            // Assuming you have an API method like this
-            // await api.graph.update(graph.id, {
-            //     title: graph.title,
-            //     description: graph.description,
-            //     starting_at: graph.starting_at,
-            //     // Add viewport, nodes, edges when ready
-            // });
+            await api.graph.update(graph.id, graph)
             hasChanges = false;
         } catch (error) {
             console.error('Failed to save graph:', error);
@@ -44,8 +48,15 @@
         hasChanges = true;
     }
 
-    function handleStartingTimeChange(newValue: string) {
-        graph.starting_at = newValue;
+    function handleStartingDateChange(event: Event) {
+        const input = event.target as HTMLInputElement;
+        const dateValue = input.value;
+
+        if (dateValue) {
+            const localDate = new Date(dateValue + 'T00:00:00');
+            graph.starting_at = localDate.toISOString();
+        }
+
         hasChanges = true;
     }
 </script>
@@ -88,11 +99,9 @@
         <div class="form-group">
             <label>Starting At</label>
             <input
-                    type="datetime-local"
-                    bind:value={graph.starting_at}
-                    onchange={() => {
-                    hasChanges = true;
-                }}
+                    type="date"
+                    value={startingAtDate()}
+                    onchange={handleStartingDateChange}
                     class="datetime-input"
             />
         </div>
