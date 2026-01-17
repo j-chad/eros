@@ -32,20 +32,21 @@ CREATE TABLE IF NOT EXISTS device
 -- GRAPH NODES AND EDGES
 -- -----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS graph (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+CREATE TABLE IF NOT EXISTS graph
+(
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
 
-    title       TEXT     NOT NULL,
-    description TEXT,
+    title         TEXT     NOT NULL,
+    description   TEXT,
 
-    starting_at DATETIME,
+    starting_at   DATETIME,
 
     viewport_x    REAL,
     viewport_y    REAL,
     viewport_zoom REAL,
 
-    created_at  DATETIME NOT NULL DEFAULT (datetime('now')),
-    updated_at  DATETIME NOT NULL DEFAULT (datetime('now'))
+    created_at    DATETIME NOT NULL DEFAULT (datetime('now')),
+    updated_at    DATETIME NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS node
@@ -70,21 +71,21 @@ CREATE TABLE IF NOT EXISTS node
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_one_start_per_graph
-    ON node(graph_id)
+    ON node (graph_id)
     WHERE type = 'start';
 
 CREATE TABLE IF NOT EXISTS edge
 (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
 
-    graph_id     INTEGER  NOT NULL,
-    source_node_id INTEGER  NOT NULL,
-    destination_node_id   INTEGER  NOT NULL,
+    graph_id            INTEGER  NOT NULL,
+    source_node_id      INTEGER  NOT NULL,
+    destination_node_id INTEGER  NOT NULL,
 
-    choice_label TEXT, -- For choice edges
+    choice_label        TEXT, -- For choice edges
 
-    created_at   DATETIME NOT NULL DEFAULT (datetime('now')),
-    updated_at   DATETIME NOT NULL DEFAULT (datetime('now')),
+    created_at          DATETIME NOT NULL DEFAULT (datetime('now')),
+    updated_at          DATETIME NOT NULL DEFAULT (datetime('now')),
 
     FOREIGN KEY (graph_id) REFERENCES graph (id) ON DELETE CASCADE,
     FOREIGN KEY (source_node_id) REFERENCES node (id) ON DELETE CASCADE,
@@ -144,7 +145,8 @@ CREATE TABLE IF NOT EXISTS favour_choice
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     label       TEXT     NOT NULL Unique,
     description TEXT,
-    can_message INTEGER  NOT NULL DEFAULT 1, -- Whether user can message when requesting
+    cost        INTEGER  NOT NULL DEFAULT 1,
+    can_message BOOLEAN  NOT NULL DEFAULT FALSE, -- Whether user can message when requesting
     created_at  DATETIME NOT NULL DEFAULT (datetime('now')),
     updated_at  DATETIME NOT NULL DEFAULT (datetime('now'))
 );
