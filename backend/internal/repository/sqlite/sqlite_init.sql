@@ -139,6 +139,7 @@ CREATE TABLE IF NOT EXISTS favour_count
     created_at    DATETIME NOT NULL   DEFAULT (datetime('now')),
     updated_at    DATETIME NOT NULL   DEFAULT (datetime('now'))
 );
+INSERT OR IGNORE INTO favour_count (id) VALUES (0);
 
 CREATE TABLE IF NOT EXISTS favour_choice
 (

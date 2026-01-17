@@ -1,13 +1,20 @@
 meta {
   name: Create Favour Choice
   type: http
-  seq: 2
+  seq: 3
 }
 
 post {
   url: {{scheme}}{{host}}/api/admin/favours/choices
-  body: multipartForm
+  body: json
   auth: inherit
+}
+
+body:json {
+  {
+    "label": "test2",
+    "cost": 2
+  }
 }
 
 body:multipart-form {
