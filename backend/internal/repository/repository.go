@@ -33,6 +33,7 @@ type DeviceRepository interface {
 
 type FavourRepository interface {
 	CreateFavourChoice(ctx context.Context, choice *models.FavourChoice) error // The ID of the newly created choice is set in the provided choice object.
+	GetFavourCostByID(ctx context.Context, choiceID string) (int, error)
 	UpdateFavourChoice(ctx context.Context, choice models.FavourChoice) error
 	DeleteFavourChoice(ctx context.Context, choiceID string) error
 	ListFavourChoices(ctx context.Context) ([]models.FavourChoice, error)

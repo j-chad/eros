@@ -11,12 +11,14 @@ func (s *sqliteDB) GetFavourCount(ctx context.Context) (models.FavourCount, erro
 	var total, remaining sql.NullInt64
 	err := s.executor().QueryRowContext(ctx, `
 		SELECT
-			fc.total_favours AS total_favours,
-			fc.total_favours - COUNT(fr.id) AS remaining_favours
-		FROM favour_count fc
-		LEFT JOIN favour_requests fr
+			count.total_favours AS total_favours,
+			count.total_favours - SUM(choice.cost) AS remaining_favours
+		FROM favour_count count
+		LEFT JOIN favour_requests request
 			ON 1 = 1
-		WHERE fc.id = 0;
+		LEFT JOIN favour_choice choice
+			ON choice.id = request.favour_choice_id
+		WHERE count.id = 0; -- singleton row
 	`).Scan(&total, &remaining)
 
 	if errors.Is(err, sql.ErrNoRows) {
