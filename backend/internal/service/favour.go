@@ -4,11 +4,16 @@ import (
 	"backend/internal/models"
 	"backend/internal/repository"
 	"context"
+	"errors"
 )
 
 type FavourService struct {
 	repo repository.Repository
 }
+
+var (
+	ErrFavourTooExpensive = errors.New("favour request exceeds available favour count")
+)
 
 func NewFavourService(repo repository.Repository) *FavourService {
 	return &FavourService{repo: repo}
@@ -27,7 +32,23 @@ func (s *FavourService) ListFavourRequests(ctx context.Context) ([]models.Favour
 }
 
 func (s *FavourService) RequestFavour(ctx context.Context, request *models.FavourRequest) error {
-	return s.repo.CreateFavourRequest(ctx, request)
+	return s.repo.WithTx(ctx, func(txRepo repository.Repository) error {
+		cost, err := txRepo.GetFavourCostByID(ctx, request.ChoiceID)
+		if err != nil {
+			return err
+		}
+
+		favourCount, err := txRepo.GetFavourCount(ctx)
+		if err != nil {
+			return err
+		}
+
+		if favourCount.Remaining < cost {
+			return ErrFavourTooExpensive
+		}
+
+		return s.repo.CreateFavourRequest(ctx, request)
+	})
 }
 
 func (s *FavourService) DeleteFavourRequest(ctx context.Context, requestID string) error {

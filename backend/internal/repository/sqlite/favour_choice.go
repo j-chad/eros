@@ -12,7 +12,7 @@ func (s *sqliteDB) CreateFavourChoice(ctx context.Context, choice *models.Favour
 	result, err := s.executor().ExecContext(ctx, `
 		INSERT INTO favour_choice (label, description, cost, can_message)
 		VALUES (?, ?, ?, ?)
-	`, choice.Label, choice.Description, choice.Costs, choice.CanMessage)
+	`, choice.Label, choice.Description, choice.Cost, choice.CanMessage)
 	if err != nil {
 		return err
 	}
@@ -31,7 +31,7 @@ func (s *sqliteDB) UpdateFavourChoice(ctx context.Context, choice models.FavourC
 		UPDATE favour_choice
 		SET label = ?, description = ?, can_message = ?, cost = ?
 		WHERE id = ?
-	`, choice.Label, choice.Description, choice.CanMessage, choice.Costs, choice.ID)
+	`, choice.Label, choice.Description, choice.CanMessage, choice.Cost, choice.ID)
 	return err
 }
 
@@ -57,11 +57,24 @@ func (s *sqliteDB) ListFavourChoices(ctx context.Context) ([]models.FavourChoice
 	choices := make([]models.FavourChoice, 0)
 	for rows.Next() {
 		var choice models.FavourChoice
-		if err := rows.Scan(&choice.ID, &choice.Label, &choice.Description, &choice.Costs, &choice.CanMessage, &choice.CreatedAt, &choice.UpdatedAt); err != nil {
+		if err := rows.Scan(&choice.ID, &choice.Label, &choice.Description, &choice.Cost, &choice.CanMessage, &choice.CreatedAt, &choice.UpdatedAt); err != nil {
 			return nil, err
 		}
 		choices = append(choices, choice)
 	}
 
 	return choices, rows.Err()
+}
+
+func (s *sqliteDB) GetFavourCostByID(ctx context.Context, choiceID string) (int, error) {
+	var cost int
+	err := s.executor().QueryRowContext(ctx, `
+		SELECT cost
+		FROM favour_choice
+		WHERE id = ?
+	`, choiceID).Scan(&cost)
+	if err != nil {
+		return 0, err
+	}
+	return cost, nil
 }
