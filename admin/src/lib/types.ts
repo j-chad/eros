@@ -23,6 +23,7 @@ export interface FavourChoice {
     id: string;
     label: string;
     description: string;
+    cost: number;
     can_message: boolean;
     created_at: string; // ISO 8601 date string
     updated_at: string; // ISO 8601 date string
