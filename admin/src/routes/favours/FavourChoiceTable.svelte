@@ -16,6 +16,7 @@
     let newChoice = $state({
         label: '',
         description: '',
+        cost: 1,
         can_message: false
     } as CreateFavourChoicePayload);
 
@@ -23,6 +24,7 @@
         newChoice = {
             label: '',
             description: '',
+            cost: 1,
             can_message: false
         };
         showAddChoiceForm = false;
@@ -135,6 +137,16 @@
                             rows="3"></textarea>
                 </div>
 
+                <div class="form-group">
+                    <label for="cost">Cost (in favours)</label>
+                    <input
+                            id="cost"
+                            type="number"
+                            min="1"
+                            bind:value={newChoice.cost}
+                    />
+                </div>
+
                 <div class="form-group checkbox-group">
                     <label>
                         <input
@@ -158,7 +170,7 @@
         {/if}
 
         {#if choices.length > 0}
-            <Table headers={['Label', 'Description', 'Allow Messaging', 'Created', 'Updated', 'Actions']}>
+            <Table headers={['Label', 'Description', 'Cost', 'Allow Messaging', 'Actions']}>
                 {#each choices as choice}
                     <tr>
                         <td>
@@ -177,6 +189,9 @@
                             </div>
                         </td>
                         <td>
+                            <strong>{choice.cost}</strong>
+                        </td>
+                        <td>
                             <button
                                     class="toggle-btn"
                                     class:active={choice.can_message}
@@ -184,12 +199,6 @@
                             >
                                 {choice.can_message ? 'Yes' : 'No'}
                             </button>
-                        </td>
-                        <td class="nowrap">
-                            <DateDisplay datetime={choice.created_at} />
-                        </td>
-                        <td class="nowrap">
-                            <DateDisplay datetime={choice.updated_at} />
                         </td>
                         <td>
                             <Button
