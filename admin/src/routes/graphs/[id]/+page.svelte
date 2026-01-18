@@ -119,7 +119,7 @@
 
 <!-- Graph Canvas Section - Placeholder for now -->
 <Card title="Graph Canvas">
-    <GraphRenderer/>
+    <GraphRenderer bind:graph/>
 </Card>
 
 <style>
