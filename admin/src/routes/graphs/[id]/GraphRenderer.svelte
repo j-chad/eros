@@ -5,52 +5,87 @@
         Controls,
         Background,
         BackgroundVariant,
-        type Edge,
-        type Node,
-        type NodeTypes
+        type Edge as FlowEdge,
+        type Node as FlowNode,
+        type NodeTypes, type NodeTargetEventWithPointer
     } from '@xyflow/svelte';
 
     import '@xyflow/svelte/dist/style.css';
-    import {type Graph, type Node as ErosNode, type Edge as ErosEdge, NodeType} from "$lib/types";
+    import {type AnyNode, type Edge, type Graph, NodeType} from "$lib/types";
+    import {debounce} from "$lib/utils";
     import StartNode from "./nodes/StartNode.svelte";
-    import type {Component} from "svelte";
 
-    let { graph = $bindable<Graph>() } = $props()
+    let { graph = $bindable<Graph>() }: {graph: Graph} = $props()
 
     const nodeTypes: NodeTypes = {
         [NodeType.START]: StartNode
     };
 
     // Non-reactive state for performance
-    let nodes = $state.raw<Node[]>([]);
-    let edges = $state.raw<Edge[]>([]);
+    let nodes = $state.raw<FlowNode<{node: AnyNode}, NodeType>[]>([]);
+    let edges = $state.raw<FlowEdge<{edge: Edge}>[]>([]);
+
+    // prevent graph<->flow feedback loops
+    let syncingFromGraph = false;
+    let syncingFromFlow = false;
 
     // Sync FROM graph TO flow (when graph changes)
     $effect(() => {
-        if (!graph) return;
+        console.log("Syncing from graph to flow", {graph, syncingFromGraph, syncingFromFlow});
 
-        nodes = graph.nodes?.map((node: ErosNode) => ({
+        if (!graph || syncingFromFlow) return;
+
+        syncingFromGraph = true;
+
+        nodes = graph.nodes?.map((node) => ({
             id: node.id,
-            position: node.ui_position || { x: 0, y: 0 },
-            data: {
-                label: node.title,
-                ...node
-            },
+            position: node.ui_position ?? { x: 0, y: 0 },
+            data: {node},
             type: node.type
-        })) || [];
+        })) ?? [];
 
-        edges = graph.edges?.map((edge: ErosEdge) => ({
+        edges = graph.edges.map((edge) => ({
             id: edge.id,
             source: edge.from,
             target: edge.to,
             label: edge.choice_label,
-            data: edge
-        })) || [];
+            data: {edge}
+        })) ?? [];
+
+        syncingFromGraph = false;
     });
+
+    const commitGraph = debounce(() => {
+        if (!graph || syncingFromGraph) return;
+
+        syncingFromFlow = true;
+
+        graph = {
+            ...graph,
+            nodes: nodes.map((n) => ({
+                ...n.data.node,
+                ui_position: {x: n.position.x, y: n.position.y}
+            })),
+            edges: edges.map((e) => ({
+                from: e.source,
+                to: e.target,
+                choice_label: e.label,
+                created_at: e.data?.edge.created_at ?? new Date().toISOString(),
+                updated_at: e.data?.edge.updated_at ?? new Date().toISOString(),
+                id: e.id
+            }))
+        };
+
+        syncingFromFlow = false;
+    }, 150);
+
+    function handleNodeDragStop() {
+        commitGraph();
+    }
 </script>
 
 <div class="canvas">
-    <SvelteFlow {nodes} {edges} {nodeTypes} fitView>
+    <SvelteFlow {nodes} {edges} {nodeTypes} fitView onnodedragstop={handleNodeDragStop}>
         <MiniMap/>
         <Controls/>
         <Background variant={BackgroundVariant.Dots}/>
