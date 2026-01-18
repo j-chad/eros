@@ -1,10 +1,14 @@
 <!-- StartNode.svelte -->
 <script lang="ts">
-    import {type NodeProps, Position} from '@xyflow/svelte';
-    import { Play, Edit } from 'lucide-svelte';
+    import {type NodeProps, Position, useNodeConnections} from '@xyflow/svelte';
+    import { Play } from 'lucide-svelte';
     import Handle from "./Handle.svelte";
 
     let { data }: NodeProps = $props();
+
+    const connections = useNodeConnections();
+
+    let isConnectable = $derived(connections.current.length === 0);
 </script>
 
 <div class="start-node">
@@ -15,7 +19,7 @@
         <div class="name">Start</div>
     </div>
 
-    <Handle type="source" nodeType="start" position={Position.Right} class="node-handle start-handle" />
+    <Handle type="source" nodeType="start" position={Position.Right} class="node-handle start-handle" {isConnectable}/>
 </div>
 
 <style>

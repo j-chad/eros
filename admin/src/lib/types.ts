@@ -64,8 +64,8 @@ export interface Graph {
         zoom: number;
     }
 
-    nodes?: Array<Node>;
-    edges?: Array<Edge>;
+    nodes: AnyNode[];
+    edges: Edge[];
 
     starting_at: string; // ISO 8601 date string
     created_at: string; // ISO 8601 date string
@@ -83,9 +83,9 @@ export interface Edge {
     updated_at: string; // ISO 8601 date string
 }
 
-export interface Node<T extends NodeType = NodeType, D extends Record<string, unknown> = never> {
+export interface Node<Type extends NodeType = NodeType, Data = never> {
     id: string;
-    type: T,
+    type: Type,
 
     title: string;
     description?: string | null;
@@ -95,7 +95,7 @@ export interface Node<T extends NodeType = NodeType, D extends Record<string, un
         y: number;
     };
 
-    data?: D;
+    data?: Data;
 
     unlocked_at?: string | null; // ISO 8601 date string
 
@@ -119,6 +119,8 @@ export type RewardNode = Node<NodeType.REWARD, {
     media_type: string;
     give_favours: number;
 }>;
+
+export type AnyNode = StartNode | LocationNode | CodeNode | ChoiceNode | RewardNode;
 
 export interface NewGraph {
     title: string;
