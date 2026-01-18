@@ -1,19 +1,19 @@
-<!-- src/lib/components/graph-nodes/RevealNode.svelte -->
+<!-- CodeNode.svelte -->
 <script lang="ts">
     import { Handle, Position } from '@xyflow/svelte';
-    import { Eye, Hash, Edit } from 'lucide-svelte';
+    import { Key, Edit } from 'lucide-svelte';
 
     let { data } = $props();
 </script>
 
-<div class="reveal-node">
+<div class="code-node">
     <div class="node-header">
         <div class="icon-wrapper">
-            <Eye size={16} />
+            <Key size={16} />
         </div>
         <div class="title">
-            <div class="type">Reveal #{data.order}</div>
-            <div class="name">Step {data.order}</div>
+            <div class="type">Code</div>
+            <div class="name">{data.title}</div>
         </div>
         <button class="edit-btn" onclick={data.onEdit}>
             <Edit size={14} />
@@ -21,40 +21,26 @@
     </div>
 
     <div class="node-body">
-        <div class="content">{data.content}</div>
-        <div class="gate-indicator">
-            <Hash size={12} />
-            <span>Gates below must unlock first</span>
+        {#if data.description}
+            <div class="description">{data.description}</div>
+        {/if}
+        <div class="code-display">
+            <span class="code-label">Code:</span>
+            <span class="code-value">{data.data.code}</span>
         </div>
     </div>
 
-    <!-- Handle for incoming connection from previous reveal or reward -->
     <Handle type="target" position={Position.Top} />
-
-    <!-- Handle for outgoing connection to next reveal -->
-    <Handle
-            type="source"
-            position={Position.Bottom}
-            id="next"
-            style="left: 50%"
-    />
-
-    <!-- Handle for outgoing connections to gates -->
-    <Handle
-            type="source"
-            position={Position.Bottom}
-            id="gates"
-            style="left: 25%; background: #f59e0b"
-    />
+    <Handle type="source" position={Position.Bottom} />
 </div>
 
 <style>
-    .reveal-node {
+    .code-node {
         background: white;
-        border: 2px solid #3b82f6;
+        border: 2px solid #8b5cf6;
         border-radius: 8px;
-        min-width: 260px;
-        max-width: 320px;
+        min-width: 200px;
+        max-width: 280px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 
@@ -63,7 +49,7 @@
         align-items: center;
         gap: 0.75rem;
         padding: 0.75rem 1rem;
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
         color: white;
         border-radius: 6px 6px 0 0;
     }
@@ -95,6 +81,9 @@
         font-size: 0.875rem;
         font-weight: 600;
         margin-top: 0.125rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .edit-btn {
@@ -119,7 +108,7 @@
         padding: 1rem;
     }
 
-    .content {
+    .description {
         font-size: 0.875rem;
         color: #1f2937;
         line-height: 1.5;
@@ -127,16 +116,29 @@
         word-wrap: break-word;
     }
 
-    .gate-indicator {
+    .code-display {
         display: flex;
-        align-items: center;
-        gap: 0.375rem;
-        padding: 0.5rem;
-        background: #fef3c7;
-        border: 1px solid #fbbf24;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 0.625rem 0.75rem;
+        background: #f3f4f6;
         border-radius: 4px;
-        font-size: 0.75rem;
-        color: #92400e;
+        border: 1px solid #e5e7eb;
+    }
+
+    .code-label {
+        font-size: 0.625rem;
+        color: #6b7280;
         font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .code-value {
+        font-size: 1.125rem;
+        color: #1f2937;
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+        letter-spacing: 0.15em;
     }
 </style>

@@ -1,10 +1,25 @@
 <script lang="ts">
-    import {SvelteFlow, MiniMap, Controls, Background, BackgroundVariant, type Edge, type Node} from '@xyflow/svelte';
+    import {
+        SvelteFlow,
+        MiniMap,
+        Controls,
+        Background,
+        BackgroundVariant,
+        type Edge,
+        type Node,
+        type NodeTypes
+    } from '@xyflow/svelte';
 
     import '@xyflow/svelte/dist/style.css';
-    import type {Graph, Node as ErosNode, Edge as ErosEdge} from "$lib/types";
+    import {type Graph, type Node as ErosNode, type Edge as ErosEdge, NodeType} from "$lib/types";
+    import StartNode from "./nodes/StartNode.svelte";
+    import type {Component} from "svelte";
 
     let { graph = $bindable<Graph>() } = $props()
+
+    const nodeTypes: NodeTypes = {
+        [NodeType.START]: StartNode
+    };
 
     // Non-reactive state for performance
     let nodes = $state.raw<Node[]>([]);
@@ -35,7 +50,7 @@
 </script>
 
 <div class="canvas">
-    <SvelteFlow nodes={nodes} edges={edges} fitView>
+    <SvelteFlow {nodes} {edges} {nodeTypes} fitView>
         <MiniMap/>
         <Controls/>
         <Background variant={BackgroundVariant.Dots}/>
