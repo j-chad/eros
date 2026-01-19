@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"backend/internal/crypto"
 	"backend/internal/models"
 	"context"
 	"database/sql"
@@ -10,7 +11,7 @@ import (
 
 func (s *sqliteDB) ListGraphs(ctx context.Context) ([]models.Graph, error) {
 	query := `
-        SELECT 
+        SELECT
             g.id,
             g.title,
             g.description,
@@ -56,7 +57,7 @@ func (s *sqliteDB) ListGraphs(ctx context.Context) ([]models.Graph, error) {
 
 func (s *sqliteDB) DeleteGraph(ctx context.Context, graphID string) error {
 	_, err := s.executor().ExecContext(ctx, `
-		DELETE FROM graph 
+		DELETE FROM graph
 		WHERE id = ?
 	`, graphID)
 	if err != nil {
@@ -86,9 +87,9 @@ func (s *sqliteDB) CreateGraph(ctx context.Context, req models.NewGraphRequest) 
 
 		// Insert start node
 		_, err = txRepo.executor().ExecContext(ctx, `
-			INSERT INTO node (graph_id, type, title)
-			VALUES (?, ?, ?)
-		`, graphID, models.StartNode, "Start")
+			INSERT INTO node (id, graph_id, type, title)
+			VALUES (?, ?, ?, ?)
+		`, crypto.UUIDV4(), graphID, models.StartNode, "Start")
 		if err != nil {
 			return fmt.Errorf("failed to insert start node: %w", err)
 		}
@@ -105,7 +106,7 @@ func (s *sqliteDB) CreateGraph(ctx context.Context, req models.NewGraphRequest) 
 
 func (s *sqliteDB) GetGraph(ctx context.Context, graphID string) (*models.Graph, error) {
 	row := s.executor().QueryRowContext(ctx, `
-		SELECT 
+		SELECT
 		    title,
 		    description,
 		    starting_at,
@@ -164,7 +165,7 @@ func (s *sqliteDB) UpdateGraph(ctx context.Context, req models.Graph) error {
 			viewportZoom = sql.NullFloat64{Float64: req.Viewport.Zoom, Valid: true}
 		}
 		result, err := txRepo.executor().ExecContext(ctx, `
-			UPDATE graph 
+			UPDATE graph
 			SET title = ?, description = ?, starting_at = ?, viewport_x = ?, viewport_y = ?, viewport_zoom = ?
 			WHERE id = ?;
 		`, req.Title, req.Description, req.StartingAt, viewportX, viewportY, viewportZoom, req.ID)
