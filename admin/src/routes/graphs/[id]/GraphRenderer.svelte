@@ -7,7 +7,7 @@
 		MiniMap,
 		type Node as FlowNode, type NodeEvents,
 		type NodeTypes, type PaneEvents,
-		SvelteFlow, useSvelteFlow
+		SvelteFlow, type Viewport
 	} from '@xyflow/svelte';
 
     import '@xyflow/svelte/dist/style.css';
@@ -62,9 +62,9 @@
             data: {edge}
         })) ?? [];
 
-        setTimeout(() => {
+        queueMicrotask(() => {
             syncingFromGraph = false;
-        }, 200);
+        });
     });
 
     const commitGraph = debounce(() => {
@@ -119,12 +119,26 @@
 		node.position = targetNode.position;
 		commitGraph();
 	};
+
+	function handleViewportChange(_: unknown, viewport: Viewport) {
+		syncingFromFlow = true;
+
+		graph = {
+			...graph,
+			viewport: viewport
+		};
+
+		queueMicrotask(() => {
+			syncingFromFlow = false;
+		});
+	}
 </script>
 
 <div class="canvas">
-    <SvelteFlow {nodes} {edges} {nodeTypes} fitView
+    <SvelteFlow {nodes} {edges} {nodeTypes} initialViewport={graph.viewport} fitView={graph.viewport === undefined}
                 onnodedragstop={handleNodeDragStop}
                 onpanecontextmenu={handlePaneContextMenu}
+				onmoveend={handleViewportChange}
     >
         <MiniMap/>
         <Controls/>
