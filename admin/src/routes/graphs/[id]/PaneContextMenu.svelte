@@ -28,13 +28,6 @@
 
     const nodeTypes: NodeOption[] = [
         {
-            type: NodeType.START,
-            label: 'Start',
-            icon: Play,
-            color: '#10b981',
-            description: 'Beginning of the journey',
-        },
-        {
             type: NodeType.LOCATION,
             label: 'Location',
             icon: MapPin,
