@@ -2,7 +2,9 @@
 <script lang="ts">
     import {Gift, GitBranch, Key, MapPin, Play} from 'lucide-svelte';
     import {type AnyNode, type Node, NodeType} from "$lib/types";
-    import {useNodes} from "@xyflow/svelte";
+	import {useNodes, useSvelteFlow} from "@xyflow/svelte";
+
+	const { screenToFlowPosition } = useSvelteFlow();
 
     interface NodeOption {
         type: NodeType;
@@ -11,15 +13,6 @@
         color: string;
         description: string;
     }
-
-    const nodes = useNodes();
-    const nextNodeId = $derived.by(() => {
-        const largestId = nodes.current.reduce((maxId, node) => {
-            const idNum = parseInt(node.id);
-            return isNaN(idNum) ? maxId : Math.max(maxId, idNum);
-        }, 0);
-        return (largestId + 1).toString();
-    })
 
     let {
         x,
@@ -72,14 +65,13 @@
     ];
 
     function handleCreateNode(type: NodeType) {
-        console.log("Creating node", {type, x, y});
         onCreateNode?.({
-            id: nextNodeId,
+            id: crypto.randomUUID(),
             type,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             title: "My New Node",
-            ui_position: { x, y },
+            ui_position: screenToFlowPosition({ x, y }),
         });
         onClose?.();
     }

@@ -16,11 +16,6 @@
     };
 
     const handleColor = $derived(colorMap[props.nodeType] ?? '#6b7280');
-
-    // log computed handle color
-    $effect(() => {
-        console.log('Handle color for node type', props.nodeType, 'is', handleColor);
-    });
 </script>
 
 <FlowHandle {...props} class="node-handle" style="background: {handleColor}"

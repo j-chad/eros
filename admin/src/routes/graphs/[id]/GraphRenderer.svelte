@@ -1,14 +1,14 @@
 <script lang="ts">
-    import {
-        Background,
-        BackgroundVariant,
-        Controls,
-        type Edge as FlowEdge,
-        MiniMap,
-        type Node as FlowNode,
-        type NodeTypes, type PaneEvents,
-        SvelteFlow
-    } from '@xyflow/svelte';
+	import {
+		Background,
+		BackgroundVariant,
+		Controls,
+		type Edge as FlowEdge,
+		MiniMap,
+		type Node as FlowNode, type NodeEvents,
+		type NodeTypes, type PaneEvents,
+		SvelteFlow, useSvelteFlow
+	} from '@xyflow/svelte';
 
     import '@xyflow/svelte/dist/style.css';
     import {type AnyNode, type Edge, type Graph, type Node, NodeType} from "$lib/types";
@@ -33,6 +33,10 @@
     let syncingFromGraph = false;
     let syncingFromFlow = false;
 
+	function findNodeById(id: string): FlowNode<{ node: AnyNode }, NodeType> | undefined {
+		return nodes.find((n) => n.id === id);
+	}
+
     function nodeToFlowNode(node: AnyNode): FlowNode<{ node: AnyNode }, NodeType> {
         return {
             id: node.id,
@@ -45,7 +49,6 @@
     // Sync FROM graph TO flow (when graph changes)
     $effect(() => {
         if (!graph || syncingFromFlow) return;
-        console.log("Syncing from graph to flow", {graph, syncingFromGraph, syncingFromFlow});
 
         syncingFromGraph = true;
 
@@ -59,14 +62,13 @@
             data: {edge}
         })) ?? [];
 
-        queueMicrotask(() => {
+        setTimeout(() => {
             syncingFromGraph = false;
-        });
+        }, 200);
     });
 
     const commitGraph = debounce(() => {
         if (!graph || syncingFromGraph) return;
-        console.log("Syncing from flow to graph", {nodes, edges, graph, syncingFromGraph, syncingFromFlow});
 
         syncingFromFlow = true;
 
@@ -87,8 +89,8 @@
         };
 
         queueMicrotask(() => {
-            syncingFromFlow = false;
-        });
+			syncingFromFlow = false;
+		});
     }, 150);
 
     const handlePaneContextMenu: PaneEvents['onpanecontextmenu'] = ({event}) => {
@@ -105,17 +107,18 @@
     }
 
     function handleNewNode(node: AnyNode) {
-        console.log("New node created, committing graph", {nodes, edges});
         const flowNode = nodeToFlowNode(node);
         nodes = [...nodes, flowNode];
-        console.log("Nodes after addition", nodes);
         commitGraph();
     }
 
-    function handleNodeDragStop() {
-        console.log("Node drag stopped, committing graph", {nodes, edges});
-        commitGraph();
-    }
+    const handleNodeDragStop: NodeEvents['onnodedragstop'] = ({targetNode}) => {
+		if (!targetNode) return;
+		const node = findNodeById(targetNode.id);
+		if (!node) return;
+		node.position = targetNode.position;
+		commitGraph();
+	};
 </script>
 
 <div class="canvas">
