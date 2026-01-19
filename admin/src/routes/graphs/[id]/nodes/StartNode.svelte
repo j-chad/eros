@@ -11,7 +11,7 @@
     let isConnectable = $derived(connections.current.length === 0);
 </script>
 
-<div class="start-node">
+<div class="default-node">
     <div class="icon-wrapper">
         <Play size={16} />
     </div>
@@ -23,7 +23,7 @@
 </div>
 
 <style>
-    .start-node {
+    .default-node {
         background: white;
         border: 2px solid #10b981;
         border-radius: 8px;

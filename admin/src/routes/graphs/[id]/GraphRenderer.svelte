@@ -15,15 +15,19 @@
     import {debounce} from "$lib/utils";
     import StartNode from "./nodes/StartNode.svelte";
     import PaneContextMenu from "./PaneContextMenu.svelte";
+	import DefaultNode from "./nodes/DefaultNode.svelte";
+	import NodeContextMenu from "./NodeContextMenu.svelte";
 
     let {graph = $bindable<Graph>()}: { graph: Graph } = $props()
 
     const nodeTypes: NodeTypes = {
+		[NodeType.LOCATION]: DefaultNode,
         [NodeType.START]: StartNode
     };
 
-    let showContextMenu = $state(false);
+    let contextMenu = $state<'node' | 'pane' | 'hidden'>('hidden');
     let contextMenuPosition = $state({ x: 0, y: 0 });
+	let selectedNodeId = $state<string | null>(null);
 
     // Non-reactive state for performance
     let nodes = $state.raw<FlowNode<{ node: AnyNode }, NodeType>[]>([]);
@@ -93,17 +97,39 @@
 		});
     }, 150);
 
+	function handleDeleteNode(nodeId: string) {
+		nodes = nodes.filter((n) => n.id !== nodeId);
+		edges = edges.filter((e) => e.source !== nodeId && e.target !== nodeId);
+		commitGraph();
+	}
+
     const handlePaneContextMenu: PaneEvents['onpanecontextmenu'] = ({event}) => {
         event.preventDefault()
-        showContextMenu = true;
+        contextMenu = 'pane'
         contextMenuPosition = {
             x: event.clientX,
             y: event.clientY
         };
     };
 
+	const handleNodeContextMenu: NodeEvents['onnodecontextmenu'] = ({event, node}) => {
+		event.preventDefault()
+
+		if (node.type === NodeType.START) {
+			// Don't show context menu for start node
+			return;
+		}
+
+		selectedNodeId = node.id;
+		contextMenu = 'node'
+		contextMenuPosition = {
+			x: event.clientX,
+			y: event.clientY
+		};
+	};
+
     function handleCloseContextMenu() {
-        showContextMenu = false;
+        contextMenu = 'hidden';
     }
 
     function handleNewNode(node: AnyNode) {
@@ -138,13 +164,16 @@
     <SvelteFlow {nodes} {edges} {nodeTypes} initialViewport={graph.viewport} fitView={graph.viewport === undefined}
                 onnodedragstop={handleNodeDragStop}
                 onpanecontextmenu={handlePaneContextMenu}
+				onnodecontextmenu={handleNodeContextMenu}
 				onmoveend={handleViewportChange}
     >
         <MiniMap/>
         <Controls/>
         <Background variant={BackgroundVariant.Dots}/>
-        {#if showContextMenu}
+        {#if contextMenu === 'pane'}
             <PaneContextMenu x={contextMenuPosition.x} y={contextMenuPosition.y} onClose={handleCloseContextMenu} onCreateNode={handleNewNode}/>
+		{:else if contextMenu === 'node' && selectedNodeId !== null}
+			<NodeContextMenu nodeId={selectedNodeId} x={contextMenuPosition.x} y={contextMenuPosition.y} onClose={handleCloseContextMenu} onDelete={handleDeleteNode}/>
         {/if}
     </SvelteFlow>
 </div>
