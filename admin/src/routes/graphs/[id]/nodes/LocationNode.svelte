@@ -1,9 +1,13 @@
 <!-- LocationNode.svelte -->
 <script lang="ts">
-    import { Handle, Position } from '@xyflow/svelte';
+	import {type NodeProps, Position} from '@xyflow/svelte';
     import { MapPin, Edit } from 'lucide-svelte';
+	import type {LocationNode} from "$lib/types";
+	import Handle from "./Handle.svelte";
 
-    let { data } = $props();
+    let { data }: NodeProps = $props();
+
+	const node = $derived(data.node) as LocationNode
 </script>
 
 <div class="location-node">
@@ -13,31 +17,31 @@
         </div>
         <div class="title">
             <div class="type">Location</div>
-            <div class="name">{data.title}</div>
+            <div class="name">{node.title}</div>
         </div>
-        <button class="edit-btn" onclick={data.onEdit}>
+        <button class="edit-btn">
             <Edit size={14} />
         </button>
     </div>
 
     <div class="node-body">
-        {#if data.description}
-            <div class="description">{data.description}</div>
+        {#if node.description}
+            <div class="description">{node.description}</div>
         {/if}
         <div class="config">
             <div class="config-item">
                 <span class="key">📍 Coordinates:</span>
-                <span class="value">{data.data.latitude.toFixed(6)}, {data.data.longitude.toFixed(6)}</span>
+                <span class="value">{node.data?.latitude.toFixed(6)}, {node.data?.longitude.toFixed(6)}</span>
             </div>
             <div class="config-item">
                 <span class="key">📏 Radius:</span>
-                <span class="value">{data.data.radius_meters}m</span>
+                <span class="value">{node.data?.radius_meters ?? 0}m</span>
             </div>
         </div>
     </div>
 
-    <Handle type="target" position={Position.Top} />
-    <Handle type="source" position={Position.Bottom} />
+    <Handle type="target" position={Position.Left} nodeType="location"/>
+    <Handle type="source" position={Position.Right} nodeType="location"/>
 </div>
 
 <style>

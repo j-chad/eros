@@ -15,13 +15,13 @@
     import {debounce} from "$lib/utils";
     import StartNode from "./nodes/StartNode.svelte";
     import PaneContextMenu from "./PaneContextMenu.svelte";
-	import DefaultNode from "./nodes/DefaultNode.svelte";
 	import NodeContextMenu from "./NodeContextMenu.svelte";
+	import LocationNode from "./nodes/LocationNode.svelte";
 
     let {graph = $bindable<Graph>()}: { graph: Graph } = $props()
 
     const nodeTypes: NodeTypes = {
-		[NodeType.LOCATION]: DefaultNode,
+		[NodeType.LOCATION]: LocationNode,
         [NodeType.START]: StartNode
     };
 
