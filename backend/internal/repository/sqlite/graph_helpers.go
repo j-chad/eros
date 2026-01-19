@@ -100,7 +100,7 @@ func (s *sqliteDB) getCompleteNodes(ctx context.Context, graphID string) ([]mode
 // getEdges retrieves all edges for the given node IDs
 func (s *sqliteDB) getEdges(ctx context.Context, graphID string) ([]models.Edge, error) {
 	rows, err := s.executor().QueryContext(ctx, `
-        SELECT 
+        SELECT
             id,
             source_node_id,
             destination_node_id,
@@ -270,14 +270,15 @@ func (s *sqliteDB) createNode(ctx context.Context, graphID string, node models.N
 
 		result, err := tx.executor().ExecContext(ctx, `
 			INSERT INTO node (
+			    id,
 				graph_id,
 				type,
 				title,
 				description,
 				ui_pos_x,
-				ui_pos_y  
-		  	) VALUES (?, ?, ?, ?, ?, ?)
-		`, graphID, node.Type, node.Title, node.Description, uiPositionX, uiPositionY)
+				ui_pos_y
+		  	) VALUES (?, ?, ?, ?, ?, ?, ?)
+		`, node.ID, graphID, node.Type, node.Title, node.Description, uiPositionX, uiPositionY)
 		if err != nil {
 			return fmt.Errorf("failed to insert node: %w", err)
 		}
@@ -300,12 +301,13 @@ func (s *sqliteDB) createNode(ctx context.Context, graphID string, node models.N
 func (s *sqliteDB) createEdge(ctx context.Context, graphID string, edge models.Edge) error {
 	_, err := s.executor().ExecContext(ctx, `
 		INSERT INTO edge (
+		  	id,
 			graph_id,
 			source_node_id,
 			destination_node_id,
 			choice_label
-		) VALUES (?, ?, ?, ?)
-	`, graphID, edge.From, edge.To, edge.ChoiceLabel)
+		) VALUES (?, ?, ?, ?, ?)
+	`, edge.ID, graphID, edge.From, edge.To, edge.ChoiceLabel)
 	if err != nil {
 		return fmt.Errorf("failed to insert edge: %w", err)
 	}

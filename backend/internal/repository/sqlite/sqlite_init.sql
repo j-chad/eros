@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS graph
 
 CREATE TABLE IF NOT EXISTS node
 (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    id          TEXT PRIMARY KEY, -- UUID v4
     graph_id    INTEGER  NOT NULL,
 
     type        TEXT     NOT NULL, -- E.G. START | LOCATION | CODE | CHOICE | REWARD
@@ -76,11 +76,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_one_start_per_graph
 
 CREATE TABLE IF NOT EXISTS edge
 (
-    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    id                  TEXT PRIMARY KEY, -- UUID v4
 
     graph_id            INTEGER  NOT NULL,
-    source_node_id      INTEGER  NOT NULL,
-    destination_node_id INTEGER  NOT NULL,
+    source_node_id      TEXT  NOT NULL,
+    destination_node_id TEXT  NOT NULL,
 
     choice_label        TEXT, -- For choice edges
 
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS edge
 
 CREATE TABLE IF NOT EXISTS node_location_gate
 (
-    node_id       INTEGER PRIMARY KEY,
+    node_id       TEXT PRIMARY KEY,
 
     latitude      REAL    NOT NULL,
     longitude     REAL    NOT NULL,
@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS node_location_gate
 
 CREATE TABLE IF NOT EXISTS node_code_gate
 (
-    node_id INTEGER PRIMARY KEY,
+    node_id TEXT PRIMARY KEY,
 
     code    TEXT NOT NULL,
 
@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS node_code_gate
 
 CREATE TABLE IF NOT EXISTS node_reward
 (
-    node_id            INTEGER PRIMARY KEY,
+    node_id            TEXT PRIMARY KEY,
 
     reward_type        TEXT    NOT NULL,
 
