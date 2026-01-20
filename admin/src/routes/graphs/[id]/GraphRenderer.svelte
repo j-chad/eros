@@ -7,11 +7,12 @@
 		MiniMap,
 		type Node as FlowNode, type NodeEvents,
 		type NodeTypes, type PaneEvents,
-		SvelteFlow, type Viewport
+		SvelteFlow, type Viewport,
+		type Connection
 	} from '@xyflow/svelte';
 
     import '@xyflow/svelte/dist/style.css';
-    import {type AnyNode, type Edge, type Graph, type Node, NodeType} from "$lib/types";
+    import {type AnyNode, type Edge, type Graph, NodeType} from "$lib/types";
     import {debounce} from "$lib/utils";
     import StartNode from "./nodes/StartNode.svelte";
     import PaneContextMenu from "./PaneContextMenu.svelte";
@@ -46,7 +47,8 @@
             id: node.id,
             position: node.ui_position ?? {x: 0, y: 0},
             data: {node},
-            type: node.type
+            type: node.type,
+			deletable: node.type !== NodeType.START,
         };
     }
 
@@ -97,12 +99,6 @@
 		});
     }, 150);
 
-	function handleDeleteNode(nodeId: string) {
-		nodes = nodes.filter((n) => n.id !== nodeId);
-		edges = edges.filter((e) => e.source !== nodeId && e.target !== nodeId);
-		commitGraph();
-	}
-
     const handlePaneContextMenu: PaneEvents['onpanecontextmenu'] = ({event}) => {
         event.preventDefault()
         contextMenu = 'pane'
@@ -139,6 +135,8 @@
     }
 
     const handleNodeDragStop: NodeEvents['onnodedragstop'] = ({targetNode}) => {
+		console.log('Node drag stop:', {nodes, edges});
+
 		if (!targetNode) return;
 		const node = findNodeById(targetNode.id);
 		if (!node) return;
@@ -158,6 +156,49 @@
 			syncingFromFlow = false;
 		});
 	}
+
+	function handleDeleteItem({nodes: deletedNodes, edges: deletedEdges}: { nodes: FlowNode[]; edges: FlowEdge[] }) {
+		// ensure start node cannot be deleted
+		deletedNodes = deletedNodes.filter((n) => n.type !== NodeType.START);
+
+		if (deletedNodes.length > 0) {
+			const deletedNodeIds = new Set(deletedNodes.map((n) => n.id));
+			nodes = nodes.filter((n) => !deletedNodeIds.has(n.id));
+			edges = edges.filter((e) => !deletedNodeIds.has(e.source) && !deletedNodeIds.has(e.target));
+		}
+
+		if (deletedEdges.length > 0) {
+			const deletedEdgeIds = new Set(deletedEdges.map((e) => e.id));
+			edges = edges.filter((e) => !deletedEdgeIds.has(e.id));
+		}
+
+		commitGraph();
+	}
+
+	function handleConnect(connection: Connection) {
+		console.log('Handle connect:', connection);
+		if (!connection.source || !connection.target) return;
+
+		const newEdge: FlowEdge<{ edge: Edge }> = {
+			id: crypto.randomUUID(),
+			source: connection.source,
+			target: connection.target,
+			label: '',
+			data: {
+				edge: {
+					id: crypto.randomUUID(),
+					from: connection.source,
+					to: connection.target,
+					choice_label: '',
+					created_at: new Date().toISOString(),
+					updated_at: new Date().toISOString()
+				}
+			}
+		};
+
+		edges = [...edges, newEdge];
+		commitGraph();
+	}
 </script>
 
 <div class="canvas">
@@ -166,6 +207,8 @@
                 onpanecontextmenu={handlePaneContextMenu}
 				onnodecontextmenu={handleNodeContextMenu}
 				onmoveend={handleViewportChange}
+				ondelete={handleDeleteItem}
+				onconnect={handleConnect}
     >
         <MiniMap/>
         <Controls/>
@@ -173,7 +216,7 @@
         {#if contextMenu === 'pane'}
             <PaneContextMenu x={contextMenuPosition.x} y={contextMenuPosition.y} onClose={handleCloseContextMenu} onCreateNode={handleNewNode}/>
 		{:else if contextMenu === 'node' && selectedNodeId !== null}
-			<NodeContextMenu nodeId={selectedNodeId} x={contextMenuPosition.x} y={contextMenuPosition.y} onClose={handleCloseContextMenu} onDelete={handleDeleteNode}/>
+			<NodeContextMenu nodeId={selectedNodeId} x={contextMenuPosition.x} y={contextMenuPosition.y} onClose={handleCloseContextMenu}/>
         {/if}
     </SvelteFlow>
 </div>
