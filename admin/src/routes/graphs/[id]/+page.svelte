@@ -13,7 +13,6 @@
 
     let graph = $state<Graph>(data.graph);
     let description = $derived(() => graph.description ?? '');
-    let hasChanges = $state(false);
     let isSaving = $state(false);
 
     // Convert UTC datetime to local date (YYYY-MM-DD)
@@ -27,10 +26,10 @@
     });
 
     async function handleSave() {
+		console.log('Saving graph:', graph);
         isSaving = true;
         try {
             await api.graph.update(graph.id, graph)
-            hasChanges = false;
         } catch (error) {
             console.error('Failed to save graph:', error);
             alert('Failed to save changes');
@@ -41,12 +40,10 @@
 
     function handleTitleChange(newValue: string) {
         graph.title = newValue;
-        hasChanges = true;
     }
 
     function handleDescriptionChange(newValue: string) {
         graph.description = newValue;
-        hasChanges = true;
     }
 
     function handleStartingDateChange(event: Event) {
@@ -57,8 +54,6 @@
             const localDate = new Date(dateValue + 'T00:00:00');
             graph.starting_at = localDate.toISOString();
         }
-
-        hasChanges = true;
     }
 </script>
 
@@ -70,7 +65,7 @@
         <Button
                 variant="primary"
                 onclick={handleSave}
-                disabled={!hasChanges || isSaving}
+                disabled={isSaving}
         >
             {#snippet icon()}
                 <Save size={16} />

@@ -194,9 +194,13 @@ func (s *sqliteDB) getEdgeIDs(ctx context.Context, graphID string) ([]string, er
 }
 
 func (s *sqliteDB) upsertNodeData(ctx context.Context, nodeID string, nodeType models.NodeType, data any) error {
+	if data == nil {
+		return nil
+	}
+
 	switch nodeType {
 	case models.LocationGateNode:
-		locationData, ok := data.(*models.LocationData)
+		locationData, ok := data.(models.LocationData)
 		if !ok {
 			return fmt.Errorf("invalid data type for location node")
 		}
@@ -214,7 +218,7 @@ func (s *sqliteDB) upsertNodeData(ctx context.Context, nodeID string, nodeType m
 		`, nodeID, locationData.Latitude, locationData.Longitude, locationData.RadiusM)
 		return err
 	case models.CodeGateNode:
-		codeData, ok := data.(*models.CodeData)
+		codeData, ok := data.(models.CodeData)
 		if !ok {
 			return fmt.Errorf("invalid data type for code node")
 		}
@@ -228,7 +232,7 @@ func (s *sqliteDB) upsertNodeData(ctx context.Context, nodeID string, nodeType m
 		`, nodeID, codeData.Code)
 		return err
 	case models.RewardNode:
-		rewardData, ok := data.(*models.RewardData)
+		rewardData, ok := data.(models.RewardData)
 		if !ok {
 			return fmt.Errorf("invalid data type for reward node")
 		}
@@ -418,7 +422,8 @@ func (s *sqliteDB) updateNodes(ctx context.Context, graphID string, nodes []mode
 			// since the node still exists, remove it from the deleted set
 			delete(deletedNodeIDSet, node.ID)
 
-			if node.ID != "" && existingNodeIDSet[node.ID] == struct{}{} {
+			_, exists := existingNodeIDSet[node.ID]
+			if node.ID != "" && exists {
 				err := tx.updateNode(ctx, node)
 				if err != nil {
 					return fmt.Errorf("failed to update node %s: %w", node.ID, err)
