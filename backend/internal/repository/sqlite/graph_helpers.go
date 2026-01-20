@@ -470,7 +470,8 @@ func (s *sqliteDB) updateEdges(ctx context.Context, graphID string, edges []mode
 			// since the edge still exists, remove it from the deleted set
 			delete(deletedEdgeIDSet, edge.ID)
 
-			if edge.ID != "" && existingEdgeIDSet[edge.ID] == struct{}{} {
+			_, exists := existingEdgeIDSet[edge.ID]
+			if edge.ID != "" && exists {
 				err := tx.updateEdge(ctx, edge)
 				if err != nil {
 					return fmt.Errorf("failed to update edge %s: %w", edge.ID, err)
