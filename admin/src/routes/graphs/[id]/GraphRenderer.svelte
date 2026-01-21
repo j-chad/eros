@@ -18,7 +18,7 @@
     import PaneContextMenu from "./PaneContextMenu.svelte";
 	import NodeContextMenu from "./NodeContextMenu.svelte";
 	import LocationNode from "./nodes/LocationNode.svelte";
-	import EditDialog from "./edit-dialog/EditDialog.svelte";
+	import EditNodeDialog from "./edit-node-dialog/EditNodeDialog.svelte";
 
     let {graph = $bindable<Graph>()}: { graph: Graph } = $props()
 
@@ -186,7 +186,6 @@
 	}
 
 	function handleConnect(connection: Connection) {
-		console.log('Handle connect:', connection);
 		if (!connection.source || !connection.target) return;
 
 		const newEdge: FlowEdge = {
@@ -212,8 +211,14 @@
 
 	function handleEditNode(nodeId: string) {
 		const node = findNodeById(nodeId, true);
-		console.log('Edit node:', node);
 		editingNode = node.data.node;
+	}
+
+	function handleUpdateNode(updatedNode: AnyNode) {
+		nodes = nodes.map((node) => {
+			return node.id === updatedNode.id ? nodeToFlowNode(updatedNode) : node;
+		});
+		commitGraph();
 	}
 </script>
 
@@ -237,7 +242,7 @@
     </SvelteFlow>
 </div>
 
-<EditDialog node={editingNode} onClose={() => editingNode = null}></EditDialog>
+<EditNodeDialog node={editingNode} onClose={() => editingNode = null} onSave={handleUpdateNode}></EditNodeDialog>
 
 <style>
     .canvas {
