@@ -1,22 +1,21 @@
-<!-- LocationNode.svelte -->
 <script lang="ts">
-	import {type Node, type NodeProps} from '@xyflow/svelte';
 	import { MapPin } from 'lucide-svelte';
 	import type {LocationNode} from "$lib/types";
 	import BaseNode from "./BaseNode.svelte";
+	import type {NodeProps} from "./types";
 
-	let { data }: NodeProps<Node<{node: LocationNode}>> = $props();
-
-	const node = $derived(data.node);
+	let { data }: NodeProps<LocationNode> = $props();
+	let node = $derived(data.node);
 </script>
 
 <BaseNode
 	{node}
+	onEdit={data.onEdit}
 	config={{
         color: '#ec4899',
         gradient: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
         icon: MapPin,
-        label: 'Location'
+        label: 'Location',
     }}
 >
 	{#snippet children()}
