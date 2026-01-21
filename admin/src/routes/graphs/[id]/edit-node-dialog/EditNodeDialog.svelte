@@ -2,11 +2,12 @@
 	import type { AnyNode } from '$lib/types';
 	import { NodeType } from '$lib/types';
 	import type { Component } from 'svelte';
+	import EditLocationDialog from "./EditLocationDialog.svelte";
 
 	type ComponentMap = { [K in NodeType]?: NodeFormComponent<Extract<AnyNode, { type: K }>>; };
 	type NodeFormComponent<N extends AnyNode> = Component<{
 		node: N;
-		onSave?: (node: N) => void;
+		onSave: (node: N) => void;
 		onCancel: () => void;
 	}>;
 
@@ -22,8 +23,10 @@
 
 	let dialog: HTMLDialogElement;
 
-	const componentMap: ComponentMap = {};
-	const bodyComponent = $derived(node ? componentMap[node.type] : null);
+	const componentMap: ComponentMap = {
+		[NodeType.LOCATION]: EditLocationDialog,
+	};
+	const BodyComponent = $derived(node ? componentMap[node.type] : undefined) as NodeFormComponent<AnyNode>;
 
 	$effect(() => {
 		if (node) {
@@ -61,8 +64,8 @@
 {#if node}
 	<dialog bind:this={dialog} class="edit-dialog" onclose={handleCancel} onclick={handleBackdropClick}>
 		<div class="dialog-content">
-			{#if bodyComponent}
-				<bodyComponent {node} onSave={handleSave} onCancel={handleCancel}></bodyComponent>
+			{#if BodyComponent}
+				<BodyComponent node={node} onSave={handleSave} onCancel={handleCancel}></BodyComponent>
 			{:else}
 				<h2>⚠️ Cannot Edit Node</h2>
 				<p>

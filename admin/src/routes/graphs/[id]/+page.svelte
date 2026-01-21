@@ -26,7 +26,6 @@
     });
 
     async function handleSave() {
-		console.log('Saving graph:', graph);
         isSaving = true;
         try {
             await api.graph.update(graph.id, graph)
