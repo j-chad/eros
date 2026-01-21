@@ -16,7 +16,7 @@
 		description: node.description || '',
 		latitude: node.data?.latitude ?? 0,
 		longitude: node.data?.longitude ?? 0,
-		radius_meters: node.data?.radius_meters ?? 0
+		radius_m: node.data?.radius_m ?? 0
 	});
 
 	function handleSubmit(event: Event) {
@@ -29,7 +29,7 @@
 			data: {
 				latitude: editForm.latitude,
 				longitude: editForm.longitude,
-				radius_meters: editForm.radius_meters
+				radius_m: editForm.radius_m
 			}
 		};
 
@@ -94,13 +94,13 @@
 			type="number"
 			min="0"
 			step="1"
-			bind:value={editForm.radius_meters}
+			bind:value={editForm.radius_m}
 			required
 			placeholder="e.g., 100"
 		/>
 		<span class="help-text">
-			{#if editForm.radius_meters > 0}
-				Triggers when within {editForm.radius_meters}m of the location
+			{#if editForm.radius_m > 0}
+				Triggers when within {editForm.radius_m}m of the location
 			{:else}
 				Enter a radius in meters
 			{/if}

@@ -223,12 +223,12 @@ SELECT n.id,
        n.unlocked_at,
 
        CASE n.type
-           WHEN 'location_gate' THEN json_object(
+           WHEN 'location' THEN json_object(
                    'latitude', nlg.latitude,
                    'longitude', nlg.longitude,
-                   'radius_meters', nlg.radius_meters
+                   'radius_m', nlg.radius_meters
                                      )
-           WHEN 'code_gate' THEN json_object(
+           WHEN 'code' THEN json_object(
                    'code', ncg.code
                                  )
            WHEN 'reward' THEN json_object(
