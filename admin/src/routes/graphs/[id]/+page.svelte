@@ -87,7 +87,6 @@
                 value={description()}
                 onSave={handleDescriptionChange}
                 multiline={true} />
-<!--                placeholder="Add a description..."-->
     </div>
 
     <div class="grid-3">
@@ -111,7 +110,6 @@
     </div>
 </Card>
 
-<!-- Graph Canvas Section - Placeholder for now -->
 <Card title="Graph Canvas">
     <GraphRenderer bind:graph/>
 </Card>

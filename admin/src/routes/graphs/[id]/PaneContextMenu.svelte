@@ -1,4 +1,3 @@
-<!-- PaneContextMenu.svelte -->
 <script lang="ts">
     import {Gift, GitBranch, Key, MapPin, Play} from 'lucide-svelte';
     import {type AnyNode, type Node, NodeType} from "$lib/types";
