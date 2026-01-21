@@ -1,144 +1,101 @@
 <!-- CodeNode.svelte -->
 <script lang="ts">
-    import { Handle, Position } from '@xyflow/svelte';
-    import { Key, Edit } from 'lucide-svelte';
+	import { Key } from 'lucide-svelte';
+	import type { CodeNode } from "$lib/types";
+	import BaseNode from "./BaseNode.svelte";
+	import type { NodeProps } from "./types";
 
-    let { data } = $props();
+	let { data }: NodeProps<CodeNode> = $props();
+	let node = $derived(data.node);
+	let isHovered = $state(false);
 </script>
 
-<div class="code-node">
-    <div class="node-header">
-        <div class="icon-wrapper">
-            <Key size={16} />
-        </div>
-        <div class="title">
-            <div class="type">Code</div>
-            <div class="name">{data.title}</div>
-        </div>
-        <button class="edit-btn" onclick={data.onEdit}>
-            <Edit size={14} />
-        </button>
-    </div>
-
-    <div class="node-body">
-        {#if data.description}
-            <div class="description">{data.description}</div>
-        {/if}
-        <div class="code-display">
-            <span class="code-label">Code:</span>
-            <span class="code-value">{data.data.code}</span>
-        </div>
-    </div>
-
-    <Handle type="target" position={Position.Top} />
-    <Handle type="source" position={Position.Bottom} />
-</div>
+<BaseNode
+	{node}
+	onEdit={data.onEdit}
+	onmouseenter={() => isHovered = true}
+	onmouseleave={() => isHovered = false}
+	config={{
+        color: '#8b5cf6',
+        gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+        icon: Key,
+        label: 'Code',
+    }}
+>
+	{#snippet children()}
+		<div
+			role="presentation"
+			class="config"
+		>
+			<div class="config-item">
+				<span class="key">🔑 Code:</span>
+				<span class="value" class:revealed={isHovered}>
+                    {#if isHovered}
+                        {node.data?.code}
+                    {:else}
+                        {'•'.repeat(node.data?.code?.length ?? 8)}
+                    {/if}
+                </span>
+			</div>
+		</div>
+	{/snippet}
+</BaseNode>
 
 <style>
-    .code-node {
-        background: white;
-        border: 2px solid #8b5cf6;
-        border-radius: 8px;
-        min-width: 200px;
-        max-width: 280px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
+	.config {
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+		cursor: pointer;
+	}
 
-    .node-header {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.75rem 1rem;
-        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-        color: white;
-        border-radius: 6px 6px 0 0;
-    }
+	.config-item {
+		font-size: 0.75rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+	}
 
-    .icon-wrapper {
-        width: 32px;
-        height: 32px;
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(255, 255, 255, 0.2);
-    }
+	.key {
+		color: #6b7280;
+		font-weight: 500;
+	}
 
-    .title {
-        flex: 1;
-        min-width: 0;
-    }
+	.value {
+		color: #1f2937;
+		font-weight: 600;
+		font-family: 'Courier New', monospace;
+		font-size: 0.875rem;
+		letter-spacing: 0.15em;
+		transition: all 0.2s;
+		overflow-x: auto;
+		overflow-y: hidden;
+		white-space: nowrap;
+		max-width: 100%;
+		padding-bottom: 0.25rem;
+	}
 
-    .type {
-        font-size: 0.625rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        opacity: 0.9;
-        font-weight: 600;
-    }
+	.value:not(.revealed) {
+		letter-spacing: 0.3em;
+		color: #9ca3af;
+	}
 
-    .name {
-        font-size: 0.875rem;
-        font-weight: 600;
-        margin-top: 0.125rem;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+	/* Custom scrollbar styling */
+	.value::-webkit-scrollbar {
+		height: 4px;
+	}
 
-    .edit-btn {
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
-        border-radius: 4px;
-        padding: 0.375rem;
-        color: white;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.2s;
-        flex-shrink: 0;
-    }
+	.value::-webkit-scrollbar-track {
+		background: #f3f4f6;
+		border-radius: 2px;
+	}
 
-    .edit-btn:hover {
-        background: rgba(255, 255, 255, 0.3);
-    }
+	.value::-webkit-scrollbar-thumb {
+		background: #d1d5db;
+		border-radius: 2px;
+	}
 
-    .node-body {
-        padding: 1rem;
-    }
-
-    .description {
-        font-size: 0.875rem;
-        color: #1f2937;
-        line-height: 1.5;
-        margin-bottom: 0.75rem;
-        word-wrap: break-word;
-    }
-
-    .code-display {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-        padding: 0.625rem 0.75rem;
-        background: #f3f4f6;
-        border-radius: 4px;
-        border: 1px solid #e5e7eb;
-    }
-
-    .code-label {
-        font-size: 0.625rem;
-        color: #6b7280;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .code-value {
-        font-size: 1.125rem;
-        color: #1f2937;
-        font-weight: 700;
-        font-family: 'Courier New', monospace;
-        letter-spacing: 0.15em;
-    }
+	.value::-webkit-scrollbar-thumb:hover {
+		background: #9ca3af;
+	}
 </style>

@@ -3,6 +3,7 @@
 	import { NodeType } from '$lib/types';
 	import type { Component } from 'svelte';
 	import EditLocationDialog from "./EditLocationDialog.svelte";
+	import EditCodeDialog from "./EditCodeDialog.svelte";
 
 	type ComponentMap = { [K in NodeType]?: NodeFormComponent<Extract<AnyNode, { type: K }>>; };
 	type NodeFormComponent<N extends AnyNode> = Component<{
@@ -25,6 +26,7 @@
 
 	const componentMap: ComponentMap = {
 		[NodeType.LOCATION]: EditLocationDialog,
+		[NodeType.CODE]: EditCodeDialog
 	};
 	const BodyComponent = $derived(node ? componentMap[node.type] : undefined) as NodeFormComponent<AnyNode>;
 
@@ -35,21 +37,6 @@
 			dialog?.close();
 		}
 	});
-
-	function handleBackdropClick(event: MouseEvent) {
-		const dialogElement = event.currentTarget as HTMLDialogElement;
-		const rect = dialogElement.getBoundingClientRect();
-		const isInDialog = (
-			rect.top <= event.clientY &&
-			event.clientY <= rect.top + rect.height &&
-			rect.left <= event.clientX &&
-			event.clientX <= rect.left + rect.width
-		);
-
-		if (!isInDialog) {
-			handleCancel()
-		}
-	}
 
 	function handleSave(updatedNode: AnyNode) {
 		onSave?.(updatedNode);
@@ -62,7 +49,7 @@
 </script>
 
 {#if node}
-	<dialog bind:this={dialog} class="edit-dialog" onclose={handleCancel} onclick={handleBackdropClick}>
+	<dialog bind:this={dialog} class="edit-dialog" onclose={handleCancel} closedby="any">
 		<div class="dialog-content">
 			{#if BodyComponent}
 				<BodyComponent node={node} onSave={handleSave} onCancel={handleCancel}></BodyComponent>
