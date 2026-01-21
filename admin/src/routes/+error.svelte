@@ -1,4 +1,3 @@
-<!-- src/routes/+error.svelte -->
 <script lang="ts">
     import { page } from '$app/state';
     import { dev } from '$app/environment';

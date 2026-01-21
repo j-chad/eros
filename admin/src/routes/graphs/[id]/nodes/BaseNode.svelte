@@ -1,4 +1,3 @@
-<!-- BaseNode.svelte -->
 <script lang="ts">
 	import { Position } from '@xyflow/svelte';
 	import {Edit, type Play} from 'lucide-svelte';

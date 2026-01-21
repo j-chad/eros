@@ -1,4 +1,3 @@
-<!-- NodeContextMenu.svelte -->
 <script lang="ts">
 	import { Trash2 } from 'lucide-svelte';
 

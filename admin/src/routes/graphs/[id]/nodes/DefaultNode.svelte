@@ -1,4 +1,3 @@
-<!-- StartNode.svelte -->
 <script lang="ts">
 	import {type NodeProps} from '@xyflow/svelte';
 	import {MessageSquareWarning} from 'lucide-svelte';

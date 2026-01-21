@@ -1,4 +1,3 @@
-<!-- StartNode.svelte -->
 <script lang="ts">
 	import {useNodeConnections} from '@xyflow/svelte';
 	import { Play } from 'lucide-svelte';

@@ -20,10 +20,12 @@
 	import LocationNode from "./nodes/LocationNode.svelte";
 	import EditNodeDialog from "./edit-node-dialog/EditNodeDialog.svelte";
 	import CodeNode from "./nodes/CodeNode.svelte";
+	import ChoiceNode from "./nodes/ChoiceNode.svelte";
 
     let {graph = $bindable<Graph>()}: { graph: Graph } = $props()
 
     const nodeTypes: NodeTypes = {
+		[NodeType.CHOICE]: ChoiceNode,
 		[NodeType.CODE]: CodeNode,
 		[NodeType.LOCATION]: LocationNode,
         [NodeType.START]: StartNode

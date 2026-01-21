@@ -1,4 +1,3 @@
-<!-- CodeNode.svelte -->
 <script lang="ts">
 	import { Key } from 'lucide-svelte';
 	import type { CodeNode } from "$lib/types";
