@@ -12,7 +12,7 @@
 	import type { Node as FlowNode, Edge as FlowEdge } from './nodes/types';
 
     import '@xyflow/svelte/dist/style.css';
-    import {type AnyNode, type Edge, type Graph, NodeType} from "$lib/types";
+    import {type AnyNode, type Graph, NodeType} from "$lib/types";
     import {debounce} from "$lib/utils";
     import StartNode from "./nodes/StartNode.svelte";
     import PaneContextMenu from "./PaneContextMenu.svelte";
@@ -38,15 +38,25 @@
     let syncingFromGraph = false;
     let syncingFromFlow = false;
 
-	function findNodeById(id: string): FlowNode | undefined {
-		return nodes.find((n) => n.id === id);
+	function findNodeById(id: string, required: true): FlowNode
+	function findNodeById(id: string, required?: false): FlowNode | undefined
+	function findNodeById(id: string, required=false): FlowNode | undefined {
+		const node = nodes.find((n) => n.id === id);
+		if (required && !node) {
+			throw new Error(`Node with ID ${id} not found`);
+		}
+
+		return node;
 	}
 
     function nodeToFlowNode(node: AnyNode): FlowNode {
         return {
             id: node.id,
             position: node.ui_position ?? {x: 0, y: 0},
-            data: {node},
+            data: {
+				node,
+				onEdit: handleEditNode
+			},
             type: node.type,
 			deletable: node.type !== NodeType.START,
         };
@@ -135,11 +145,9 @@
     }
 
     const handleNodeDragStop: NodeEvents['onnodedragstop'] = ({targetNode}) => {
-		console.log('Node drag stop:', {nodes, edges});
+		if (!targetNode) throw new Error('No target node on drag stop');
 
-		if (!targetNode) return;
-		const node = findNodeById(targetNode.id);
-		if (!node) return;
+		const node = findNodeById(targetNode.id, true);
 		node.position = targetNode.position;
 		commitGraph();
 	};
@@ -198,6 +206,11 @@
 
 		edges = [...edges, newEdge];
 		commitGraph();
+	}
+
+	function handleEditNode(nodeId: string) {
+		const node = findNodeById(nodeId, true);
+		console.log('Edit node:', node);
 	}
 </script>
 

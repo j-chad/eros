@@ -1,6 +1,6 @@
 <!-- BaseNode.svelte -->
 <script lang="ts">
-	import { type NodeProps, Position } from '@xyflow/svelte';
+	import { Position } from '@xyflow/svelte';
 	import {Edit, type Play} from 'lucide-svelte';
 	import type { AnyNode } from "$lib/types";
 	import Handle from "./Handle.svelte";
@@ -25,7 +25,7 @@
 		node: AnyNode
 		config: BaseNodeConfig;
 		children?: any;
-		onEdit?: (node: AnyNode) => void;
+		onEdit?: (nodeID: string) => void;
 	} = $props();
 </script>
 
@@ -39,7 +39,7 @@
 			<div class="name">{node.title}</div>
 		</div>
 		{#if onEdit}
-			<button class="edit-btn" onclick={() => onEdit?.(node)}>
+			<button class="edit-btn" onclick={() => onEdit?.(node.id)}>
 				<Edit size={14} />
 			</button>
 		{/if}
