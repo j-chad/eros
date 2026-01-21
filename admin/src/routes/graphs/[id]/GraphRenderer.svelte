@@ -18,6 +18,7 @@
     import PaneContextMenu from "./PaneContextMenu.svelte";
 	import NodeContextMenu from "./NodeContextMenu.svelte";
 	import LocationNode from "./nodes/LocationNode.svelte";
+	import EditDialog from "./edit-dialog/EditDialog.svelte";
 
     let {graph = $bindable<Graph>()}: { graph: Graph } = $props()
 
@@ -29,6 +30,7 @@
     let contextMenu = $state<'node' | 'pane' | 'hidden'>('hidden');
     let contextMenuPosition = $state({ x: 0, y: 0 });
 	let selectedNodeId = $state<string | null>(null);
+	let editingNode = $state<AnyNode | null>(null);
 
     // Non-reactive state for performance
     let nodes = $state.raw<FlowNode[]>([]);
@@ -211,6 +213,7 @@
 	function handleEditNode(nodeId: string) {
 		const node = findNodeById(nodeId, true);
 		console.log('Edit node:', node);
+		editingNode = node.data.node;
 	}
 </script>
 
@@ -233,6 +236,8 @@
         {/if}
     </SvelteFlow>
 </div>
+
+<EditDialog node={editingNode} onClose={() => editingNode = null}></EditDialog>
 
 <style>
     .canvas {
