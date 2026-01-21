@@ -3,13 +3,13 @@
 		Background,
 		BackgroundVariant,
 		Controls,
-		type Edge as FlowEdge,
-		MiniMap,
-		type Node as FlowNode, type NodeEvents,
+		MiniMap, type NodeEvents,
 		type NodeTypes, type PaneEvents,
 		SvelteFlow, type Viewport,
 		type Connection
 	} from '@xyflow/svelte';
+
+	import type { Node as FlowNode, Edge as FlowEdge } from './nodes/types';
 
     import '@xyflow/svelte/dist/style.css';
     import {type AnyNode, type Edge, type Graph, NodeType} from "$lib/types";
@@ -31,18 +31,18 @@
 	let selectedNodeId = $state<string | null>(null);
 
     // Non-reactive state for performance
-    let nodes = $state.raw<FlowNode<{ node: AnyNode }, NodeType>[]>([]);
-    let edges = $state.raw<FlowEdge<{ edge: Edge }>[]>([]);
+    let nodes = $state.raw<FlowNode[]>([]);
+    let edges = $state.raw<FlowEdge[]>([]);
 
     // prevent graph<->flow feedback loops
     let syncingFromGraph = false;
     let syncingFromFlow = false;
 
-	function findNodeById(id: string): FlowNode<{ node: AnyNode }, NodeType> | undefined {
+	function findNodeById(id: string): FlowNode | undefined {
 		return nodes.find((n) => n.id === id);
 	}
 
-    function nodeToFlowNode(node: AnyNode): FlowNode<{ node: AnyNode }, NodeType> {
+    function nodeToFlowNode(node: AnyNode): FlowNode {
         return {
             id: node.id,
             position: node.ui_position ?? {x: 0, y: 0},
@@ -179,7 +179,7 @@
 		console.log('Handle connect:', connection);
 		if (!connection.source || !connection.target) return;
 
-		const newEdge: FlowEdge<{ edge: Edge }> = {
+		const newEdge: FlowEdge = {
 			id: crypto.randomUUID(),
 			source: connection.source,
 			target: connection.target,

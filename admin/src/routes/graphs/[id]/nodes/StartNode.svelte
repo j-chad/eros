@@ -1,11 +1,12 @@
 <!-- StartNode.svelte -->
 <script lang="ts">
-	import {type Node, type NodeProps, useNodeConnections} from '@xyflow/svelte';
+	import {useNodeConnections} from '@xyflow/svelte';
 	import { Play } from 'lucide-svelte';
-	import type {AnyNode, StartNode, StartNode as StartNodeType} from "$lib/types";
+	import type {StartNode, StartNode as StartNodeType} from "$lib/types";
 	import BaseNode from "./BaseNode.svelte";
+	import type {NodeProps} from "./types";
 
-	let { data }: NodeProps<Node<{node: StartNode}>> = $props();
+	let { data }: NodeProps<StartNode> = $props();
 
 	const node = $derived(data.node as StartNodeType);
 	const connections = useNodeConnections();
