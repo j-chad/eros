@@ -28,7 +28,7 @@
 			</div>
 			<div class="config-item">
 				<span class="key">📏 Radius:</span>
-				<span class="value">{node.data?.radius_meters ?? 0}m</span>
+				<span class="value">{node.data?.radius_m ?? 0}m</span>
 			</div>
 		</div>
 	{/snippet}

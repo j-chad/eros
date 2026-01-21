@@ -107,7 +107,7 @@ export type StartNode = Node<NodeType.START>;
 export type LocationNode = Node<NodeType.LOCATION, {
     latitude: number;
     longitude: number;
-    radius_meters: number;
+    radius_m: number;
 }>;
 export type CodeNode = Node<NodeType.CODE, {
     code: string;
