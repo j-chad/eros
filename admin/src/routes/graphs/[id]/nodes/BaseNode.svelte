@@ -21,15 +21,19 @@
 		config,
 		children,
 		onEdit,
+		onmouseenter,
+		onmouseleave
 	}: {
 		node: AnyNode
 		config: BaseNodeConfig;
 		children?: any;
 		onEdit?: (nodeID: string) => void;
+		onmouseenter?: () => void;
+		onmouseleave?: () => void;
 	} = $props();
 </script>
 
-<div class="base-node" style="border-color: {config.color}">
+<div class="base-node" role="presentation" style="border-color: {config.color}" {onmouseenter} {onmouseleave}>
 	<div class="node-header" style="background: {config.gradient}">
 		<div class="icon-wrapper">
 			<config.icon size={16} />

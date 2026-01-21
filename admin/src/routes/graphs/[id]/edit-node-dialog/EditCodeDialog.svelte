@@ -1,46 +1,39 @@
 <script lang="ts">
-	import type { LocationNode } from '$lib/types';
+	import type { CodeNode } from '$lib/types';
 
 	let {
 		node,
 		onSave,
 		onCancel
 	}: {
-		node: LocationNode;
-		onSave: (node: LocationNode) => void;
+		node: CodeNode;
+		onSave: (node: CodeNode) => void;
 		onCancel: () => void;
 	} = $props();
 
 	let editForm = $state({
 		title: node.title,
 		description: node.description || '',
-		latitude: node.data?.latitude ?? 0,
-		longitude: node.data?.longitude ?? 0,
-		radius_m: node.data?.radius_m ?? 0
+		code: node.data?.code ?? ''
 	});
 
 	function handleSubmit(event: Event) {
-		console.log('Form submit triggered');
 		event.preventDefault();
-		event.stopPropagation();
 
-		const updatedNode: LocationNode = {
+		const updatedNode: CodeNode = {
 			...node,
 			title: editForm.title,
 			description: editForm.description,
 			data: {
-				latitude: editForm.latitude,
-				longitude: editForm.longitude,
-				radius_m: editForm.radius_m
+				code: editForm.code
 			}
 		};
 
-		console.log('Calling onSave with:', updatedNode);
 		onSave(updatedNode);
 	}
 </script>
 
-<h2>Edit Location Node</h2>
+<h2>Edit Code Node</h2>
 
 <form onsubmit={handleSubmit}>
 	<div class="form-group">
@@ -50,7 +43,7 @@
 			type="text"
 			bind:value={editForm.title}
 			required
-			placeholder="e.g., Home, Office, Park"
+			placeholder="e.g., Access Code, PIN, Security Key"
 		/>
 	</div>
 
@@ -60,52 +53,25 @@
 			id="description"
 			bind:value={editForm.description}
 			rows="3"
-			placeholder="Optional description for this location"
+			placeholder="Optional description for this code"
 		/>
-	</div>
-
-	<div class="form-row">
-		<div class="form-group">
-			<label for="latitude">Latitude</label>
-			<input
-				id="latitude"
-				type="number"
-				step="0.000001"
-				bind:value={editForm.latitude}
-				required
-				placeholder="e.g., -36.848461"
-			/>
-		</div>
-
-		<div class="form-group">
-			<label for="longitude">Longitude</label>
-			<input
-				id="longitude"
-				type="number"
-				step="0.000001"
-				bind:value={editForm.longitude}
-				required
-				placeholder="e.g., 174.763336"
-			/>
-		</div>
 	</div>
 
 	<div class="form-group">
-		<label for="radius">Radius (meters)</label>
+		<label for="code">Code</label>
 		<input
-			id="radius"
-			type="number"
-			min="0"
-			step="1"
-			bind:value={editForm.radius_m}
+			id="code"
+			type="text"
+			bind:value={editForm.code}
 			required
-			placeholder="e.g., 100"
+			placeholder="e.g., 1234, ABC123, ****"
+			class="code-input"
 		/>
 		<span class="help-text">
-			{#if editForm.radius_m > 0}
-				Triggers when within {editForm.radius_m}m of the location
+			{#if editForm.code}
+				Code: {editForm.code}
 			{:else}
-				Enter a radius in meters
+				Enter the code value
 			{/if}
 		</span>
 	</div>
@@ -140,13 +106,6 @@
 		gap: 0.5rem;
 	}
 
-	.form-row {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 1rem;
-		margin-bottom: 1rem;
-	}
-
 	label {
 		font-size: 0.875rem;
 		font-weight: 500;
@@ -162,14 +121,20 @@
 		transition: all 0.2s;
 	}
 
+	.code-input {
+		font-family: 'Courier New', monospace;
+		letter-spacing: 0.15em;
+		font-weight: 600;
+	}
+
 	input::placeholder, textarea::placeholder {
 		color: #9ca3af;
 	}
 
 	input:focus, textarea:focus {
 		outline: none;
-		border-color: #ec4899;
-		box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+		border-color: #8b5cf6;
+		box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
 	}
 
 	.help-text {
@@ -208,15 +173,15 @@
 	}
 
 	.btn-save {
-		background: #ec4899;
+		background: #8b5cf6;
 		border: none;
 		color: white;
 	}
 
 	.btn-save:hover {
-		background: #db2777;
+		background: #7c3aed;
 		transform: translateY(-1px);
-		box-shadow: 0 4px 6px -1px rgba(236, 72, 153, 0.3);
+		box-shadow: 0 4px 6px -1px rgba(139, 92, 246, 0.3);
 	}
 
 	.btn-save:active {
