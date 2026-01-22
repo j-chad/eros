@@ -1,30 +1,20 @@
 <!-- ManualNode.svelte -->
 <script lang="ts">
-	import {type Node, type NodeProps} from '@xyflow/svelte';
 	import { HandMetal, CheckCircle2, Circle } from 'lucide-svelte';
 	import type {ManualNode} from "$lib/types";
 	import BaseNode from "./BaseNode.svelte";
+	import type {NodeProps} from "./types";
 
-	let { data }: NodeProps<Node<{node: ManualNode, onEdit?: (nodeId: string) => void}>> = $props();
-
-	const node = $derived(data.node);
-	const onEdit = $derived(data.onEdit);
-
-	// This would come from execution state in a real implementation
-	const isCompleted = $derived(node.data?.completed ?? false);
-	const isPending = $derived(node.data?.pending ?? false);
+	let { data }: NodeProps<ManualNode> = $props();
+	let node = $derived(data.node);
 </script>
 
 <BaseNode
 	{node}
-	{onEdit}
+	onEdit={data.onEdit}
 	config={{
-        color: isCompleted ? '#10b981' : (isPending ? '#f59e0b' : '#8b5cf6'),
-        gradient: isCompleted
-			? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-			: (isPending
-				? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
-				: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'),
+        color: '#10b981',
+        gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
         icon: HandMetal,
         label: 'Manual'
     }}
@@ -32,43 +22,23 @@
 	{#snippet children()}
 		<div class="manual-content">
 			<div class="status-indicator">
-				{#if isCompleted}
-					<div class="status completed">
-						<CheckCircle2 size={20} />
-						<span>Completed</span>
-					</div>
-				{:else if isPending}
-					<div class="status pending">
-						<Circle size={20} class="pulse" />
-						<span>Awaiting Confirmation</span>
-					</div>
-				{:else}
-					<div class="status idle">
-						<Circle size={20} />
-						<span>Not Started</span>
-					</div>
-				{/if}
+				<div class="status idle">
+					<Circle size={20} />
+					<span>Not Started</span>
+		</div>
 			</div>
 
 			<button
 				class="confirm-button"
-				class:completed={isCompleted}
-				class:pending={isPending}
-				disabled={isCompleted}
 				onclick={() => {
 					// This would trigger the confirmation in a real implementation
 					console.log('Manual node confirmed:', node.id);
 				}}
 			>
-				{#if isCompleted}
-					<CheckCircle2 size={24} />
-					<span>Confirmed</span>
-				{:else}
 					<div class="button-inner">
 						<div class="button-ring"></div>
 						<span>Confirm</span>
 					</div>
-				{/if}
 			</button>
 
 			<div class="manual-hint">
