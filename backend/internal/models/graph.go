@@ -12,7 +12,7 @@ type NodeType string
 
 const (
 	StartNode        NodeType = "start"
-	ChoiceNode       NodeType = "choice"
+	ManualNode       NodeType = "manual"
 	CodeGateNode     NodeType = "code"
 	LocationGateNode NodeType = "location"
 	RewardNode       NodeType = "reward"

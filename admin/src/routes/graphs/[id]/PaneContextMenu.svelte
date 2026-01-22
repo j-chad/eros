@@ -41,7 +41,7 @@
             description: 'Secret code unlock'
         },
         {
-            type: NodeType.CHOICE,
+            type: NodeType.MANUAL,
             label: 'Choice',
             icon: GitBranch,
             color: '#f59e0b',

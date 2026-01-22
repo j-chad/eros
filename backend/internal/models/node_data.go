@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type LocationData struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
@@ -8,6 +10,11 @@ type LocationData struct {
 
 type CodeData struct {
 	Code string `json:"code"`
+}
+
+type ManualData struct {
+	Instructions string     `json:"instructions"`
+	UnlockedAt   *time.Time `json:"unlocked_at"`
 }
 
 type RewardData struct {

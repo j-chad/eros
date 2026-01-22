@@ -49,7 +49,7 @@ export enum NodeType {
     START = 'start',
     LOCATION = 'location',
     CODE = 'code',
-    CHOICE = 'choice',
+    MANUAL = 'manual',
     REWARD = 'reward',
 }
 
@@ -112,7 +112,10 @@ export type LocationNode = Node<NodeType.LOCATION, {
 export type CodeNode = Node<NodeType.CODE, {
     code: string;
 }>;
-export type ChoiceNode = Node<NodeType.CHOICE>;
+export type ManualNode = Node<NodeType.MANUAL, {
+	instructions: string;
+	unlocked_at?: string | null; // ISO 8601 date string
+}>;
 export type RewardNode = Node<NodeType.REWARD, {
     reward_type: string; // not sure what the possible types are yet
     content: string;
@@ -120,7 +123,7 @@ export type RewardNode = Node<NodeType.REWARD, {
     give_favours: number;
 }>;
 
-export type AnyNode = StartNode | LocationNode | CodeNode | ChoiceNode | RewardNode;
+export type AnyNode = StartNode | LocationNode | CodeNode | ManualNode | RewardNode;
 
 export interface NewGraph {
     title: string;
