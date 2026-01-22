@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {Gift, GitBranch, Key, MapPin, Play} from 'lucide-svelte';
+	import {Gift, GitBranch, HandMetal, Key, MapPin, Play} from 'lucide-svelte';
     import {type AnyNode, type Node, NodeType} from "$lib/types";
 	import {useNodes, useSvelteFlow} from "@xyflow/svelte";
 
@@ -42,10 +42,10 @@
         },
         {
             type: NodeType.MANUAL,
-            label: 'Choice',
-            icon: GitBranch,
-            color: '#f59e0b',
-            description: 'Multiple paths'
+            label: 'Manual',
+            icon: HandMetal,
+            color: '#10b981',
+            description: 'Human confirmation'
         },
         {
             type: NodeType.REWARD,
