@@ -25,7 +25,7 @@
     let {graph = $bindable<Graph>()}: { graph: Graph } = $props()
 
     const nodeTypes: NodeTypes = {
-		[NodeType.CHOICE]: ChoiceNode,
+		[NodeType.MANUAL]: ChoiceNode,
 		[NodeType.CODE]: CodeNode,
 		[NodeType.LOCATION]: LocationNode,
         [NodeType.START]: StartNode

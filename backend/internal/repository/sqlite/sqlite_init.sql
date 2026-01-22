@@ -106,6 +106,16 @@ CREATE TABLE IF NOT EXISTS node_location_gate
     FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS node_manual_gate
+(
+	node_id TEXT PRIMARY KEY,
+
+	instructions TEXT NOT NULL,
+	unlocked_at DATETIME, -- when the admin manually marked it as unlocked
+
+	FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS node_code_gate
 (
     node_id TEXT PRIMARY KEY,
@@ -227,10 +237,14 @@ SELECT n.id,
                    'latitude', nlg.latitude,
                    'longitude', nlg.longitude,
                    'radius_m', nlg.radius_meters
-                                     )
+           )
            WHEN 'code' THEN json_object(
                    'code', ncg.code
-                                 )
+		   )
+           WHEN 'manual' THEN json_object(
+				   'instructions', nmg.instructions,
+				   'unlocked_at', nmg.unlocked_at
+		   )
            WHEN 'reward' THEN json_object(
                    'reward_type', nr.reward_type,
                    'content_html', nr.content_html,
@@ -243,4 +257,5 @@ SELECT n.id,
 FROM node n
          LEFT JOIN node_location_gate nlg ON n.id = nlg.node_id
          LEFT JOIN node_code_gate ncg ON n.id = ncg.node_id
-         LEFT JOIN node_reward nr ON n.id = nr.node_id;
+         LEFT JOIN node_reward nr ON n.id = nr.node_id
+		 LEFT JOIN node_manual_gate nmg ON n.id = nmg.node_id;

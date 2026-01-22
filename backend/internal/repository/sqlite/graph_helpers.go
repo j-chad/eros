@@ -60,7 +60,12 @@ func (s *sqliteDB) scanNodeFull(scanner interface {
 		if err := json.Unmarshal(dataJSON, &node.Data); err != nil {
 			return node, fmt.Errorf("failed to unmarshal reward data: %w", err)
 		}
-	case models.StartNode, models.ChoiceNode:
+	case models.ManualNode:
+		node.Data = &models.ManualData{}
+		if err := json.Unmarshal(dataJSON, &node.Data); err != nil {
+			return node, fmt.Errorf("failed to unmarshal manual data: %w", err)
+		}
+	case models.StartNode:
 		// No additional data for these types
 	default:
 		return node, fmt.Errorf("unknown node type: %s", node.Type)
@@ -251,7 +256,7 @@ func (s *sqliteDB) upsertNodeData(ctx context.Context, nodeID string, nodeType m
 				give_favours = excluded.give_favours
 		`, nodeID, rewardData.RewardType, rewardData.Content, rewardData.MediaType, rewardData.GiveFavours)
 		return err
-	case models.StartNode, models.ChoiceNode:
+	case models.StartNode:
 		// No additional data to insert
 		return nil
 	default:
