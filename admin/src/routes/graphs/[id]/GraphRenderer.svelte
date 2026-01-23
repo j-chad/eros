@@ -61,7 +61,8 @@
             position: node.ui_position ?? {x: 0, y: 0},
             data: {
 				node,
-				onEdit: handleEditNode
+				onEdit: handleEditNode,
+				onUpdate: handleUpdateNode
 			},
             type: node.type,
 			deletable: node.type !== NodeType.START,
