@@ -1,12 +1,12 @@
-<!-- ManualNode.svelte -->
 <script lang="ts">
-	import { HandMetal, CheckCircle2, Circle } from 'lucide-svelte';
+	import { HandMetal } from 'lucide-svelte';
 	import type {ManualNode} from "$lib/types";
 	import BaseNode from "./BaseNode.svelte";
 	import type {NodeProps} from "./types";
 
 	let { data }: NodeProps<ManualNode> = $props();
 	let node = $derived(data.node);
+	let isUnlocked = $derived(!!node.data?.unlocked_at);
 </script>
 
 <BaseNode
@@ -21,18 +21,17 @@
 >
 	{#snippet children()}
 		<div class="manual-content">
-			<div class="status-indicator">
-				<div class="status idle">
-					<Circle size={20} />
-					<span>Not Started</span>
-		</div>
-			</div>
-
 			<button
 				class="confirm-button"
 				onclick={() => {
-					// This would trigger the confirmation in a real implementation
-					console.log('Manual node confirmed:', node.id);
+					const unlockedAt = isUnlocked ? null : new Date().toISOString();
+					data.onUpdate({
+						...node,
+						data: {
+							...node.data ?? {instructions: ""},
+							unlocked_at: unlockedAt
+						}
+					});
 				}}
 			>
 					<div class="button-inner">
@@ -40,10 +39,6 @@
 						<span>Confirm</span>
 					</div>
 			</button>
-
-			<div class="manual-hint">
-				✋ Manual confirmation required
-			</div>
 		</div>
 	{/snippet}
 </BaseNode>
@@ -53,39 +48,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
-	}
-
-	.status-indicator {
-		display: flex;
-		justify-content: center;
-	}
-
-	.status {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem 0.75rem;
-		border-radius: 6px;
-		font-size: 0.75rem;
-		font-weight: 600;
-	}
-
-	.status.completed {
-		background: #d1fae5;
-		color: #065f46;
-		border: 1px solid #6ee7b7;
-	}
-
-	.status.pending {
-		background: #fef3c7;
-		color: #92400e;
-		border: 1px solid #fbbf24;
-	}
-
-	.status.idle {
-		background: #f3f4f6;
-		color: #6b7280;
-		border: 1px solid #d1d5db;
 	}
 
 	.confirm-button {
@@ -107,29 +69,23 @@
 		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 	}
 
-	.confirm-button:not(.completed):not(.pending) {
+	.confirm-button:not(.unlocked) {
 		background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
 		color: white;
 	}
 
-	.confirm-button.pending {
-		background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-		color: white;
-		animation: pulse-button 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-	}
-
-	.confirm-button.completed {
+	.confirm-button.unlocked {
 		background: #d1fae5;
 		color: #065f46;
 		cursor: not-allowed;
 	}
 
-	.confirm-button:not(.completed):not(:disabled):hover {
+	.confirm-button:not(.unlocked):hover {
 		transform: scale(1.1);
 		box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 	}
 
-	.confirm-button:not(.completed):not(:disabled):active {
+	.confirm-button:not(.unlocked):active {
 		transform: scale(0.95);
 	}
 
@@ -153,51 +109,14 @@
 		pointer-events: none;
 	}
 
-	.confirm-button:not(.completed):hover .button-ring {
+	.confirm-button:not(.unlocked):hover .button-ring {
 		animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
-	}
-
-	.manual-hint {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 0.375rem;
-		padding: 0.5rem;
-		background: #f5f3ff;
-		border: 1px solid #c4b5fd;
-		border-radius: 4px;
-		font-size: 0.75rem;
-		color: #5b21b6;
-		font-weight: 500;
-		text-align: center;
-	}
-
-	@keyframes pulse-button {
-		0%, 100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.8;
-		}
 	}
 
 	@keyframes ping {
 		75%, 100% {
 			transform: translate(-50%, -50%) scale(1.5);
 			opacity: 0;
-		}
-	}
-
-	:global(.pulse) {
-		animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-	}
-
-	@keyframes pulse {
-		0%, 100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.5;
 		}
 	}
 </style>
