@@ -22,15 +22,13 @@
 	{#snippet children()}
 		<div class="manual-content">
 			<button
+				class:unlocked={isUnlocked}
 				class="confirm-button"
 				onclick={() => {
 					const unlockedAt = isUnlocked ? null : new Date().toISOString();
-					data.onUpdate({
-						...node,
-						data: {
-							...node.data ?? {instructions: ""},
-							unlocked_at: unlockedAt
-						}
+					data.onUpdateData({
+						...node.data ?? {instructions: ""},
+						unlocked_at: unlockedAt
 					});
 				}}
 			>
@@ -77,7 +75,6 @@
 	.confirm-button.unlocked {
 		background: #d1fae5;
 		color: #065f46;
-		cursor: not-allowed;
 	}
 
 	.confirm-button:not(.unlocked):hover {

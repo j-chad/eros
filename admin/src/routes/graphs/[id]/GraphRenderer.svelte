@@ -62,7 +62,7 @@
             data: {
 				node,
 				onEdit: handleEditNode,
-				onUpdate: handleUpdateNode
+				onUpdateData: handleUpdateNodeData
 			},
             type: node.type,
 			deletable: node.type !== NodeType.START,
@@ -223,6 +223,16 @@
 		nodes = nodes.map((node) => {
 			return node.id === updatedNode.id ? nodeToFlowNode(updatedNode) : node;
 		});
+		commitGraph();
+	}
+
+	function handleUpdateNodeData(nodeId: string, newData: AnyNode['data']) {
+		const node = findNodeById(nodeId, true);
+		const updatedNode = {
+			...node.data.node,
+			data: newData
+		};
+		nodes = nodes.map((n) => n.id === nodeId ? nodeToFlowNode(updatedNode as AnyNode) : n);
 		commitGraph();
 	}
 </script>
