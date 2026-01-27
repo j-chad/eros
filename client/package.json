@@ -31,7 +31,12 @@
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.53.1",
 		"vite": "^7.3.1",
-		"vite-plugin-devtools-json": "^1.0.0",
+		"vite-plugin-devtools-json": "^1.0.0"
+	},
+	"dependencies": {
+		"@tailwindcss/vite": "^4.1.18",
+		"daisyui": "^5.5.14",
+		"tailwindcss": "^4.1.18",
 		"workbox-precaching": "^7.4.0"
 	}
 }
