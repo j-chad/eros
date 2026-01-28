@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import jsQR from 'jsqr';
+	import BrandHeader from "$lib/ui/BrandHeader.svelte";
+	import Button from "$lib/ui/base/Button.svelte";
+	import {ArrowLeft, ArrowRight} from "lucide-svelte";
 
 	type Mode = 'scan' | 'manual';
 	let mode = $state<Mode>('scan');
@@ -217,24 +220,15 @@
 </svelte:head>
 
 <div class="min-h-dvh bg-linear-to-br from-pink-50 via-base-100 to-pink-100">
-	<div class="mx-auto min-h-dvh max-w-md px-4 py-6">
-		<div class="flex items-center justify-between">
-			<div class="flex items-center gap-3">
-				<div class="grid h-11 w-11 place-items-center rounded-2xl bg-linear-to-br from-pink-400 to-fuchsia-500 text-white shadow-lg shadow-pink-200">
-					<span class="text-lg font-black">E</span>
-				</div>
-				<div>
-					<div class="text-lg font-extrabold leading-tight">Eros</div>
-					<div class="text-xs opacity-70">Link this device</div>
-				</div>
-			</div>
-			<div class="max-w-45">
-				<ul class="steps steps-horizontal w-full">
+	<div class="mx-auto min-h-dvh max-w-md px-4 py-6">=
+		<BrandHeader subtitle="Link this device">
+			{#snippet rightContent()}
+				<ul class="steps steps-horizontal w-full max-w-45">
 					<li class="step {step >= 1 ? 'step-secondary' : ''}">Code</li>
 					<li class="step {step === 2 ? 'step-secondary' : ''}">Device</li>
 				</ul>
-			</div>
-		</div>
+			{/snippet}
+		</BrandHeader>
 
 		<div class="mt-5 card rounded-3xl bg-base-100 shadow-xl shadow-pink-200/40">
 			<div class="card-body gap-4">
@@ -303,19 +297,20 @@
 							</div>
 						</label>
 
-						<button
-							class="btn btn-secondary w-full rounded-2xl"
+						<Button
+							block
 							disabled={!regCodeValid}
 							onclick={goNext}
 						>
-							Continue →
-						</button>
+							Continue
+							<ArrowRight class="font-icon"/>
+						</Button>
 
 						{#if canScan}
 							<div class="divider my-1 opacity-60">or</div>
-							<button class="btn btn-ghost w-full rounded-2xl" onclick={switchToScan}>
+							<Button block ghost onclick={switchToScan}>
 								Back to scanning
-							</button>
+							</Button>
 						{/if}
 					{/if}
 
@@ -351,9 +346,10 @@
 					</label>
 
 					<div class="flex gap-3 pt-1 animate-popIn">
-						<button class="btn btn-ghost rounded-2xl" onclick={back} disabled={busy}>
-							← Back
-						</button>
+						<Button ghost disabled={busy} onclick={back}>
+							<ArrowLeft class="font-icon"/>
+							Back
+						</Button>
 						<button
 							class="btn btn-secondary flex-1 rounded-2xl"
 							disabled={!deviceNameValid || busy}
