@@ -3,3 +3,8 @@
 	themes: valentine --default;
 }
 
+/* for icons that should scale with font size */
+.font-icon {
+	width: 1em;
+	height: 1em;
+}
