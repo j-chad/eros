@@ -1,169 +1,394 @@
 <script lang="ts">
-	let registrationCode = "";
-	let deviceName = "";
-	let isSubmitting = false;
+	import { onMount, onDestroy } from 'svelte';
+	import jsQR from 'jsqr';
 
-	function normalizeCode(v: string) {
-		return v.toUpperCase().replace(/\s+/g, "");
+	type Mode = 'scan' | 'manual';
+	let mode = $state<Mode>('scan');
+	let step = $state<1 | 2>(1);
+
+	let regCodeRaw = $state('');
+	const regCode = $derived(formatRegCode(regCodeRaw));
+	const regCodeValid = $derived(isValidRegCode(regCode));
+
+	let deviceName = $state('');
+	const deviceNameValid = $derived(deviceName.trim().length >= 2);
+
+	let busy = $state(false);
+	let error = $state<string | null>(null);
+
+	// camera / scanning
+	let canScan = $state(false);
+	let scanning = $state(false);
+
+	let stream: MediaStream | null = null;
+	let rafId: number | null = null;
+
+	let videoEl: HTMLVideoElement | null = null;
+	let canvasEl: HTMLCanvasElement | null = null;
+	let codeEl: HTMLInputElement | null = null;
+	let nameEl: HTMLInputElement | null = null;
+
+	onMount(async () => {
+		canScan =
+			typeof window !== 'undefined' &&
+			!!navigator.mediaDevices?.getUserMedia &&
+			!!window.isSecureContext; // camera requires https or localhost
+
+		if (!canScan) {
+			mode = 'manual';
+			queueMicrotask(() => codeEl?.focus());
+			return;
+		}
+
+		// QR scan is default
+		await startScan();
+	});
+
+	onDestroy(() => stopScan());
+
+	function formatRegCode(value: string) {
+		const cleaned = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+		if (cleaned.length <= 4) return cleaned;
+		return `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
 	}
 
-	async function onSubmit() {
-		isSubmitting = true;
+	function isValidRegCode(value: string) {
+		return /^[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(value);
+	}
+
+	function parseRegisterUrlToCode(raw: string): string | null {
+		// QR content should be a URL that ends with /register?code=...
+		// Accept absolute or relative URLs (relative resolved to current origin).
+		let url: URL;
 		try {
-			// Wire this to a SvelteKit action or endpoint later
-			await new Promise((r) => setTimeout(r, 500));
-			alert("Activated (demo). Hook this to your backend/action.");
+			url = new URL(raw, window.location.origin);
+		} catch {
+			return null;
+		}
+
+		// Ensure path ends with /register (allow trailing slash)
+		const path = url.pathname.replace(/\/+$/, '');
+		if (!path.endsWith('/register')) return null;
+
+		const codeParam = url.searchParams.get('code') ?? '';
+		if (!codeParam) return null;
+
+		// Convert code param into our expected XXXX-XXXX (accept 8 raw alphanum or dashed)
+		const upper = codeParam.toUpperCase();
+		const dashed = upper.match(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/)?.[0];
+		if (dashed) return dashed;
+
+		const raw8 = upper.replace(/[^A-Z0-9]/g, '').match(/^[A-Z0-9]{8}$/)?.[0];
+		if (raw8) return `${raw8.slice(0, 4)}-${raw8.slice(4)}`;
+
+		return null;
+	}
+
+	async function startScan() {
+		error = null;
+		if (!canScan || scanning) return;
+
+		try {
+			scanning = true;
+
+			stream = await navigator.mediaDevices.getUserMedia({
+				video: {
+					facingMode: { ideal: 'environment' },
+					width: { ideal: 1280 },
+					height: { ideal: 720 }
+				},
+				audio: false
+			});
+
+			if (!videoEl) return;
+			videoEl.srcObject = stream;
+			videoEl.playsInline = true;
+			videoEl.muted = true;
+			await videoEl.play();
+
+			const tick = () => {
+				if (!scanning || !videoEl || !canvasEl) return;
+
+				const w = videoEl.videoWidth;
+				const h = videoEl.videoHeight;
+
+				if (w && h) {
+					// Keep canvas small-ish for mobile perf (downscale)
+					const targetW = Math.min(720, w);
+					const scale = targetW / w;
+					const targetH = Math.round(h * scale);
+
+					canvasEl.width = targetW;
+					canvasEl.height = targetH;
+
+					const ctx = canvasEl.getContext('2d', { willReadFrequently: true });
+					if (ctx) {
+						ctx.drawImage(videoEl, 0, 0, targetW, targetH);
+						const imageData = ctx.getImageData(0, 0, targetW, targetH);
+
+						const qr = jsQR(imageData.data, imageData.width, imageData.height, {
+							inversionAttempts: 'attemptBoth'
+						});
+
+						if (qr?.data) {
+							const parsed = parseRegisterUrlToCode(qr.data);
+							if (parsed) {
+								regCodeRaw = parsed;
+								stopScan();
+								goNext();
+								return;
+							}
+						}
+					}
+				}
+
+				rafId = requestAnimationFrame(tick);
+			};
+
+			rafId = requestAnimationFrame(tick);
+		} catch {
+			error = 'Couldn’t access the camera. Check permissions, or use manual entry.';
+			stopScan();
+			mode = 'manual';
+			queueMicrotask(() => codeEl?.focus());
+		}
+	}
+
+	function stopScan() {
+		scanning = false;
+		if (rafId != null) cancelAnimationFrame(rafId);
+		rafId = null;
+
+		if (stream) {
+			for (const t of stream.getTracks()) t.stop();
+		}
+		stream = null;
+
+		if (videoEl) videoEl.srcObject = null;
+	}
+
+	function switchToManual() {
+		mode = 'manual';
+		stopScan();
+		queueMicrotask(() => codeEl?.focus());
+	}
+
+	async function switchToScan() {
+		if (!canScan) return;
+		mode = 'scan';
+		await startScan();
+	}
+
+	function goNext() {
+		error = null;
+		if (!regCodeValid) return;
+
+		step = 2;
+		queueMicrotask(() => nameEl?.focus());
+	}
+
+	function back() {
+		error = null;
+		step = 1;
+		if (mode === 'scan') startScan();
+		else queueMicrotask(() => codeEl?.focus());
+	}
+
+	async function finish() {
+		error = null;
+		if (!deviceNameValid) return;
+
+		busy = true;
+		try {
+			localStorage.setItem('eros.regCode', regCode);
+			localStorage.setItem('eros.deviceName', deviceName.trim());
+			window.location.href = '/';
+		} catch {
+			error = 'Could not save your setup. Please try again.';
 		} finally {
-			isSubmitting = false;
+			busy = false;
 		}
 	}
 </script>
 
 <svelte:head>
-	<title>Eros • Activate</title>
-	<meta name="apple-mobile-web-app-capable" content="yes" />
-	<meta name="theme-color" content="#ff4d8d" />
+	<title>Login • Eros</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
 </svelte:head>
 
-<main
-	class="
-    min-h-screen bg-base-200 text-base-content
-    px-4 py-8
-    flex items-center justify-center
-  "
-	style="
-    background-image:
-      radial-gradient(900px 500px at 15% 10%, oklch(var(--p) / 0.12), transparent 55%),
-      radial-gradient(900px 500px at 85% 30%, oklch(var(--s) / 0.10), transparent 60%),
-      radial-gradient(900px 500px at 50% 90%, oklch(var(--a) / 0.08), transparent 55%);
-  "
->
-	<div class="w-full max-w-md">
-		<!-- Header -->
-		<header class="mb-4 px-1">
-			<div class="flex items-start gap-3">
-				<div class="h-12 w-12 rounded-2xl bg-base-100 shadow grid place-items-center">
-					<span class="text-xl">💗</span>
+<div class="min-h-dvh bg-linear-to-br from-pink-50 via-base-100 to-pink-100">
+	<div class="mx-auto min-h-dvh max-w-md px-4 py-6">
+		<div class="flex items-center justify-between">
+			<div class="flex items-center gap-3">
+				<div class="grid h-11 w-11 place-items-center rounded-2xl bg-linear-to-br from-pink-400 to-fuchsia-500 text-white shadow-lg shadow-pink-200">
+					<span class="text-lg font-black">E</span>
 				</div>
-
-				<div class="min-w-0">
-					<h1 class="text-3xl font-bold leading-tight">
-						Eros
-					</h1>
-					<p class="mt-1 text-sm opacity-80">
-						Enter your <span class="font-semibold">registration code</span> and name this device.
-					</p>
+				<div>
+					<div class="text-lg font-extrabold leading-tight">Eros</div>
+					<div class="text-xs opacity-70">Link this device</div>
 				</div>
 			</div>
-		</header>
+			<div class="max-w-45">
+				<ul class="steps steps-horizontal w-full">
+					<li class="step {step >= 1 ? 'step-secondary' : ''}">Code</li>
+					<li class="step {step === 2 ? 'step-secondary' : ''}">Device</li>
+				</ul>
+			</div>
+		</div>
 
-		<!-- Card -->
-		<section class="card bg-base-100 shadow-xl rounded-3xl">
+		<div class="mt-5 card rounded-3xl bg-base-100 shadow-xl shadow-pink-200/40">
 			<div class="card-body gap-4">
-				<form class="flex flex-col gap-3" on:submit|preventDefault={onSubmit}>
-					<!-- Registration Code -->
-					<div class="form-control">
-						<label class="label" for="code">
-							<span class="label-text">Registration code</span>
-							<span class="label-text-alt opacity-70">Case-insensitive</span>
-						</label>
-
-						<label class="input input-bordered rounded-2xl flex items-center gap-2">
-							<span class="opacity-70">🔑</span>
-							<input
-								id="code"
-								name="code"
-								class="grow"
-								inputmode="latin"
-								autocomplete="one-time-code"
-								placeholder="e.g. LOVE-8K2Q"
-								bind:value={registrationCode}
-								on:input={(e) => (registrationCode = normalizeCode((e.target as HTMLInputElement).value))}
-								required
-							/>
-						</label>
-
-						<label class="label">
-              <span class="label-text-alt opacity-70">
-                Printed on the card you were given.
-              </span>
-						</label>
+				{#if error}
+					<div class="alert alert-error rounded-2xl">
+						<span class="text-sm">{error}</span>
 					</div>
+				{/if}
 
-					<!-- Device Name -->
-					<div class="form-control">
-						<label class="label" for="device">
-							<span class="label-text">Device name</span>
-							<span class="label-text-alt opacity-70">You can change this later</span>
-						</label>
+				{#if step === 1}
+					{#if mode === 'scan'}
+						<div class="relative overflow-hidden rounded-3xl bg-base-200 animate-popIn">
+							<video
+								bind:this={videoEl}
+								class="aspect-3/4 w-full object-cover"
+								playsinline
+								muted
+							></video>
 
-						<label class="input input-bordered rounded-2xl flex items-center gap-2">
-							<span class="opacity-70">📱</span>
-							<input
-								id="device"
-								name="device"
-								class="grow"
-								autocomplete="nickname"
-								placeholder="e.g. Jackson’s Phone ✨"
-								bind:value={deviceName}
-								required
-							/>
-						</label>
+							<!-- hidden canvas for decoding -->
+							<canvas bind:this={canvasEl} class="hidden"></canvas>
 
-						<label class="label">
-              <span class="label-text-alt opacity-70">
-                Helps Eros recognize this device.
-              </span>
-						</label>
-					</div>
+							<div class="pointer-events-none absolute inset-0 grid place-items-center">
+								<div class="w-[72%] max-w-70 aspect-square rounded-3xl border-2 border-white/70 shadow-[0_0_0_999px_rgba(0,0,0,0.25)]">
+									<div class="h-full w-full rounded-3xl ring-2 ring-pink-300/60"></div>
+								</div>
+							</div>
 
-					<!-- Actions -->
-					<div class="mt-2 flex flex-col gap-2">
-						<button
-							class="btn btn-primary rounded-2xl w-full"
-							type="submit"
-							disabled={isSubmitting || registrationCode.length < 4 || deviceName.trim().length < 2}
-						>
-							{#if isSubmitting}
-								<span class="loading loading-spinner"></span>
-								Activating…
-							{:else}
-								Continue 💞
-							{/if}
+							<div class="absolute bottom-3 left-3 right-3">
+								<div class="rounded-2xl bg-base-100/80 backdrop-blur p-3 text-sm">
+									{#if scanning}
+										<div class="flex items-center gap-2">
+											<span class="loading loading-spinner loading-sm"></span>
+											Scanning…
+										</div>
+									{:else}
+										<div class="opacity-80">Camera ready.</div>
+									{/if}
+								</div>
+							</div>
+						</div>
+
+						<div class="divider my-1 opacity-60">Trouble scanning?</div>
+						<button class="btn btn-ghost w-full rounded-2xl" onclick={switchToManual}>
+							Enter code manually
 						</button>
 
-						<div class="text-xs sm:text-sm opacity-75 text-center">
-							Tip: for the best experience, install <span class="font-semibold">Eros</span> from your browser menu.
+					{:else}
+						<label class="form-control w-full animate-popIn">
+							<div class="label">
+								<span class="label-text font-semibold">Registration code</span>
+								<span class="label-text-alt opacity-60">XXXX-XXXX</span>
+							</div>
+							<input
+								bind:this={codeEl}
+								class="input input-bordered input-secondary w-full rounded-2xl text-lg tracking-widest"
+								inputmode="text"
+								autocomplete="one-time-code"
+								placeholder="ABCD-1234"
+								value={regCodeRaw}
+								oninput={(e) => regCodeRaw = e.currentTarget.value}
+								onkeydown={(e) => e.key === 'Enter' && goNext()}
+							/>
+							<div class="label">
+								<span class="label-text-alt opacity-70">{regCodeValid ? 'Looks good ✨' : ' '}</span>
+							</div>
+						</label>
+
+						<button
+							class="btn btn-secondary w-full rounded-2xl"
+							disabled={!regCodeValid}
+							onclick={goNext}
+						>
+							Continue →
+						</button>
+
+						{#if canScan}
+							<div class="divider my-1 opacity-60">or</div>
+							<button class="btn btn-ghost w-full rounded-2xl" onclick={switchToScan}>
+								Back to scanning
+							</button>
+						{/if}
+					{/if}
+
+				{:else}
+					<div class="space-y-1 animate-popIn">
+						<h1 class="text-xl font-bold">Name this device</h1>
+						<p class="text-sm opacity-70">You can change it later.</p>
+					</div>
+
+					<div class="rounded-2xl bg-base-200/60 p-4 animate-popIn">
+						<div class="text-xs font-semibold opacity-60">Registration code</div>
+						<div class="font-mono text-sm">{regCode}</div>
+					</div>
+
+					<label class="form-control w-full animate-popIn">
+						<div class="label">
+							<span class="label-text font-semibold">Device name</span>
+							<span class="label-text-alt opacity-60">2+ chars</span>
 						</div>
-					</div>
-				</form>
+						<input
+							bind:this={nameEl}
+							class="input input-bordered input-secondary w-full rounded-2xl text-lg"
+							autocomplete="nickname"
+							placeholder="e.g. Eros iPhone"
+							bind:value={deviceName}
+							onkeydown={(e) => e.key === 'Enter' && finish()}
+						/>
+						<div class="label">
+              <span class="label-text-alt opacity-70">
+                {deviceNameValid ? 'Nice ✨' : 'Give it a short name.'}
+              </span>
+						</div>
+					</label>
 
-				<div class="divider my-2">Help</div>
-
-				<div class="collapse collapse-arrow bg-base-200 rounded-2xl">
-					<input type="checkbox" />
-					<div class="collapse-title font-medium">
-						Where do I find the registration code?
+					<div class="flex gap-3 pt-1 animate-popIn">
+						<button class="btn btn-ghost rounded-2xl" onclick={back} disabled={busy}>
+							← Back
+						</button>
+						<button
+							class="btn btn-secondary flex-1 rounded-2xl"
+							disabled={!deviceNameValid || busy}
+							onclick={finish}
+						>
+							{#if busy}
+								<span class="loading loading-spinner loading-sm"></span>
+								Saving…
+							{:else}
+								Finish
+							{/if}
+						</button>
 					</div>
-					<div class="collapse-content">
-						<p class="opacity-80 text-sm">
-							It’s on the physical card/printout you received. Upper/lowercase doesn’t matter.
-							If it includes hyphens, keep them.
-						</p>
-					</div>
-				</div>
-
-				<div class="mt-2 flex items-center gap-2">
-					<span class="badge badge-secondary rounded-xl">Private</span>
-					<span class="text-sm opacity-80">
-            Your code is only used to activate Eros on this device.
-          </span>
-				</div>
+				{/if}
 			</div>
-		</section>
+		</div>
 
-		<footer class="mt-4 text-center">
-			<p class="text-xs opacity-60">Made with love 🩷</p>
-		</footer>
+		<div class="mt-5 text-center text-xs opacity-60">
+			Tip: install the app for the smoothest scanning experience.
+		</div>
 	</div>
-</main>
+</div>
+
+<style>
+	:global(.animate-popIn) {
+		animation: popIn 220ms ease-out both;
+	}
+	@keyframes popIn {
+		from {
+			opacity: 0;
+			transform: translateY(6px) scale(0.99);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0) scale(1);
+		}
+	}
+</style>
