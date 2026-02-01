@@ -4,6 +4,7 @@
 	import BrandHeader from "$lib/ui/BrandHeader.svelte";
 	import Button from "$lib/ui/base/Button.svelte";
 	import {ArrowLeft, ArrowRight} from "lucide-svelte";
+	import Card from "$lib/ui/base/Card.svelte";
 
 	type Mode = 'scan' | 'manual';
 	let mode = $state<Mode>('scan');
@@ -220,7 +221,7 @@
 </svelte:head>
 
 <div class="min-h-dvh bg-linear-to-br from-pink-50 via-base-100 to-pink-100">
-	<div class="mx-auto min-h-dvh max-w-md px-4 py-6">=
+	<div class="mx-auto min-h-dvh max-w-md px-4 py-6">
 		<BrandHeader subtitle="Link this device">
 			{#snippet rightContent()}
 				<ul class="steps steps-horizontal w-full max-w-45">
@@ -230,7 +231,7 @@
 			{/snippet}
 		</BrandHeader>
 
-		<div class="mt-5 card rounded-3xl bg-base-100 shadow-xl shadow-pink-200/40">
+		<Card padded class="mt-5">
 			<div class="card-body gap-4">
 				{#if error}
 					<div class="alert alert-error rounded-2xl">
@@ -365,7 +366,7 @@
 					</div>
 				{/if}
 			</div>
-		</div>
+		</Card>
 
 		<div class="mt-5 text-center text-xs opacity-60">
 			Tip: install the app for the smoothest scanning experience.
