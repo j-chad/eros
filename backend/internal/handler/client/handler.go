@@ -7,11 +7,13 @@ import (
 type Handler struct {
 	authService   *service.AuthService
 	favourService *service.FavourService
+	graphService  *service.GraphService
 }
 
 func NewHandler(
 	authService *service.AuthService,
 	favourService *service.FavourService,
+	graphService *service.GraphService,
 ) *Handler {
-	return &Handler{authService: authService, favourService: favourService}
+	return &Handler{authService: authService, favourService: favourService, graphService: graphService}
 }
