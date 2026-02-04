@@ -33,4 +33,5 @@ func (s *GraphService) GetGraph(ctx context.Context, graphID string) (*models.Gr
 }
 
 func shakeGraph(graph *models.Graph) {
+
 }
