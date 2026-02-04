@@ -19,11 +19,12 @@ func NewHandler(
 	authService *service.AuthService,
 	adminService *service.AdminService,
 	favourService *service.FavourService,
+	graphService *service.GraphService,
 ) *Handler {
 	handler := &Handler{
 		auth:   authService,
 		admin:  admin.NewHandler(adminService),
-		client: client.NewHandler(authService, favourService),
+		client: client.NewHandler(authService, favourService, graphService),
 	}
 	return handler
 }
@@ -58,6 +59,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	clientMux.HandleFunc("POST /api/favours/request", h.client.RequestFavour)
 	clientMux.HandleFunc("GET /api/favours/requests", h.client.ListFavourRequests)
 	clientMux.HandleFunc("DELETE /api/favours/request/{id}", h.client.DeleteFavourRequest)
+	clientMux.HandleFunc("GET /api/graphs/{id}", h.client.GetGraph)
 	mux.Handle("/api/", withClientAuth(clientMux, *h.auth))
 
 	mux.HandleFunc("/", routeNotFound)

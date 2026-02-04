@@ -26,8 +26,9 @@ func main() {
 	authService := service.NewAuthService(conf.Auth, database)
 	adminService := service.NewAdminService(database)
 	favourService := service.NewFavourService(database)
+	graphService := service.NewGraphService(database)
 
-	h := handler.NewHandler(authService, adminService, favourService)
+	h := handler.NewHandler(authService, adminService, favourService, graphService)
 
 	mux := http.NewServeMux()
 	h.RegisterRoutes(mux)
