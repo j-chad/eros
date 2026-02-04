@@ -13,7 +13,7 @@
 
 	let editForm = $state({
 		title: node.title,
-		description: node.description || '',
+		description: node.description ?? '',
 		code: node.data?.code ?? ''
 	});
 

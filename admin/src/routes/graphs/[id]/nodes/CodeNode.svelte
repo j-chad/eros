@@ -7,6 +7,7 @@
 	let { data }: NodeProps<CodeNode> = $props();
 	let node = $derived(data.node);
 	let isHovered = $state(false);
+	let codeSet = $derived(!!node.data?.code);
 </script>
 
 <BaseNode
@@ -29,8 +30,8 @@
 			<div class="config-item">
 				<span class="key">🔑 Code:</span>
 				<span class="value" class:revealed={isHovered}>
-                    {#if isHovered}
-                        {node.data?.code}
+                    {#if isHovered || !codeSet}
+                        {node.data?.code ?? 'N/A'}
                     {:else}
                         {'•'.repeat(node.data?.code?.length ?? 8)}
                     {/if}
@@ -75,7 +76,6 @@
 	}
 
 	.value:not(.revealed) {
-		letter-spacing: 0.3em;
 		color: #9ca3af;
 	}
 
