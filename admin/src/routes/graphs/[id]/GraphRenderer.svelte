@@ -62,7 +62,7 @@
             data: {
 				node,
 				onEdit: handleEditNode,
-				onUpdateData: handleUpdateNodeData
+				onUpdateData: (data) => handleUpdateNodeData(node.id, data)
 			},
             type: node.type,
 			deletable: node.type !== NodeType.START,
@@ -110,6 +110,8 @@
                 id: e.id
             }))
         };
+
+		console.log('Committed graph:', graph);
 
         queueMicrotask(() => {
 			syncingFromFlow = false;

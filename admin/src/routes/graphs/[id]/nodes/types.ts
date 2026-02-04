@@ -4,7 +4,7 @@ import type {Node as FlowNode, Edge as FlowEdge, NodeProps as FlowNodeProps} fro
 interface NodeData<N extends AnyNode = AnyNode> extends Record<string, unknown> {
 	node: N;
 	onEdit: (nodeID: string) => void;
-	onUpdateData: (nodeID: string, data: N['data']) => void;
+	onUpdateData: (data: N['data']) => void;
 }
 
 export type Node<N extends AnyNode = AnyNode> = FlowNode<NodeData<N>, N["type"]>;

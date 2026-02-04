@@ -34,7 +34,11 @@
 			>
 					<div class="button-inner">
 						<div class="button-ring"></div>
-						<span>Confirm</span>
+						{#if isUnlocked}
+							<span>Unlocked</span>
+						{:else}
+							<span>Confirm</span>
+						{/if}
 					</div>
 			</button>
 		</div>
