@@ -1,11 +1,12 @@
 <script lang="ts">
-	import type { AnyNode } from '$lib/types';
+	import type { AnyNode, Node } from '$lib/types';
 	import { NodeType } from '$lib/types';
 	import type { Component } from 'svelte';
 	import EditLocationDialog from "./EditLocationDialog.svelte";
 	import EditCodeDialog from "./EditCodeDialog.svelte";
+	import DefaultEditDialog from "./DefaultEditDialog.svelte";
 
-	type ComponentMap = { [K in NodeType]?: NodeFormComponent<Extract<AnyNode, { type: K }>>; };
+	type ComponentMap = { [K in NodeType]?: NodeFormComponent<Extract<AnyNode, { type: K }>> | NodeFormComponent<Node>; };
 	type NodeFormComponent<N extends AnyNode> = Component<{
 		node: N;
 		onSave: (node: N) => void;
@@ -26,7 +27,8 @@
 
 	const componentMap: ComponentMap = {
 		[NodeType.LOCATION]: EditLocationDialog,
-		[NodeType.CODE]: EditCodeDialog
+		[NodeType.CODE]: EditCodeDialog,
+		[NodeType.MANUAL]: DefaultEditDialog,
 	};
 	const BodyComponent = $derived(node ? componentMap[node.type] : undefined) as NodeFormComponent<AnyNode>;
 
