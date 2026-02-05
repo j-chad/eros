@@ -216,6 +216,32 @@ BEGIN
     UPDATE graph SET updated_at = datetime('now') WHERE id = NEW.id;
 END;
 
+CREATE TRIGGER IF NOT EXISTS node_start_always_unlocked_insert
+	BEFORE INSERT ON node
+	FOR EACH ROW
+	WHEN NEW.type = 'START'
+BEGIN
+	SELECT
+		CASE
+			WHEN NEW.unlocked_at IS NULL
+				THEN
+				NEW.unlocked_at = datetime('now')
+			END;
+END;
+
+CREATE TRIGGER IF NOT EXISTS node_start_always_unlocked_update
+	BEFORE UPDATE OF type, unlocked_at ON node
+	FOR EACH ROW
+	WHEN NEW.type = 'START'
+BEGIN
+	SELECT
+		CASE
+			WHEN NEW.unlocked_at IS NULL
+				THEN
+				NEW.unlocked_at = datetime('now')
+			END;
+END;
+
 -- ----------------------------------------------------------------------------
 -- VIEWS
 -- ----------------------------------------------------------------------------
