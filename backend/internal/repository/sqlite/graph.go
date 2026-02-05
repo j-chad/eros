@@ -105,63 +105,61 @@ func (s *sqliteDB) CreateGraph(ctx context.Context, req models.NewGraphRequest) 
 	return fmt.Sprintf("%d", graphID), nil
 }
 
-func (s *sqliteDB) GetGraph(ctx context.Context, graphID string) (*models.Graph, error) {
-	graph, err := s.getGraph(ctx, graphID)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	nodes, err := s.getCompleteNodes(ctx, graphID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get all edges for those nodes
-	edges, err := s.getEdges(ctx, graphID)
-	if err != nil {
-		return nil, err
-	}
-
-	graph.Nodes = &nodes
-	graph.Edges = &edges
-
-	return graph, nil
-}
-
-func (s *sqliteDB) GetAccessibleGraph(ctx context.Context, graphID string) (*models.Graph, error) {
-	err := s.withTx(ctx, sql.TxOptions{ReadOnly: true}, func(txRepo *sqliteDB) error {
-		if err != nil {
-			return nil, err
-		}
-		defer tx.Rollback()
-		graph, err := s.getGraph(ctx, graphID)
+func (s *sqliteDB) GetGraph(ctx context.Context, graphID string) (graph *models.Graph, err error) {
+	return graph, s.withTx(ctx, &sql.TxOptions{ReadOnly: true}, func(txRepo *sqliteDB) error {
+		graph, err = s.getGraph(ctx, graphID)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				return nil, nil
+				return nil
 			}
-			return nil, err
+			return err
 		}
 
-		if graph.StartingAt.After(time.Now()) {
-			return nil, nil
-		}
-
-		nodes, err := s.getAccessibleNodes(ctx, graphID)
+		nodes, err := s.getCompleteNodes(ctx, graphID)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		edges, err := s.getAccessibleEdges(ctx, graphID)
+		// Get all edges for those nodes
+		edges, err := s.getEdges(ctx, graphID)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		graph.Nodes = &nodes
 		graph.Edges = &edges
-		return graph, nil
+		return nil
+	})
+}
+
+func (s *sqliteDB) GetAccessibleGraph(ctx context.Context, graphID string) (graph *models.Graph, err error) {
+	return graph, s.withTx(ctx, &sql.TxOptions{ReadOnly: true}, func(txRepo *sqliteDB) error {
+		graph, err = s.getGraph(ctx, graphID)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil
+			}
+			return err
+		}
+
+		if graph.StartingAt.After(time.Now()) {
+			graph = nil
+			return nil
+		}
+
+		nodes, err := s.getAccessibleNodes(ctx, graphID)
+		if err != nil {
+			return err
+		}
+
+		edges, err := s.getAccessibleEdges(ctx, graphID)
+		if err != nil {
+			return err
+		}
+
+		graph.Nodes = &nodes
+		graph.Edges = &edges
+		return nil
 	})
 }
 
