@@ -76,10 +76,13 @@ func (s *sqliteDB) withTx(ctx context.Context, opts *sql.TxOptions, fn func(db *
 		return fn(s)
 	}
 
-	tx, err := s.db.BeginTx(ctx, nil)
+	tx, err := s.db.BeginTx(ctx, opts)
 	if err != nil {
 		return fmt.Errorf("error beginning transaction: %w", err)
 	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	txRepo := &sqliteDB{
 		db: s.db,
@@ -91,6 +94,11 @@ func (s *sqliteDB) withTx(ctx context.Context, opts *sql.TxOptions, fn func(db *
 			return fmt.Errorf("error during transaction rollback: %v (original error: %w)", rbErr, err)
 		}
 		return err
+	}
+
+	if opts != nil && opts.ReadOnly {
+		// read-only transaction, no need to commit
+		return nil
 	}
 
 	if err := tx.Commit(); err != nil {
