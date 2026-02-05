@@ -59,6 +59,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	clientMux.HandleFunc("POST /api/favours/request", h.client.RequestFavour)
 	clientMux.HandleFunc("GET /api/favours/requests", h.client.ListFavourRequests)
 	clientMux.HandleFunc("DELETE /api/favours/request/{id}", h.client.DeleteFavourRequest)
+	clientMux.HandleFunc("GET /api/graphs", h.client.ListGraphs)
 	clientMux.HandleFunc("GET /api/graphs/{id}", h.client.GetGraph)
 	mux.Handle("/api/", withClientAuth(clientMux, *h.auth))
 
