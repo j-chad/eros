@@ -3,11 +3,5 @@ meta {
 }
 
 auth {
-  mode: apikey
-}
-
-auth:apikey {
-  key: Authorization
-  value: Admin {{admin_key}}
-  placement: header
+  mode: inherit
 }

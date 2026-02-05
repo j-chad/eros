@@ -144,7 +144,7 @@ func (s *sqliteDB) getAccessibleNodes(ctx context.Context, graphID string) ([]mo
 		unlocked AS (
 			SELECT id
 			FROM node
-			WHERE graph_id = ?
+			WHERE graph_id = ?1
 			  AND unlocked_at IS NOT NULL
 			  OR type = 'start'
 		),
@@ -154,10 +154,10 @@ func (s *sqliteDB) getAccessibleNodes(ctx context.Context, graphID string) ([]mo
 			SELECT e.destination_node_id
 			FROM edge e
 					 JOIN unlocked u ON u.id = e.source_node_id
-			WHERE e.graph_id = :graph_id
+			WHERE e.graph_id = ?1
 		)
 		SELECT * FROM node_full
-		WHERE graph_id = :graph_id
+		WHERE graph_id = ?1
 		  AND id IN (SELECT id FROM accessible);
 	`, graphID)
 	if err != nil {
@@ -189,7 +189,7 @@ func (s *sqliteDB) getAccessibleEdges(ctx context.Context, graphID string) ([]mo
 	unlocked AS (
 		SELECT id
 		FROM node
-		WHERE graph_id = ?
+		WHERE graph_id = ?1
 		  AND unlocked_at IS NOT NULL
 		  OR type = 'start'
 	),
@@ -199,7 +199,7 @@ func (s *sqliteDB) getAccessibleEdges(ctx context.Context, graphID string) ([]mo
 		SELECT e.destination_node_id
 		FROM edge e
 			JOIN unlocked u ON u.id = e.source_node_id
-		WHERE e.graph_id = :graph_id
+		WHERE e.graph_id = ?1
 	)
 	SELECT DISTINCT e.id,
 		e.source_node_id,
@@ -208,8 +208,8 @@ func (s *sqliteDB) getAccessibleEdges(ctx context.Context, graphID string) ([]mo
 		e.created_at,
 		e.updated_at
 	FROM edge e
-		JOIN accessible a ON a.id = e.source_node_id
-	WHERE e.graph_id = :graph_id;
+		JOIN accessible a ON a.id = e.destination_node_id
+	WHERE e.graph_id = ?1;
 	`, graphID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query accessible edges: %w", err)
