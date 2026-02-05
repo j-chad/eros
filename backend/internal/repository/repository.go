@@ -3,12 +3,13 @@ package repository
 import (
 	"backend/internal/models"
 	"context"
+	"database/sql"
 	"time"
 )
 
 type Repository interface {
 	Close()
-	WithTx(ctx context.Context, fn func(Repository) error) error
+	WithTx(ctx context.Context, opts *sql.TxOptions, fn func(Repository) error) error
 
 	RegistrationRepository
 	DeviceRepository

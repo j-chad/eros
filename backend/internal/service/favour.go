@@ -32,7 +32,7 @@ func (s *FavourService) ListFavourRequests(ctx context.Context) ([]models.Favour
 }
 
 func (s *FavourService) RequestFavour(ctx context.Context, request *models.FavourRequest) error {
-	return s.repo.WithTx(ctx, func(txRepo repository.Repository) error {
+	return s.repo.WithTx(ctx, nil, func(txRepo repository.Repository) error {
 		cost, err := txRepo.GetFavourCostByID(ctx, request.ChoiceID)
 		if err != nil {
 			return err

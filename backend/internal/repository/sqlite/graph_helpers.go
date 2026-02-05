@@ -405,7 +405,7 @@ func (s *sqliteDB) upsertNodeData(ctx context.Context, nodeID string, nodeType m
 }
 
 func (s *sqliteDB) createNode(ctx context.Context, graphID string, node models.Node) error {
-	return s.withTx(ctx, func(tx *sqliteDB) error {
+	return s.withTx(ctx, nil, func(tx *sqliteDB) error {
 		// insert node
 		var uiPositionX sql.NullFloat64
 		var uiPositionY sql.NullFloat64
@@ -562,7 +562,7 @@ func (s *sqliteDB) updateNodes(ctx context.Context, graphID string, nodes []mode
 		deletedNodeIDSet[id] = struct{}{}
 	}
 
-	return s.withTx(ctx, func(tx *sqliteDB) error {
+	return s.withTx(ctx, nil, func(tx *sqliteDB) error {
 		for _, node := range nodes {
 			// since the node still exists, remove it from the deleted set
 			delete(deletedNodeIDSet, node.ID)
@@ -610,7 +610,7 @@ func (s *sqliteDB) updateEdges(ctx context.Context, graphID string, edges []mode
 		deletedEdgeIDSet[id] = struct{}{}
 	}
 
-	return s.withTx(ctx, func(tx *sqliteDB) error {
+	return s.withTx(ctx, nil, func(tx *sqliteDB) error {
 		for _, edge := range edges {
 			// since the edge still exists, remove it from the deleted set
 			delete(deletedEdgeIDSet, edge.ID)

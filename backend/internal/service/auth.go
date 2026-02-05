@@ -74,7 +74,7 @@ func (s *AuthService) RegisterDevice(ctx context.Context, registrationCode strin
 	}
 
 	expiry := time.Now().Add(TokenExpiry)
-	err = s.repo.WithTx(ctx, func(repo repository.Repository) error {
+	err = s.repo.WithTx(ctx, nil, func(repo repository.Repository) error {
 		if err := repo.DeleteRegistrationCode(ctx); err != nil {
 			return err
 		}

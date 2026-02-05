@@ -71,7 +71,7 @@ func (s *sqliteDB) DeleteGraph(ctx context.Context, graphID string) error {
 func (s *sqliteDB) CreateGraph(ctx context.Context, req models.NewGraphRequest) (string, error) {
 	var graphID int64
 
-	err := s.withTx(ctx, func(txRepo *sqliteDB) error {
+	err := s.withTx(ctx, nil, func(txRepo *sqliteDB) error {
 		// Insert graph
 		result, err := txRepo.executor().ExecContext(ctx, `
 			INSERT INTO graph (title, description, starting_at)
@@ -131,7 +131,12 @@ func (s *sqliteDB) GetGraph(ctx context.Context, graphID string) (*models.Graph,
 	return graph, nil
 }
 
-func (s *sqliteDB) getAccessibleGraph(ctx context.Context, graphID string) (*models.Graph, error) {
+func (s *sqliteDB) GetAccessibleGraph(ctx context.Context, graphID string) (*models.Graph, error) {
+	tx, err := s.withTx()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
 	graph, err := s.getGraph(ctx, graphID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -160,7 +165,7 @@ func (s *sqliteDB) getAccessibleGraph(ctx context.Context, graphID string) (*mod
 }
 
 func (s *sqliteDB) UpdateGraph(ctx context.Context, req models.Graph) error {
-	return s.withTx(ctx, func(txRepo *sqliteDB) error {
+	return s.withTx(ctx, nil, func(txRepo *sqliteDB) error {
 		// update graph details
 		var viewportX, viewportY, viewportZoom sql.NullFloat64
 		if req.Viewport != nil {
