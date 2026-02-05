@@ -64,13 +64,13 @@ func (s *sqliteDB) Close() {
 	}
 }
 
-func (s *sqliteDB) WithTx(ctx context.Context, fn func(repository.Repository) error) error {
-	return s.withTx(ctx, func(db *sqliteDB) error {
+func (s *sqliteDB) WithTx(ctx context.Context, opts *sql.TxOptions, fn func(repository.Repository) error) error {
+	return s.withTx(ctx, opts, func(db *sqliteDB) error {
 		return fn(db)
 	})
 }
 
-func (s *sqliteDB) withTx(ctx context.Context, fn func(db *sqliteDB) error) error {
+func (s *sqliteDB) withTx(ctx context.Context, opts *sql.TxOptions, fn func(db *sqliteDB) error) error {
 	if s.tx != nil {
 		// already in a transaction
 		return fn(s)
