@@ -6,6 +6,16 @@ import (
 	"net/http"
 )
 
+func (h *Handler) ListGraphs(w http.ResponseWriter, r *http.Request) {
+	graphs, err := h.graphService.ListGraphs(r.Context())
+	if err != nil {
+		response.Error(w, apierror.UnknownInternalError(err))
+		return
+	}
+
+	response.JSON(w, http.StatusOK, graphs)
+}
+
 func (h *Handler) GetGraph(w http.ResponseWriter, r *http.Request) {
 	graph, err := h.graphService.GetGraph(r.Context(), r.PathValue("id"))
 	if err != nil {
