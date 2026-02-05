@@ -51,5 +51,6 @@ type GraphRepository interface {
 	DeleteGraph(ctx context.Context, graphID string) error
 	CreateGraph(ctx context.Context, req models.NewGraphRequest) (string, error)
 	GetGraph(ctx context.Context, graphID string) (*models.Graph, error)
+	GetAccessibleGraph(ctx context.Context, graphID string) (*models.Graph, error)
 	UpdateGraph(ctx context.Context, graph models.Graph) error
 }

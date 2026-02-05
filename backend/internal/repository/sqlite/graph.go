@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 )
 
 func (s *sqliteDB) ListGraphs(ctx context.Context) ([]models.Graph, error) {
@@ -117,7 +118,7 @@ func (s *sqliteDB) GetGraph(ctx context.Context, graphID string) (*models.Graph,
 		    updated_at
 		FROM graph
 		WHERE id = ?;
-	`, graphID, models.StartNode)
+	`, graphID)
 
 	graph := &models.Graph{ID: graphID}
 	var viewportX, viewportY, viewportZoom sql.NullFloat64
@@ -152,6 +153,55 @@ func (s *sqliteDB) GetGraph(ctx context.Context, graphID string) (*models.Graph,
 	graph.Nodes = &nodes
 	graph.Edges = &edges
 
+	return graph, nil
+}
+
+func (s *sqliteDB) getAccessibleGraph(ctx context.Context, graphID string) (*models.Graph, error) {
+	row := s.executor().QueryRowContext(ctx, `
+		SELECT
+		    title,
+		    description,
+		    starting_at,
+		    viewport_x,
+		    viewport_y,
+		    viewport_zoom,
+		    created_at,
+		    updated_at
+		FROM graph
+		WHERE id = ? AND starting_at <= ?;
+	`, graphID, time.Now())
+
+	graph := &models.Graph{ID: graphID}
+	var viewportX, viewportY, viewportZoom sql.NullFloat64
+
+	err := row.Scan(&graph.Title, &graph.Description, &graph.StartingAt, &viewportX, &viewportY, &viewportZoom, &graph.CreatedAt, &graph.UpdatedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to scan graph: %w", err)
+	}
+
+	if viewportX.Valid && viewportY.Valid && viewportZoom.Valid {
+		graph.Viewport = &models.Viewport{
+			X:    viewportX.Float64,
+			Y:    viewportY.Float64,
+			Zoom: viewportZoom.Float64,
+		}
+	}
+
+	nodes, err := s.getAccessibleNodes(ctx, graphID, now)
+	if err != nil {
+		return nil, err
+	}
+
+	edges, err := s.getAccessibleEdges(ctx, graphID, now)
+	if err != nil {
+		return nil, err
+	}
+
+	graph.Nodes = &nodes
+	graph.Edges = &edges
 	return graph, nil
 }
 
