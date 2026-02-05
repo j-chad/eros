@@ -132,36 +132,37 @@ func (s *sqliteDB) GetGraph(ctx context.Context, graphID string) (*models.Graph,
 }
 
 func (s *sqliteDB) GetAccessibleGraph(ctx context.Context, graphID string) (*models.Graph, error) {
-	tx, err := s.withTx()
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-	graph, err := s.getGraph(ctx, graphID)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+	err := s.withTx(ctx, sql.TxOptions{ReadOnly: true}, func(txRepo *sqliteDB) error {
+		if err != nil {
+			return nil, err
+		}
+		defer tx.Rollback()
+		graph, err := s.getGraph(ctx, graphID)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, nil
+			}
+			return nil, err
+		}
+
+		if graph.StartingAt.After(time.Now()) {
 			return nil, nil
 		}
-		return nil, err
-	}
 
-	if graph.StartingAt.After(time.Now()) {
-		return nil, nil
-	}
+		nodes, err := s.getAccessibleNodes(ctx, graphID)
+		if err != nil {
+			return nil, err
+		}
 
-	nodes, err := s.getAccessibleNodes(ctx, graphID)
-	if err != nil {
-		return nil, err
-	}
+		edges, err := s.getAccessibleEdges(ctx, graphID)
+		if err != nil {
+			return nil, err
+		}
 
-	edges, err := s.getAccessibleEdges(ctx, graphID)
-	if err != nil {
-		return nil, err
-	}
-
-	graph.Nodes = &nodes
-	graph.Edges = &edges
-	return graph, nil
+		graph.Nodes = &nodes
+		graph.Edges = &edges
+		return graph, nil
+	})
 }
 
 func (s *sqliteDB) UpdateGraph(ctx context.Context, req models.Graph) error {
