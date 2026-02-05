@@ -106,37 +106,12 @@ func (s *sqliteDB) CreateGraph(ctx context.Context, req models.NewGraphRequest) 
 }
 
 func (s *sqliteDB) GetGraph(ctx context.Context, graphID string) (*models.Graph, error) {
-	row := s.executor().QueryRowContext(ctx, `
-		SELECT
-		    title,
-		    description,
-		    starting_at,
-		    viewport_x,
-		    viewport_y,
-		    viewport_zoom,
-		    created_at,
-		    updated_at
-		FROM graph
-		WHERE id = ?;
-	`, graphID)
-
-	graph := &models.Graph{ID: graphID}
-	var viewportX, viewportY, viewportZoom sql.NullFloat64
-
-	err := row.Scan(&graph.Title, &graph.Description, &graph.StartingAt, &viewportX, &viewportY, &viewportZoom, &graph.CreatedAt, &graph.UpdatedAt)
+	graph, err := s.getGraph(ctx, graphID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to scan graph: %w", err)
-	}
-
-	if viewportX.Valid && viewportY.Valid && viewportZoom.Valid {
-		graph.Viewport = &models.Viewport{
-			X:    viewportX.Float64,
-			Y:    viewportY.Float64,
-			Zoom: viewportZoom.Float64,
-		}
+		return nil, err
 	}
 
 	nodes, err := s.getCompleteNodes(ctx, graphID)
@@ -157,45 +132,24 @@ func (s *sqliteDB) GetGraph(ctx context.Context, graphID string) (*models.Graph,
 }
 
 func (s *sqliteDB) getAccessibleGraph(ctx context.Context, graphID string) (*models.Graph, error) {
-	row := s.executor().QueryRowContext(ctx, `
-		SELECT
-		    title,
-		    description,
-		    starting_at,
-		    viewport_x,
-		    viewport_y,
-		    viewport_zoom,
-		    created_at,
-		    updated_at
-		FROM graph
-		WHERE id = ? AND starting_at <= ?;
-	`, graphID, time.Now())
-
-	graph := &models.Graph{ID: graphID}
-	var viewportX, viewportY, viewportZoom sql.NullFloat64
-
-	err := row.Scan(&graph.Title, &graph.Description, &graph.StartingAt, &viewportX, &viewportY, &viewportZoom, &graph.CreatedAt, &graph.UpdatedAt)
+	graph, err := s.getGraph(ctx, graphID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to scan graph: %w", err)
+		return nil, err
 	}
 
-	if viewportX.Valid && viewportY.Valid && viewportZoom.Valid {
-		graph.Viewport = &models.Viewport{
-			X:    viewportX.Float64,
-			Y:    viewportY.Float64,
-			Zoom: viewportZoom.Float64,
-		}
+	if graph.StartingAt.After(time.Now()) {
+		return nil, nil
 	}
 
-	nodes, err := s.getAccessibleNodes(ctx, graphID, now)
+	nodes, err := s.getAccessibleNodes(ctx, graphID)
 	if err != nil {
 		return nil, err
 	}
 
-	edges, err := s.getAccessibleEdges(ctx, graphID, now)
+	edges, err := s.getAccessibleEdges(ctx, graphID)
 	if err != nil {
 		return nil, err
 	}
