@@ -130,11 +130,12 @@ CREATE TABLE IF NOT EXISTS node_reward
     node_id            TEXT PRIMARY KEY,
 
     reward_type        TEXT    NOT NULL,
-
-    content_html       TEXT,
-    content_media_type TEXT,
+	payload			   TEXT    NOT NULL, -- E.g. HTML content or media URL
 
     give_favours       INTEGER NOT NULL DEFAULT 0,
+
+	created_at          DATETIME NOT NULL DEFAULT (datetime('now')),
+	updated_at          DATETIME NOT NULL DEFAULT (datetime('now')),
 
     FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE
 );
@@ -216,6 +217,14 @@ BEGIN
     UPDATE graph SET updated_at = datetime('now') WHERE id = NEW.id;
 END;
 
+CREATE TRIGGER IF NOT EXISTS trg_update_node_reward_updated_at
+	AFTER UPDATE
+	ON node_reward
+	FOR EACH ROW
+BEGIN
+	UPDATE node_reward SET updated_at = datetime('now') WHERE node_id = NEW.node_id;
+END;
+
 CREATE TRIGGER IF NOT EXISTS node_start_always_unlocked_insert
 	BEFORE INSERT ON node
 	FOR EACH ROW
@@ -273,10 +282,9 @@ SELECT n.id,
 		   )
            WHEN 'reward' THEN json_object(
                    'reward_type', nr.reward_type,
-                   'content_html', nr.content_html,
-                   'content_media_type', nr.content_media_type,
+                   'payload', nr.payload,
                    'give_favours', nr.give_favours
-                              )
+		   )
            ELSE json('{}')
            END AS data_json
 
