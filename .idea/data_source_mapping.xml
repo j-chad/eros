@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourcePerFileMappings">
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/c0cf4d4b-28f8-465a-9ff7-180f88c58312/console_1.sql" value="c0cf4d4b-28f8-465a-9ff7-180f88c58312" />
     <file url="file://$PROJECT_DIR$/backend/internal/repository/sqlite/favour_count.go" value="c0cf4d4b-28f8-465a-9ff7-180f88c58312" />
     <file url="file://$PROJECT_DIR$/backend/internal/repository/sqlite/graph_helpers.go" value="c0cf4d4b-28f8-465a-9ff7-180f88c58312" />
     <file url="file://$PROJECT_DIR$/backend/internal/repository/sqlite/sqlite_init.sql" value="c0cf4d4b-28f8-465a-9ff7-180f88c58312" />

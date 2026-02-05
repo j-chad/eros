@@ -9,6 +9,41 @@ import (
 	"strconv"
 )
 
+// getGraph retrieves a graph. It does not populate the nodes or edges.
+func (s *sqliteDB) getGraph(ctx context.Context, graphID string) (*models.Graph, error) {
+	row := s.executor().QueryRowContext(ctx, `
+		SELECT
+		    title,
+		    description,
+		    starting_at,
+		    viewport_x,
+		    viewport_y,
+		    viewport_zoom,
+		    created_at,
+		    updated_at
+		FROM graph
+		WHERE id = ?;
+	`, graphID)
+
+	graph := &models.Graph{ID: graphID}
+	var viewportX, viewportY, viewportZoom sql.NullFloat64
+
+	err := row.Scan(&graph.Title, &graph.Description, &graph.StartingAt, &viewportX, &viewportY, &viewportZoom, &graph.CreatedAt, &graph.UpdatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan graph: %w", err)
+	}
+
+	if viewportX.Valid && viewportY.Valid && viewportZoom.Valid {
+		graph.Viewport = &models.Viewport{
+			X:    viewportX.Float64,
+			Y:    viewportY.Float64,
+			Zoom: viewportZoom.Float64,
+		}
+	}
+
+	return graph, nil
+}
+
 // scanNodeFull scans a row from node_full view into a Node struct
 func (s *sqliteDB) scanNodeFull(scanner interface {
 	Scan(dest ...interface{}) error
@@ -100,6 +135,111 @@ func (s *sqliteDB) getCompleteNodes(ctx context.Context, graphID string) ([]mode
 	}
 
 	return nodes, nil
+}
+
+// getAccessibleNodes retrieves all nodes reachable from a start node that are unlocked or have an edge from an unlocked node
+func (s *sqliteDB) getAccessibleNodes(ctx context.Context, graphID string) ([]models.Node, error) {
+	rows, err := s.executor().QueryContext(ctx, `
+		WITH
+		unlocked AS (
+			SELECT id
+			FROM node
+			WHERE graph_id = ?
+			  AND unlocked_at IS NOT NULL
+			  OR type = 'start'
+		),
+		accessible AS (
+			SELECT id FROM unlocked
+			UNION
+			SELECT e.destination_node_id
+			FROM edge e
+					 JOIN unlocked u ON u.id = e.source_node_id
+			WHERE e.graph_id = :graph_id
+		)
+		SELECT * FROM node_full
+		WHERE graph_id = :graph_id
+		  AND id IN (SELECT id FROM accessible);
+	`, graphID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query accessible nodes: %w", err)
+	}
+	defer rows.Close()
+
+	nodes := make([]models.Node, 0)
+
+	for rows.Next() {
+		node, err := s.scanNodeFull(rows)
+		if err != nil {
+			return nil, err
+		}
+		nodes = append(nodes, node)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating accessible nodes: %w", err)
+	}
+
+	return nodes, nil
+}
+
+// getAccessibleEdges retrieves all edges that have a source node that is unlocked or has an edge from an unlocked node
+func (s *sqliteDB) getAccessibleEdges(ctx context.Context, graphID string) ([]models.Edge, error) {
+	rows, err := s.executor().QueryContext(ctx, `
+	WITH
+	unlocked AS (
+		SELECT id
+		FROM node
+		WHERE graph_id = ?
+		  AND unlocked_at IS NOT NULL
+		  OR type = 'start'
+	),
+	accessible AS (
+		SELECT id FROM unlocked
+		UNION
+		SELECT e.destination_node_id
+		FROM edge e
+			JOIN unlocked u ON u.id = e.source_node_id
+		WHERE e.graph_id = :graph_id
+	)
+	SELECT DISTINCT e.id,
+		e.source_node_id,
+		e.destination_node_id,
+		e.choice_label,
+		e.created_at,
+		e.updated_at
+	FROM edge e
+		JOIN accessible a ON a.id = e.source_node_id
+	WHERE e.graph_id = :graph_id;
+	`, graphID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query accessible edges: %w", err)
+	}
+	defer rows.Close()
+
+	edges := make([]models.Edge, 0)
+	for rows.Next() {
+		var edge models.Edge
+
+		err := rows.Scan(
+			&edge.ID,
+			&edge.From,
+			&edge.To,
+			&edge.ChoiceLabel,
+			&edge.CreatedAt,
+			&edge.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan edge: %w", err)
+		}
+
+		edges = append(edges, edge)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating accessible edges: %w", err)
+	}
+
+	return edges, nil
 }
 
 // getEdges retrieves all edges for the given node IDs
