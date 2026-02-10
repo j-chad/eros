@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"strconv"
 )
 
 // getGraph retrieves a graph. It does not populate the nodes or edges.
@@ -415,7 +414,7 @@ func (s *sqliteDB) createNode(ctx context.Context, graphID string, node models.N
 			uiPositionY = sql.NullFloat64{Valid: false}
 		}
 
-		result, err := tx.executor().ExecContext(ctx, `
+		_, err := tx.executor().ExecContext(ctx, `
 			INSERT INTO node (
 			    id,
 				graph_id,
@@ -430,13 +429,8 @@ func (s *sqliteDB) createNode(ctx context.Context, graphID string, node models.N
 			return fmt.Errorf("failed to insert node: %w", err)
 		}
 
-		nodeID, err := result.LastInsertId()
-		if err != nil {
-			return fmt.Errorf("failed to get last insert ID for node: %w", err)
-		}
-
 		// insert type-specific data
-		err = tx.upsertNodeData(ctx, strconv.FormatInt(nodeID, 10), node.Type, node.Data)
+		err = tx.upsertNodeData(ctx, node.ID, node.Type, node.Data)
 		if err != nil {
 			return fmt.Errorf("failed to insert node data: %w", err)
 		}
