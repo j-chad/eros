@@ -21,10 +21,12 @@
 	import EditNodeDialog from "./edit-node-dialog/EditNodeDialog.svelte";
 	import CodeNode from "./nodes/CodeNode.svelte";
 	import ManualNode from "./nodes/ManualNode.svelte";
+	import RewardNode from "./nodes/RewardNode.svelte";
 
     let {graph = $bindable<Graph>()}: { graph: Graph } = $props()
 
     const nodeTypes: NodeTypes = {
+		[NodeType.REWARD]: RewardNode,
 		[NodeType.MANUAL]: ManualNode,
 		[NodeType.CODE]: CodeNode,
 		[NodeType.LOCATION]: LocationNode,

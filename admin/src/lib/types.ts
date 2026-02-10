@@ -83,7 +83,7 @@ export interface Edge {
     updated_at: string; // ISO 8601 date string
 }
 
-export interface Node<Type extends NodeType = NodeType, Data = never> {
+export interface Node<Type extends NodeType = NodeType, Data = undefined> {
     id: string;
     type: Type,
 
@@ -118,12 +118,13 @@ export type ManualNode = Node<NodeType.MANUAL, {
 }>;
 export type RewardNode = Node<NodeType.REWARD, {
     reward_type: string; // not sure what the possible types are yet
-    content: string;
-    media_type: string;
+    payload: string;
     give_favours: number;
 }>;
 
 export type AnyNode = StartNode | LocationNode | CodeNode | ManualNode | RewardNode;
+export type NodeByType<T extends NodeType> = Extract<AnyNode, { type: T }>;
+export type NodeDataByType<T extends NodeType> = NodeByType<T>['data'];
 
 export interface NewGraph {
     title: string;

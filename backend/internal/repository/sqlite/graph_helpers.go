@@ -385,16 +385,14 @@ func (s *sqliteDB) upsertNodeData(ctx context.Context, nodeID string, nodeType m
 			INSERT INTO node_reward (
 				node_id,
 				reward_type,
-			    content_html,
-			    content_media_type,
+			    payload,
 				give_favours
-			) VALUES (?, ?, ?, ?, ?)
+			) VALUES (?, ?, ?, ?)
 			ON CONFLICT (node_id) DO UPDATE SET
 				reward_type = excluded.reward_type,
-				content_html = excluded.content_html,
-				content_media_type = excluded.content_media_type,
+				payload = excluded.payload,
 				give_favours = excluded.give_favours
-		`, nodeID, rewardData.RewardType, rewardData.Content, rewardData.MediaType, rewardData.GiveFavours)
+		`, nodeID, rewardData.RewardType, rewardData.Payload, rewardData.GiveFavours)
 		return err
 	case models.StartNode:
 		// No additional data to insert
