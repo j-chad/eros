@@ -19,7 +19,6 @@ type ManualData struct {
 
 type RewardData struct {
 	RewardType  string `json:"reward_type"`
-	Content     string `json:"content"`
-	MediaType   string `json:"media_type"`
+	Payload     string `json:"payload"`
 	GiveFavours int    `json:"give_favours"`
 }

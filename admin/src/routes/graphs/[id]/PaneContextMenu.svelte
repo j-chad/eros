@@ -1,17 +1,20 @@
 <script lang="ts">
-	import {Gift, GitBranch, HandMetal, Key, MapPin, Play} from 'lucide-svelte';
-    import {type AnyNode, type Node, NodeType} from "$lib/types";
-	import {useNodes, useSvelteFlow} from "@xyflow/svelte";
+	import {Gift, HandMetal, Key, MapPin, Play} from 'lucide-svelte';
+	import {type AnyNode, type NodeByType, type NodeDataByType, NodeType} from "$lib/types";
+	import {useSvelteFlow} from "@xyflow/svelte";
 
 	const { screenToFlowPosition } = useSvelteFlow();
 
-    interface NodeOption {
-        type: NodeType;
-        label: string;
-        icon: typeof Play;
-        color: string;
-        description: string;
-    }
+	interface NodeOption<T extends NodeType> {
+		type: T;
+		label: string;
+		icon: typeof Play;
+		color: string;
+		description: string;
+		defaultData?: NodeDataByType<T>;
+	}
+
+	type AnyNodeOption = { [K in NodeType]: NodeOption<K> }[NodeType];
 
     let {
         x,
@@ -25,46 +28,66 @@
         onCreateNode?: (node: AnyNode) => void;
     } = $props();
 
-    const nodeTypes: NodeOption[] = [
-        {
-            type: NodeType.LOCATION,
-            label: 'Location',
-            icon: MapPin,
-            color: '#ec4899',
-            description: 'GPS-based unlock'
-        },
-        {
-            type: NodeType.CODE,
-            label: 'Code',
-            icon: Key,
-            color: '#8b5cf6',
-            description: 'Secret code unlock'
-        },
-        {
-            type: NodeType.MANUAL,
-            label: 'Manual',
-            icon: HandMetal,
-            color: '#10b981',
-            description: 'Human confirmation'
-        },
-        {
-            type: NodeType.REWARD,
-            label: 'Reward',
-            icon: Gift,
-            color: '#06b6d4',
-            description: 'Content reveal'
-        }
-    ];
+	const nodeTypeMap: { [K in NodeType]: NodeOption<K> } = {
+		[NodeType.LOCATION]: {
+			type: NodeType.LOCATION,
+			label: "Location",
+			icon: MapPin,
+			color: "#ec4899",
+			description: "GPS-based unlock",
+			defaultData: {
+				latitude: 0,
+				longitude: 0,
+				radius_m: 10,
+			}
+		},
+		[NodeType.CODE]: {
+			type: NodeType.CODE,
+			label: "Code",
+			icon: Key,
+			color: "#8b5cf6",
+			description: "Secret code unlock",
+		},
+		[NodeType.MANUAL]: {
+			type: NodeType.MANUAL,
+			label: "Manual",
+			icon: HandMetal,
+			color: "#10b981",
+			description: "Human confirmation",
+		},
+		[NodeType.REWARD]: {
+			type: NodeType.REWARD,
+			label: "Reward",
+			icon: Gift,
+			color: "#06b6d4",
+			description: "Content reveal",
+			defaultData: {
+				reward_type: 'text',
+				payload: '',
+				give_favours: 0
+			}
+		},
+		[NodeType.START]: {
+			type: NodeType.START,
+			label: "Start",
+			icon: Play,
+			color: "#64748b",
+			description: "Entry point",
+		},
+	};
 
     function handleCreateNode(type: NodeType) {
-        onCreateNode?.({
-            id: crypto.randomUUID(),
-            type,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            title: "My New Node",
-            ui_position: screenToFlowPosition({ x, y }),
-        });
+		const data = nodeTypeMap[type].defaultData;
+
+		onCreateNode?.({
+			id: crypto.randomUUID(),
+			type,
+			created_at: new Date().toISOString(),
+			updated_at: new Date().toISOString(),
+			title: "My New Node",
+			ui_position: screenToFlowPosition({ x, y }),
+			data: data
+		} as AnyNode);
         onClose?.();
     }
 

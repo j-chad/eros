@@ -188,14 +188,14 @@ func (s *sqliteDB) UpdateGraph(ctx context.Context, req models.Graph) error {
 			return fmt.Errorf("no graph found with ID %s", req.ID)
 		}
 
-		err = txRepo.updateEdges(ctx, req.ID, *req.Edges)
-		if err != nil {
-			return fmt.Errorf("failed to update edges: %w", err)
-		}
-
 		err = txRepo.updateNodes(ctx, req.ID, *req.Nodes)
 		if err != nil {
 			return fmt.Errorf("failed to update nodes: %w", err)
+		}
+
+		err = txRepo.updateEdges(ctx, req.ID, *req.Edges)
+		if err != nil {
+			return fmt.Errorf("failed to update edges: %w", err)
 		}
 
 		return nil
