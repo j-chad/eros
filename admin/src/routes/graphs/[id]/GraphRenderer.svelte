@@ -33,9 +33,8 @@
         [NodeType.START]: StartNode
     };
 
-    let contextMenu = $state<'node' | 'pane' | 'hidden'>('hidden');
+    let contextMenu = $state<'pane' | 'hidden'>('hidden');
     let contextMenuPosition = $state({ x: 0, y: 0 });
-	let selectedNodeId = $state<string | null>(null);
 	let editingNode = $state<AnyNode | null>(null);
 
     // Non-reactive state for performance
@@ -47,7 +46,6 @@
     let syncingFromFlow = false;
 
 	function findNodeById(id: string, required: true): FlowNode
-	function findNodeById(id: string, required?: false): FlowNode | undefined
 	function findNodeById(id: string, required=false): FlowNode | undefined {
 		const node = nodes.find((n) => n.id === id);
 		if (required && !node) {
@@ -128,22 +126,6 @@
             y: event.clientY
         };
     };
-
-	const handleNodeContextMenu: NodeEvents['onnodecontextmenu'] = ({event, node}) => {
-		event.preventDefault()
-
-		if (node.type === NodeType.START) {
-			// Don't show context menu for start node
-			return;
-		}
-
-		selectedNodeId = node.id;
-		contextMenu = 'node'
-		contextMenuPosition = {
-			x: event.clientX,
-			y: event.clientY
-		};
-	};
 
     function handleCloseContextMenu() {
         contextMenu = 'hidden';
@@ -245,7 +227,6 @@
     <SvelteFlow {nodes} {edges} {nodeTypes} initialViewport={graph.viewport} fitView={graph.viewport === undefined}
                 onnodedragstop={handleNodeDragStop}
                 onpanecontextmenu={handlePaneContextMenu}
-				onnodecontextmenu={handleNodeContextMenu}
 				onmoveend={handleViewportChange}
 				ondelete={handleDeleteItem}
 				onconnect={handleConnect}
@@ -255,9 +236,7 @@
         <Background variant={BackgroundVariant.Dots}/>
         {#if contextMenu === 'pane'}
             <PaneContextMenu x={contextMenuPosition.x} y={contextMenuPosition.y} onClose={handleCloseContextMenu} onCreateNode={handleNewNode}/>
-		{:else if contextMenu === 'node' && selectedNodeId !== null}
-			<NodeContextMenu nodeId={selectedNodeId} x={contextMenuPosition.x} y={contextMenuPosition.y} onClose={handleCloseContextMenu}/>
-        {/if}
+		{/if}
     </SvelteFlow>
 </div>
 

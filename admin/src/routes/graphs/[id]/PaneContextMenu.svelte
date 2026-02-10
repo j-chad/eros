@@ -76,6 +76,8 @@
 		},
 	};
 
+	const nodeTypes = Object.values(nodeTypeMap);
+
     function handleCreateNode(type: NodeType) {
 		const data = nodeTypeMap[type].defaultData;
 
