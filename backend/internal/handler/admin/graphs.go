@@ -23,12 +23,12 @@ func (h *Handler) ListStartNodes(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) DeleteGraph(w http.ResponseWriter, r *http.Request) {
 	graphID := r.PathValue("id")
 	if graphID == "" {
-		response.Error(w, apierror.BadRequest("Graph ID is required"))
+		response.Error(r.Context(), w, apierror.BadRequest("Graph ID is required"))
 		return
 	}
 
 	if err := h.adminService.DeleteGraph(r.Context(), graphID); err != nil {
-		response.Error(w, apierror.UnknownInternalError(err))
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
 
@@ -38,17 +38,17 @@ func (h *Handler) DeleteGraph(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CreateGraph(w http.ResponseWriter, r *http.Request) {
 	var newGraphRequest models.NewGraphRequest
 	if err := json.NewDecoder(r.Body).Decode(&newGraphRequest); err != nil {
-		response.Error(w, apierror.BadRequest("invalid request body"))
+		response.Error(r.Context(), w, apierror.BadRequest("invalid request body"))
 	}
 
 	if newGraphRequest.Title == "" {
-		response.Error(w, apierror.BadRequest("graph title is required"))
+		response.Error(r.Context(), w, apierror.BadRequest("graph title is required"))
 		return
 	}
 
 	createdGraphID, err := h.adminService.CreateGraph(r.Context(), newGraphRequest)
 	if err != nil {
-		response.Error(w, apierror.UnknownInternalError(err))
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
 
@@ -58,18 +58,18 @@ func (h *Handler) CreateGraph(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetGraph(w http.ResponseWriter, r *http.Request) {
 	graphID := r.PathValue("id")
 	if graphID == "" {
-		response.Error(w, apierror.BadRequest("Graph ID is required"))
+		response.Error(r.Context(), w, apierror.BadRequest("Graph ID is required"))
 		return
 	}
 
 	graph, err := h.adminService.GetGraph(r.Context(), graphID)
 	if err != nil {
-		response.Error(w, apierror.UnknownInternalError(err))
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
 
 	if graph == nil {
-		response.Error(w, apierror.NotFound("Graph not found"))
+		response.Error(r.Context(), w, apierror.NotFound("Graph not found"))
 		return
 	}
 
@@ -79,13 +79,13 @@ func (h *Handler) GetGraph(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) UpdateGraph(w http.ResponseWriter, r *http.Request) {
 	var graphID = r.PathValue("id")
 	if graphID == "" {
-		response.Error(w, apierror.BadRequest("Graph ID is required"))
+		response.Error(r.Context(), w, apierror.BadRequest("Graph ID is required"))
 		return
 	}
 
 	var graph models.Graph
 	if err := json.NewDecoder(r.Body).Decode(&graph); err != nil {
-		response.Error(w, apierror.BadRequest("invalid request body"))
+		response.Error(r.Context(), w, apierror.BadRequest("invalid request body"))
 		return
 	}
 
@@ -94,11 +94,11 @@ func (h *Handler) UpdateGraph(w http.ResponseWriter, r *http.Request) {
 	err := h.adminService.UpdateGraph(r.Context(), graph)
 	if err != nil {
 		if errors.Is(err, service.ErrInvalidGraph) {
-			response.Error(w, apierror.BadRequest("invalid graph data"))
+			response.Error(r.Context(), w, apierror.BadRequest("invalid graph data"))
 			return
 		}
 
-		response.Error(w, apierror.UnknownInternalError(err))
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
 

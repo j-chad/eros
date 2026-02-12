@@ -67,7 +67,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 func routeNotFound(w http.ResponseWriter, r *http.Request) {
-	response.Error(w, apierror.NotFound("no such route").
+	response.Error(r.Context(), w, apierror.NotFound("no such route").
 		WithDetail("path", r.URL.Path).
 		WithDetail("method", r.Method))
 }
