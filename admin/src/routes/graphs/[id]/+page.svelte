@@ -30,8 +30,8 @@
         try {
             await api.graph.update(graph.id, graph)
         } catch (error) {
-            console.error('Failed to save graph:', error);
-            alert('Failed to save changes');
+            console.error('Failed to save graph:', (error as any).body?.['internal']);
+            alert(`Failed to save graph: ${error}`);
         } finally {
             isSaving = false;
         }

@@ -9,7 +9,7 @@ import (
 func (h *Handler) ListGraphs(w http.ResponseWriter, r *http.Request) {
 	graphs, err := h.graphService.ListGraphs(r.Context())
 	if err != nil {
-		response.Error(w, apierror.UnknownInternalError(err))
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
 
@@ -19,12 +19,12 @@ func (h *Handler) ListGraphs(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetGraph(w http.ResponseWriter, r *http.Request) {
 	graph, err := h.graphService.GetGraph(r.Context(), r.PathValue("id"))
 	if err != nil {
-		response.Error(w, apierror.UnknownInternalError(err))
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
 
 	if graph == nil {
-		response.Error(w, apierror.NotFound("graph not found"))
+		response.Error(r.Context(), w, apierror.NotFound("graph not found"))
 		return
 	}
 

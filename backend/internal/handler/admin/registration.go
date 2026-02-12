@@ -9,7 +9,7 @@ import (
 func (h *Handler) CreateRegistrationCode(w http.ResponseWriter, r *http.Request) {
 	registrationCode, err := h.adminService.CreateRegistrationCode(r.Context())
 	if err != nil {
-		response.Error(w, apierror.UnknownInternalError(err))
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
 
@@ -18,7 +18,7 @@ func (h *Handler) CreateRegistrationCode(w http.ResponseWriter, r *http.Request)
 
 func (h *Handler) InvalidateRegistrationCode(w http.ResponseWriter, r *http.Request) {
 	if err := h.adminService.InvalidateRegistrationCode(r.Context()); err != nil {
-		response.Error(w, apierror.UnknownInternalError(err))
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
 
@@ -28,12 +28,12 @@ func (h *Handler) InvalidateRegistrationCode(w http.ResponseWriter, r *http.Requ
 func (h *Handler) GetRegistrationCode(w http.ResponseWriter, r *http.Request) {
 	registrationCode, err := h.adminService.GetRegistrationCode(r.Context())
 	if err != nil {
-		response.Error(w, apierror.UnknownInternalError(err))
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
 
 	if registrationCode == nil {
-		response.Error(w, apierror.NotFound("no active registration code found"))
+		response.Error(r.Context(), w, apierror.NotFound("no active registration code found"))
 		return
 	}
 

@@ -2,6 +2,8 @@ package response
 
 import (
 	"backend/pkg/apierror"
+	"backend/pkg/authctx"
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -18,7 +20,7 @@ func JSON(w http.ResponseWriter, status int, data interface{}) {
 }
 
 // Error writes an error response
-func Error(w http.ResponseWriter, err *apierror.APIError) {
+func Error(ctx context.Context, w http.ResponseWriter, err *apierror.APIError) {
 	if err.StatusCode >= 500 {
 		log.Printf("internal error: %v", err.Err)
 	}
@@ -34,6 +36,11 @@ func Error(w http.ResponseWriter, err *apierror.APIError) {
 	// Add details if present
 	if err.Details != nil && len(err.Details) > 0 {
 		errorResponse["error"].(map[string]interface{})["details"] = err.Details
+	}
+
+	// Add internal error if admin
+	if authctx.IsAdmin(ctx) && err.Err != nil {
+		errorResponse["error"].(map[string]interface{})["internal"] = err.Err.Error()
 	}
 
 	JSON(w, err.StatusCode, errorResponse)

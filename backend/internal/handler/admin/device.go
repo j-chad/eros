@@ -11,7 +11,7 @@ import (
 func (h *Handler) ListDevices(w http.ResponseWriter, r *http.Request) {
 	devices, err := h.adminService.ListDevices(r.Context())
 	if err != nil {
-		response.Error(w, apierror.UnknownInternalError(err))
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
 
@@ -21,12 +21,12 @@ func (h *Handler) ListDevices(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) RevokeDevice(w http.ResponseWriter, r *http.Request) {
 	deviceID := r.PathValue("id")
 	if deviceID == "" {
-		response.Error(w, apierror.BadRequest("device ID is required"))
+		response.Error(r.Context(), w, apierror.BadRequest("device ID is required"))
 		return
 	}
 
 	if err := h.adminService.RevokeDevice(r.Context(), deviceID); err != nil {
-		response.Error(w, apierror.UnknownInternalError(err))
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
 
@@ -36,7 +36,7 @@ func (h *Handler) RevokeDevice(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) UpdateDeviceInfo(w http.ResponseWriter, r *http.Request) {
 	deviceID := r.PathValue("id")
 	if deviceID == "" {
-		response.Error(w, apierror.BadRequest("device ID is required"))
+		response.Error(r.Context(), w, apierror.BadRequest("device ID is required"))
 		return
 	}
 
@@ -44,13 +44,13 @@ func (h *Handler) UpdateDeviceInfo(w http.ResponseWriter, r *http.Request) {
 	buffer := make([]byte, r.ContentLength)
 	_, err := r.Body.Read(buffer)
 	if err != nil && !errors.Is(err, io.EOF) {
-		response.Error(w, apierror.UnknownInternalError(err).WithDetail("msg", "failed to read device info"))
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err).WithDetail("msg", "failed to read device info"))
 		return
 	}
 	deviceInfo := string(buffer)
 
 	if err := h.adminService.UpdateDeviceInfo(r.Context(), deviceID, deviceInfo); err != nil {
-		response.Error(w, apierror.UnknownInternalError(err))
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
 
