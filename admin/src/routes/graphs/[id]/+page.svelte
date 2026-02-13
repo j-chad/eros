@@ -5,7 +5,7 @@
     import EditableField from "$lib/components/EditableField.svelte";
     import Header from "$lib/components/Header.svelte";
     import DateDisplay from "$lib/components/DateDisplay.svelte";
-    import type { Graph } from '$lib/types';
+	import type {APIError, Graph} from '$lib/types';
     import { api } from "$lib/api";
     import GraphRenderer from "./GraphRenderer.svelte";
 
@@ -30,8 +30,7 @@
         try {
             await api.graph.update(graph.id, graph)
         } catch (error) {
-            console.error('Failed to save graph:', (error as any).body?.['internal']);
-            alert(`Failed to save graph: ${error}`);
+            alert(`Failed to save graph: ${(error as App.Error).body as APIError['internal']}`);
         } finally {
             isSaving = false;
         }
