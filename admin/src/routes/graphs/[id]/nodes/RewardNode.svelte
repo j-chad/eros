@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Gift, Eye, EyeOff, Coins } from 'lucide-svelte';
+	import { Gift, Eye, EyeOff, Star, Image, Video, Calendar, Ticket } from 'lucide-svelte';
 	import type { RewardNode } from '$lib/types';
 	import BaseNode from './BaseNode.svelte';
 	import type { NodeProps } from './types';
@@ -9,11 +9,56 @@
 
 	let showPayload = $state(false);
 
-	const rewardType = $derived(node.data?.reward_type ?? 'content');
+	const rewardType = $derived(node.data?.reward_type ?? 'favour');
 	const payload = $derived(node.data?.payload ?? '');
 	const giveFavours = $derived(node.data?.give_favours ?? 0);
 
-	const hasPayload = $derived(!!payload?.trim());
+	const hasPayload = $derived(!!payload?.trim() && rewardType !== 'favour');
+
+	// Get icon for reward type
+	const rewardTypeIcon = $derived.by(() => {
+		switch (rewardType) {
+			case 'image': return Image;
+			case 'video': return Video;
+			case 'calendar': return Calendar;
+			case 'coupon': return Ticket;
+			case 'favour': return Star;
+			default: return Gift;
+		}
+	});
+
+	// Format reward type display name
+	const rewardTypeLabel = $derived.by(() => {
+		switch (rewardType) {
+			case 'image': return 'Image';
+			case 'video': return 'Video';
+			case 'calendar': return 'Calendar Event';
+			case 'coupon': return 'Coupon';
+			case 'favour': return 'Favour Points';
+			default: return rewardType;
+		}
+	});
+
+	// Parse and format payload preview
+	const payloadPreview = $derived.by(() => {
+		if (!payload) return '—';
+		try {
+			const parsed = JSON.parse(payload);
+			switch (rewardType) {
+				case 'image':
+				case 'video':
+					return parsed.url ? new URL(parsed.url).hostname : '—';
+				case 'calendar':
+					return parsed.event_title || '—';
+				case 'coupon':
+					return parsed.url ? 'Wallet Pass' : '—';
+				default:
+					return `${payload.length} chars`;
+			}
+		} catch {
+			return `${payload.length} chars`;
+		}
+	});
 </script>
 
 <BaseNode
@@ -31,49 +76,47 @@
 			<div class="reward-card">
 				<div class="top-row">
 					<div class="type-badge" title="Reward type">
-						<span class="dot" aria-hidden="true"></span>
-						<span class="type-text">{rewardType}</span>
+						<svelte:component this={rewardTypeIcon} size={12} />
+						<span class="type-text">{rewardTypeLabel}</span>
 					</div>
 
-					<button
-						class="toggle"
-						disabled={!hasPayload}
-						title={showPayload ? 'Hide payload' : 'Reveal payload'}
-						onclick={() => (showPayload = !showPayload)}
-					>
-						{#if showPayload}
-							<EyeOff size={14} />
-							<span>Hide</span>
-						{:else}
-							<Eye size={14} />
-							<span>Reveal</span>
-						{/if}
-					</button>
-				</div>
-
-				<div class="payload">
-					{#if !hasPayload}
-						<div class="payload-empty">
-							<span class="muted">No payload set</span>
-							<span class="hint">Edit node to add content</span>
-						</div>
-					{:else if showPayload}
-						<pre class="payload-pre">{payload}</pre>
-					{:else}
-						<div class="payload-hidden">
-							<div class="dots" aria-hidden="true">
-								<span></span><span></span><span></span>
-							</div>
-							<span class="muted">Hidden</span>
-						</div>
+					{#if hasPayload}
+						<button
+							class="toggle"
+							title={showPayload ? 'Hide payload' : 'Reveal payload'}
+							onclick={() => (showPayload = !showPayload)}
+						>
+							{#if showPayload}
+								<EyeOff size={14} />
+								<span>Hide</span>
+							{:else}
+								<Eye size={14} />
+								<span>Show</span>
+							{/if}
+						</button>
 					{/if}
 				</div>
 
+				{#if hasPayload}
+					<div class="payload">
+						{#if showPayload}
+							<pre class="payload-pre">{payload}</pre>
+						{:else}
+							<div class="payload-hidden">
+								<div class="dots" aria-hidden="true">
+									<span></span><span></span><span></span>
+								</div>
+								<span class="muted">Hidden</span>
+							</div>
+						{/if}
+					</div>
+				{/if}
+
 				{#if giveFavours > 0}
 					<div class="favours">
-						<Coins size={14} />
-						<span class="favours-label">Favours:</span>
+						<Star size={14} fill="currentColor" />
 						<span class="favours-value">+{giveFavours}</span>
+						<span class="favours-label">Favour{giveFavours !== 1 ? 's' : ''}</span>
 					</div>
 				{/if}
 			</div>
@@ -81,12 +124,18 @@
 			<div class="meta">
 				<div class="meta-item">
 					<span class="key">🎁 Type</span>
-					<span class="value">{rewardType}</span>
+					<span class="value">{rewardTypeLabel}</span>
 				</div>
 				<div class="meta-item">
-					<span class="key">📦 Payload</span>
-					<span class="value">{hasPayload ? `${payload.length} chars` : '—'}</span>
+					<span class="key">📦 Content</span>
+					<span class="value">{payloadPreview}</span>
 				</div>
+				{#if giveFavours > 0}
+					<div class="meta-item">
+						<span class="key">⭐ Favours</span>
+						<span class="value">+{giveFavours}</span>
+					</div>
+				{/if}
 			</div>
 		</div>
 	{/snippet}
@@ -119,7 +168,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.5rem;
-		padding: 0.375rem 0.5rem;
+		padding: 0.375rem 0.625rem;
 		border-radius: 999px;
 		background: rgba(6, 182, 212, 0.12);
 		border: 1px solid rgba(6, 182, 212, 0.25);
@@ -127,15 +176,6 @@
 		font-size: 0.75rem;
 		font-weight: 700;
 		letter-spacing: 0.01em;
-		text-transform: lowercase;
-	}
-
-	.dot {
-		width: 8px;
-		height: 8px;
-		border-radius: 999px;
-		background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-		box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.18);
 	}
 
 	.type-text {
@@ -160,18 +200,13 @@
 		transition: all 0.15s ease;
 	}
 
-	.toggle:hover:not(:disabled) {
+	.toggle:hover {
 		transform: translateY(-1px);
 		box-shadow: 0 8px 14px rgba(0, 0, 0, 0.08);
 	}
 
-	.toggle:active:not(:disabled) {
+	.toggle:active {
 		transform: translateY(0px) scale(0.98);
-	}
-
-	.toggle:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
 	}
 
 	.payload {
@@ -195,14 +230,8 @@
 		color: #111827;
 		white-space: pre-wrap;
 		word-break: break-word;
-	}
-
-	.payload-empty {
-		display: flex;
-		flex-direction: column;
-		gap: 0.125rem;
-		align-items: center;
-		text-align: center;
+		max-height: 120px;
+		overflow-y: auto;
 	}
 
 	.payload-hidden {
@@ -244,16 +273,22 @@
 		}
 	}
 
+	.muted {
+		color: #9ca3af;
+		font-size: 0.75rem;
+		font-weight: 600;
+	}
+
 	.favours {
 		margin-top: 0.6rem;
 		display: inline-flex;
 		align-items: center;
 		gap: 0.35rem;
-		padding: 0.4rem 0.55rem;
+		padding: 0.4rem 0.65rem;
 		border-radius: 10px;
-		background: rgba(16, 185, 129, 0.12);
-		border: 1px solid rgba(16, 185, 129, 0.25);
-		color: #065f46;
+		background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+		border: 1px solid #fbbf24;
+		color: #92400e;
 		font-size: 0.75rem;
 		font-weight: 800;
 		width: fit-content;
@@ -266,15 +301,16 @@
 
 	.favours-value {
 		font-variant-numeric: tabular-nums;
+		font-weight: 900;
 	}
 
 	.meta {
-		display: flex;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
 		gap: 0.75rem;
 	}
 
 	.meta-item {
-		flex: 1;
 		display: flex;
 		flex-direction: column;
 		gap: 0.125rem;
@@ -292,5 +328,8 @@
 		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
 		monospace;
 		font-size: 0.6875rem;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 </style>
