@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type {RewardNode} from '$lib/types';
-	import {Calendar, Gift, Image, Sparkles, Star, Video} from 'lucide-svelte';
+	import {Calendar, Gift, Image, NotebookPen, Sparkles, Star, Video} from 'lucide-svelte';
 
 	let {
 		node,
@@ -97,7 +97,8 @@
 		{ value: 'image', label: 'Image', icon: Image, description: 'Show a celebratory image' },
 		{ value: 'video', label: 'Video', icon: Video, description: 'Play a reward video' },
 		{ value: 'calendar', label: 'Calendar Event', icon: Calendar, description: 'Add event to calendar' },
-		{ value: 'coupon', label: 'Coupon', icon: Gift, description: 'Apple Wallet coupon' }
+		{ value: 'coupon', label: 'Coupon', icon: Gift, description: 'Apple Wallet coupon' },
+		{ value: 'markdown', label: 'Markdown', icon: NotebookPen, description: 'Custom message with markdown formatting' }
 	];
 </script>
 
@@ -356,6 +357,23 @@
 						Learn more about Wallet passes →
 					</a>
 				</div>
+			{:else if editForm.reward_type === 'markdown'}
+				<div class="form-group">
+					<label for="markdown_content">Markdown Content</label>
+					<textarea
+						id="markdown_content"
+						oninput={(e) => updatePayload({ url: e.currentTarget.value })}
+						rows="6"
+						placeholder="Enter custom message with **markdown** formatting"
+					>{payloadForm.url}</textarea>
+				</div>
+
+				{#if editForm.give_favours > 0}
+					<div class="favour-badge">
+						<Star size={16} />
+						<span>+{editForm.give_favours} Favours</span>
+					</div>
+				{/if}
 			{/if}
 		</div>
 	</div>
