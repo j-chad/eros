@@ -4,6 +4,7 @@
 	import type { Component } from 'svelte';
 	import EditLocationDialog from "./EditLocationDialog.svelte";
 	import EditCodeDialog from "./EditCodeDialog.svelte";
+	import EditRewardDialog from "./EditRewardDialog.svelte";
 	import DefaultEditDialog from "./DefaultEditDialog.svelte";
 
 	type ComponentMap = { [K in NodeType]?: NodeFormComponent<Extract<AnyNode, { type: K }>> | NodeFormComponent<Node>; };
@@ -29,8 +30,12 @@
 		[NodeType.LOCATION]: EditLocationDialog,
 		[NodeType.CODE]: EditCodeDialog,
 		[NodeType.MANUAL]: DefaultEditDialog,
+		[NodeType.REWARD]: EditRewardDialog,
 	};
 	const BodyComponent = $derived(node ? componentMap[node.type] : undefined) as NodeFormComponent<AnyNode>;
+
+	// Make dialog larger for reward nodes
+	const isRewardNode = $derived(node?.type === NodeType.REWARD);
 
 	$effect(() => {
 		if (node) {
@@ -51,7 +56,7 @@
 </script>
 
 {#if node}
-	<dialog bind:this={dialog} class="edit-dialog" onclose={handleCancel} closedby="any">
+	<dialog bind:this={dialog} class="edit-dialog" class:large={isRewardNode} onclose={handleCancel} closedby="any">
 		<div class="dialog-content">
 			{#if BodyComponent}
 				<BodyComponent node={node} onSave={handleSave} onCancel={handleCancel}></BodyComponent>
@@ -78,6 +83,10 @@
 		max-width: 500px;
 		width: 90%;
 		box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+	}
+
+	.edit-dialog.large {
+		max-width: 900px;
 	}
 
 	.edit-dialog::backdrop {
