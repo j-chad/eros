@@ -2,51 +2,56 @@
 	import {
 		Background,
 		BackgroundVariant,
+		type Connection,
 		Controls,
-		MiniMap, type NodeEvents,
-		type NodeTypes, type PaneEvents,
-		SvelteFlow, type Viewport,
-		type Connection
+		type EdgeEvents,
+		MiniMap,
+		type NodeEvents,
+		type NodeTypes,
+		type PaneEvents,
+		SvelteFlow,
+		type Viewport
 	} from '@xyflow/svelte';
 
-	import type { Node as FlowNode, Edge as FlowEdge } from './nodes/types';
+	import type {Edge as FlowEdge, Node as FlowNode} from './nodes/types';
 
-    import '@xyflow/svelte/dist/style.css';
-    import {type AnyNode, type Graph, NodeType} from "$lib/types";
-    import {debounce} from "$lib/utils";
-    import StartNode from "./nodes/StartNode.svelte";
-    import PaneContextMenu from "./PaneContextMenu.svelte";
-	import NodeContextMenu from "./NodeContextMenu.svelte";
+	import '@xyflow/svelte/dist/style.css';
+	import {type AnyNode, type Edge, type Graph, NodeType} from "$lib/types";
+	import {debounce} from "$lib/utils";
+	import StartNode from "./nodes/StartNode.svelte";
+	import PaneContextMenu from "./PaneContextMenu.svelte";
 	import LocationNode from "./nodes/LocationNode.svelte";
 	import EditNodeDialog from "./edit-node-dialog/EditNodeDialog.svelte";
 	import CodeNode from "./nodes/CodeNode.svelte";
 	import ManualNode from "./nodes/ManualNode.svelte";
 	import RewardNode from "./nodes/RewardNode.svelte";
+	import EditEdgeDialog from "./EditEdgeDialog.svelte";
 
-    let {graph = $bindable<Graph>()}: { graph: Graph } = $props()
+	let {graph = $bindable<Graph>()}: { graph: Graph } = $props()
 
-    const nodeTypes: NodeTypes = {
+	const nodeTypes: NodeTypes = {
 		[NodeType.REWARD]: RewardNode,
 		[NodeType.MANUAL]: ManualNode,
 		[NodeType.CODE]: CodeNode,
 		[NodeType.LOCATION]: LocationNode,
-        [NodeType.START]: StartNode
-    };
+		[NodeType.START]: StartNode
+	};
 
-    let contextMenu = $state<'pane' | 'hidden'>('hidden');
-    let contextMenuPosition = $state({ x: 0, y: 0 });
+	let contextMenu = $state<'pane' | 'hidden'>('hidden');
+	let contextMenuPosition = $state({x: 0, y: 0});
 	let editingNode = $state<AnyNode | null>(null);
+	let editingEdge = $state<Edge | null>(null);
 
-    // Non-reactive state for performance
-    let nodes = $state.raw<FlowNode[]>([]);
-    let edges = $state.raw<FlowEdge[]>([]);
+	// Non-reactive state for performance
+	let nodes = $state.raw<FlowNode[]>([]);
+	let edges = $state.raw<FlowEdge[]>([]);
 
-    // prevent graph<->flow feedback loops
-    let syncingFromGraph = false;
-    let syncingFromFlow = false;
+	// prevent graph<->flow feedback loops
+	let syncingFromGraph = false;
+	let syncingFromFlow = false;
 
 	function findNodeById(id: string, required: true): FlowNode
-	function findNodeById(id: string, required=false): FlowNode | undefined {
+	function findNodeById(id: string, required = false): FlowNode | undefined {
 		const node = nodes.find((n) => n.id === id);
 		if (required && !node) {
 			throw new Error(`Node with ID ${id} not found`);
@@ -55,89 +60,96 @@
 		return node;
 	}
 
-    function nodeToFlowNode(node: AnyNode): FlowNode {
-        return {
-            id: node.id,
-            position: node.ui_position ?? {x: 0, y: 0},
-            data: {
+	function nodeToFlowNode(node: AnyNode): FlowNode {
+		return {
+			id: node.id,
+			position: node.ui_position ?? {x: 0, y: 0},
+			data: {
 				node,
 				onEdit: handleEditNode,
 				onUpdateData: (data) => handleUpdateNodeData(node.id, data)
 			},
-            type: node.type,
+			type: node.type,
 			deletable: node.type !== NodeType.START,
-        };
-    }
+		};
+	}
 
-    // Sync FROM graph TO flow (when graph changes)
-    $effect(() => {
-        if (!graph || syncingFromFlow) return;
+	// Sync FROM graph TO flow (when graph changes)
+	$effect(() => {
+		if (!graph || syncingFromFlow) return;
 
-        syncingFromGraph = true;
+		syncingFromGraph = true;
 
-        nodes = graph.nodes?.map(nodeToFlowNode) ?? [];
+		nodes = graph.nodes?.map(nodeToFlowNode) ?? [];
 
-        edges = graph.edges.map((edge) => ({
-            id: edge.id,
-            source: edge.from,
-            target: edge.to,
-            label: edge.choice_label,
-            data: {edge}
-        })) ?? [];
+		edges = graph.edges.map((edge) => ({
+			id: edge.id,
+			source: edge.from,
+			target: edge.to,
+			label: edge.choice_label,
+			data: {edge}
+		})) ?? [];
 
-        queueMicrotask(() => {
-            syncingFromGraph = false;
-        });
-    });
+		queueMicrotask(() => {
+			syncingFromGraph = false;
+		});
+	});
 
-    const commitGraph = debounce(() => {
-        if (!graph || syncingFromGraph) return;
+	const commitGraph = debounce(() => {
+		if (!graph || syncingFromGraph) return;
 
-        syncingFromFlow = true;
+		syncingFromFlow = true;
 
-        graph = {
-            ...graph,
-            nodes: nodes.map((n) => ({
-                ...n.data.node,
-                ui_position: n.position
-            })),
-            edges: edges.map((e) => ({
-                from: e.source,
-                to: e.target,
-                choice_label: e.label,
-                created_at: e.data?.edge.created_at ?? new Date().toISOString(),
-                updated_at: e.data?.edge.updated_at ?? new Date().toISOString(),
-                id: e.id
-            }))
-        };
+		graph = {
+			...graph,
+			nodes: nodes.map((n) => ({
+				...n.data.node,
+				ui_position: n.position
+			})),
+			edges: edges.map((e) => ({
+				from: e.source,
+				to: e.target,
+				choice_label: e.label,
+				created_at: e.data?.edge.created_at ?? new Date().toISOString(),
+				updated_at: e.data?.edge.updated_at ?? new Date().toISOString(),
+				id: e.id
+			}))
+		};
 
 		console.log('Committed graph:', graph);
 
-        queueMicrotask(() => {
+		queueMicrotask(() => {
 			syncingFromFlow = false;
 		});
-    }, 150);
+	}, 150);
 
-    const handlePaneContextMenu: PaneEvents['onpanecontextmenu'] = ({event}) => {
-        event.preventDefault()
-        contextMenu = 'pane'
-        contextMenuPosition = {
-            x: event.clientX,
-            y: event.clientY
-        };
-    };
+	const handlePaneContextMenu: PaneEvents['onpanecontextmenu'] = ({event}) => {
+		event.preventDefault()
+		contextMenu = 'pane'
+		contextMenuPosition = {
+			x: event.clientX,
+			y: event.clientY
+		};
+	};
 
-    function handleCloseContextMenu() {
-        contextMenu = 'hidden';
-    }
+	const handleEdgeClick: EdgeEvents<FlowEdge>['onedgeclick'] = ({event, edge}) => {
+		event.stopPropagation();
+		if (edge.data?.edge) {
+			editingEdge = edge.data.edge;
+		}
+	};
 
-    function handleNewNode(node: AnyNode) {
-        const flowNode = nodeToFlowNode(node);
-        nodes = [...nodes, flowNode];
-        commitGraph();
-    }
+	function handleCloseContextMenu() {
+		contextMenu = 'hidden';
+	}
 
-    const handleNodeDragStop: NodeEvents['onnodedragstop'] = ({targetNode}) => {
+	function handleNewNode(node: AnyNode) {
+		const flowNode = nodeToFlowNode(node);
+		nodes = [...nodes, flowNode];
+		commitGraph();
+	}
+
+	const handleNodeDragStop: NodeEvents['onnodedragstop'] = ({targetNode}) => {
 		if (!targetNode) throw new Error('No target node on drag stop');
 
 		const node = findNodeById(targetNode.id, true);
@@ -179,14 +191,16 @@
 	function handleConnect(connection: Connection) {
 		if (!connection.source || !connection.target) return;
 
+		const id = crypto.randomUUID();
+
 		const newEdge: FlowEdge = {
-			id: crypto.randomUUID(),
+			id,
 			source: connection.source,
 			target: connection.target,
 			label: '',
 			data: {
 				edge: {
-					id: crypto.randomUUID(),
+					id,
 					from: connection.source,
 					to: connection.target,
 					choice_label: '',
@@ -221,32 +235,54 @@
 		nodes = nodes.map((n) => n.id === nodeId ? nodeToFlowNode(updatedNode as AnyNode) : n);
 		commitGraph();
 	}
+
+	function handleUpdateEdge(updatedEdge: Edge) {
+		edges = edges.map((e) => {
+			if (e.id === updatedEdge.id) {
+				return {
+					...e,
+					label: updatedEdge.choice_label,
+					data: {edge: updatedEdge}
+				};
+			}
+			return e;
+		});
+		commitGraph();
+	}
 </script>
 
 <div class="canvas">
-    <SvelteFlow {nodes} {edges} {nodeTypes} initialViewport={graph.viewport} fitView={graph.viewport === undefined}
-                onnodedragstop={handleNodeDragStop}
-                onpanecontextmenu={handlePaneContextMenu}
-				onmoveend={handleViewportChange}
-				ondelete={handleDeleteItem}
+	<SvelteFlow {edges} fitView={graph.viewport === undefined} initialViewport={graph.viewport} {nodeTypes} {nodes}
 				onconnect={handleConnect}
-    >
-        <MiniMap/>
-        <Controls/>
-        <Background variant={BackgroundVariant.Dots}/>
-        {#if contextMenu === 'pane'}
-            <PaneContextMenu x={contextMenuPosition.x} y={contextMenuPosition.y} onClose={handleCloseContextMenu} onCreateNode={handleNewNode}/>
+				ondelete={handleDeleteItem}
+				onedgeclick={handleEdgeClick}
+				onmoveend={handleViewportChange}
+				onnodedragstop={handleNodeDragStop}
+				onpanecontextmenu={handlePaneContextMenu}
+	>
+		<MiniMap/>
+		<Controls/>
+		<Background variant={BackgroundVariant.Dots}/>
+		{#if contextMenu === 'pane'}
+			<PaneContextMenu x={contextMenuPosition.x} y={contextMenuPosition.y} onClose={handleCloseContextMenu}
+							 onCreateNode={handleNewNode}/>
 		{/if}
-    </SvelteFlow>
+	</SvelteFlow>
 </div>
 
 <EditNodeDialog node={editingNode} onClose={() => editingNode = null} onSave={handleUpdateNode}></EditNodeDialog>
+<EditEdgeDialog
+	allEdges={graph.edges}
+	edge={editingEdge}
+	onClose={() => editingEdge = null}
+	onSave={handleUpdateEdge}
+/>
 
 <style>
-    .canvas {
-        width: 100%;
-        height: 600px;
-        border: 2px dashed #d1d5db;
-        border-radius: 8px;
-    }
+	.canvas {
+		width: 100%;
+		height: 600px;
+		border: 2px dashed #d1d5db;
+		border-radius: 8px;
+	}
 </style>

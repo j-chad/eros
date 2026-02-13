@@ -1,4 +1,3 @@
-<!-- EditEdgeDialog.svelte -->
 <script lang="ts">
 	import type { Edge } from '$lib/types';
 
@@ -20,20 +19,21 @@
 		choice_label: ''
 	});
 
+	const neighbourEdges = $derived(() => {
+		if (!edge) return [];
+		return allEdges.filter(e => e.from === edge.from && e.id !== edge.id);
+	});
+
 	// Check if this edge's source has multiple outgoing edges
 	const hasMultipleOutgoing = $derived(() => {
 		if (!edge) return false;
-		return allEdges.filter(e => e.from === edge.from).length > 1;
+		return neighbourEdges().length > 0;
 	});
 
 	// Check if the label is unique among edges from the same source
 	const isLabelUnique = $derived(() => {
-		if (!edge || !editForm.choice_label.trim()) return true;
-		return !allEdges.some(e =>
-			e.from === edge.from &&
-			e.id !== edge.id &&
-			e.choice_label === editForm.choice_label.trim()
-		);
+		if (!edge) return true;
+		return !neighbourEdges().some(e => e.choice_label?.trim() === editForm.choice_label.trim());
 	});
 
 	const showError = $derived(hasMultipleOutgoing() && !editForm.choice_label.trim());
