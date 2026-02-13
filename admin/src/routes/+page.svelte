@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {Plus, RefreshCw, Trash2} from 'lucide-svelte';
+	import {FileUp, Plus, RefreshCw, Trash2} from 'lucide-svelte';
     import {api} from "$lib/api";
     import Card from "$lib/components/Card.svelte";
     import Button from "$lib/components/Button.svelte";
@@ -8,6 +8,7 @@
     import Table from "$lib/components/Table.svelte";
     import EditableField from "$lib/components/EditableField.svelte";
     import Header from "$lib/components/Header.svelte";
+	import {buildRegistrationPdf} from "$lib/pdf/registration";
 
     let {data} = $props();
 
@@ -44,6 +45,22 @@
             device.device_info = newValue;
         }
     }
+
+	async function handleExportPDF() {
+		const blob = await buildRegistrationPdf({
+			code: registrationCode!.code,
+			qrUrl: `${window.location.origin}/register?code=${registrationCode!.code}`,
+		})
+
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		link.href = url;
+		link.download = `registration_${registrationCode!.code}.pdf`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
+	}
 </script>
 
 <Header title="Registration Management"/>
@@ -64,6 +81,12 @@
                 {/snippet}
                 Delete
             </Button>
+			<Button variant="secondary" onclick={handleExportPDF}>
+				{#snippet icon()}
+					<FileUp size={16}/>
+				{/snippet}
+				Export PDF
+			</Button>
         {/if}
     {/snippet}
 
