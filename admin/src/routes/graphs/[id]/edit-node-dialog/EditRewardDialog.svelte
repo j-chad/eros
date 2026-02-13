@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { RewardNode } from '$lib/types';
-	import { Image, Video, Gift, Star, Sparkles } from 'lucide-svelte';
+	import type {RewardNode} from '$lib/types';
+	import {Calendar, Gift, Image, Sparkles, Star, Video} from 'lucide-svelte';
 
 	let {
 		node,
@@ -12,11 +12,14 @@
 		onCancel: () => void;
 	} = $props();
 
+	let formElement: HTMLFormElement;
+
 	let editForm = $state({
 		title: node.title,
 		description: node.description || '',
 		reward_type: node.data?.reward_type || 'favour',
-		payload: node.data?.payload || ''
+		payload: node.data?.payload || '',
+		give_favours: node.data?.give_favours || 0
 	});
 
 	// Parse payload based on type for easier editing
@@ -25,34 +28,48 @@
 			const parsed = editForm.payload ? JSON.parse(editForm.payload) : {};
 			return {
 				url: parsed.url || '',
-				amount: parsed.amount || 0,
-				coupon_data: parsed.coupon_data || {}
+				coupon_data: parsed.coupon_data || {},
+				event_title: parsed.event_title || '',
+				event_start: parsed.event_start || '',
+				event_end: parsed.event_end || '',
+				event_location: parsed.event_location || '',
+				event_notes: parsed.event_notes || ''
 			};
 		} catch {
 			return {
 				url: '',
-				amount: 0,
-				coupon_data: {}
+				coupon_data: {},
+				event_title: '',
+				event_start: '',
+				event_end: '',
+				event_location: '',
+				event_notes: ''
 			};
 		}
 	});
 
 	function updatePayload(updates: Partial<typeof payloadForm>) {
-		const current = payloadForm;
-		const updated = { ...current, ...updates };
+		const updated = { ...payloadForm, ...updates };
 
 		// Create clean payload based on type
 		let payload: any = {};
 		if (editForm.reward_type === 'video' || editForm.reward_type === 'image') {
 			payload = { url: updated.url };
-		} else if (editForm.reward_type === 'favour') {
-			payload = { amount: updated.amount };
 		} else if (editForm.reward_type === 'coupon') {
 			payload = {
 				url: updated.url,
 				coupon_data: updated.coupon_data
 			};
+		} else if (editForm.reward_type === 'calendar') {
+			payload = {
+				event_title: updated.event_title,
+				event_start: updated.event_start,
+				event_end: updated.event_end,
+				event_location: updated.event_location,
+				event_notes: updated.event_notes
+			};
 		}
+		// favour type has no payload, just give_favours
 
 		editForm.payload = JSON.stringify(payload);
 	}
@@ -68,7 +85,7 @@
 			data: {
 				reward_type: editForm.reward_type,
 				payload: editForm.payload,
-				give_favours: 0
+				give_favours: editForm.give_favours
 			}
 		};
 
@@ -79,13 +96,14 @@
 		{ value: 'favour', label: 'Favour Points', icon: Star, description: 'Award currency to the user' },
 		{ value: 'image', label: 'Image', icon: Image, description: 'Show a celebratory image' },
 		{ value: 'video', label: 'Video', icon: Video, description: 'Play a reward video' },
+		{ value: 'calendar', label: 'Calendar Event', icon: Calendar, description: 'Add event to calendar' },
 		{ value: 'coupon', label: 'Coupon', icon: Gift, description: 'Apple Wallet coupon' }
 	];
 </script>
 
 <h2>🎁 Edit Reward Node</h2>
 
-<form onsubmit={handleSubmit}>
+<form bind:this={formElement} onsubmit={handleSubmit}>
 	<div class="form-layout">
 		<!-- Left Column -->
 		<div class="form-column">
@@ -108,6 +126,20 @@
 					rows="3"
 					placeholder="Describe what the user accomplished"
 				></textarea>
+			</div>
+
+			<div class="form-group">
+				<label for="give_favours">Favour Points</label>
+				<input
+					id="give_favours"
+					type="number"
+					min="0"
+					bind:value={editForm.give_favours}
+					placeholder="0"
+				/>
+				<span class="help-text">
+					💰 Optional: Award favour points with any reward type
+				</span>
 			</div>
 
 			<div class="form-group">
@@ -139,29 +171,20 @@
 			</div>
 
 			{#if editForm.reward_type === 'favour'}
-				<div class="form-group">
-					<label for="amount">Favour Amount</label>
-					<input
-						id="amount"
-						type="number"
-						min="1"
-						value={payloadForm.amount}
-						oninput={(e) => updatePayload({ amount: parseInt(e.currentTarget.value) || 0 })}
-						required
-						placeholder="100"
-					/>
-					<span class="help-text">
-						💰 How many favour points to award
-					</span>
+				<div class="info-box">
+					<strong>💰 Favour Points Only</strong>
+					<p>This reward will award favour points to the user. Configure the amount in the "Favour Points" field on the left.</p>
 				</div>
 
-				<div class="preview-box favour-preview">
-					<div class="favour-display">
-						<Star size={48} class="favour-icon" />
-						<div class="favour-amount">+{payloadForm.amount || 0}</div>
-						<div class="favour-label">Favour Points</div>
+				{#if editForm.give_favours > 0}
+					<div class="preview-box favour-preview">
+						<div class="favour-display">
+							<Star size={48} class="favour-icon" />
+							<div class="favour-amount">+{editForm.give_favours}</div>
+							<div class="favour-label">Favour Points</div>
+						</div>
 					</div>
-				</div>
+				{/if}
 
 			{:else if editForm.reward_type === 'image'}
 				<div class="form-group">
@@ -178,6 +201,13 @@
 						🖼️ URL to the reward image (GIF, PNG, JPG)
 					</span>
 				</div>
+
+				{#if editForm.give_favours > 0}
+					<div class="favour-badge">
+						<Star size={16} />
+						<span>+{editForm.give_favours} Favours</span>
+					</div>
+				{/if}
 
 				<div class="preview-box">
 					{#if payloadForm.url}
@@ -206,6 +236,13 @@
 					</span>
 				</div>
 
+				{#if editForm.give_favours > 0}
+					<div class="favour-badge">
+						<Star size={16} />
+						<span>+{editForm.give_favours} Favours</span>
+					</div>
+				{/if}
+
 				<div class="preview-box">
 					{#if payloadForm.url}
 						<video src={payloadForm.url} controls class="preview-media">
@@ -217,6 +254,76 @@
 							<p>Enter a video URL to preview</p>
 						</div>
 					{/if}
+				</div>
+
+			{:else if editForm.reward_type === 'calendar'}
+				<div class="form-group">
+					<label for="event_title">Event Title</label>
+					<input
+						id="event_title"
+						type="text"
+						value={payloadForm.event_title}
+						oninput={(e) => updatePayload({ event_title: e.currentTarget.value })}
+						required
+						placeholder="Team Meeting"
+					/>
+				</div>
+
+				<div class="form-row">
+					<div class="form-group">
+						<label for="event_start">Start Date & Time</label>
+						<input
+							id="event_start"
+							type="datetime-local"
+							value={payloadForm.event_start}
+							oninput={(e) => updatePayload({ event_start: e.currentTarget.value })}
+							required
+						/>
+					</div>
+
+					<div class="form-group">
+						<label for="event_end">End Date & Time</label>
+						<input
+							id="event_end"
+							type="datetime-local"
+							value={payloadForm.event_end}
+							oninput={(e) => updatePayload({ event_end: e.currentTarget.value })}
+							required
+						/>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label for="event_location">Location (Optional)</label>
+					<input
+						id="event_location"
+						type="text"
+						value={payloadForm.event_location}
+						oninput={(e) => updatePayload({ event_location: e.currentTarget.value })}
+						placeholder="Conference Room A"
+					/>
+				</div>
+
+				<div class="form-group">
+					<label for="event_notes">Notes (Optional)</label>
+					<textarea
+						id="event_notes"
+						oninput={(e) => updatePayload({ event_notes: e.currentTarget.value })}
+						rows="3"
+						placeholder="Bring your laptop"
+					>{payloadForm.event_notes}</textarea>
+				</div>
+
+				{#if editForm.give_favours > 0}
+					<div class="favour-badge">
+						<Star size={16} />
+						<span>+{editForm.give_favours} Favours</span>
+					</div>
+				{/if}
+
+				<div class="info-box">
+					<strong>📅 Calendar Integration</strong>
+					<p>Users will be prompted to add this event to their device calendar.</p>
 				</div>
 
 			{:else if editForm.reward_type === 'coupon'}
@@ -234,6 +341,13 @@
 						🎫 URL to Apple Wallet .pkpass file
 					</span>
 				</div>
+
+				{#if editForm.give_favours > 0}
+					<div class="favour-badge">
+						<Star size={16} />
+						<span>+{editForm.give_favours} Favours</span>
+					</div>
+				{/if}
 
 				<div class="info-box">
 					<strong>📱 Apple Wallet Integration</strong>
@@ -305,6 +419,12 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+	}
+
+	.form-row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.75rem;
 	}
 
 	label {
@@ -382,6 +502,20 @@
 		font-size: 0.75rem;
 		color: #6b7280;
 		margin-top: 0.125rem;
+	}
+
+	.favour-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.375rem 0.75rem;
+		background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+		border: 1px solid #fbbf24;
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: #92400e;
+		width: fit-content;
 	}
 
 	.preview-box {
