@@ -2,6 +2,11 @@ export interface APIError {
     code: string;
     message: string;
     details?: Record<string, unknown>;
+	internal?: string;
+}
+
+function isAPIError(error: unknown): error is APIError {
+	return typeof error === 'object' && error !== null && 'code' in error && 'message' in error;
 }
 
 export interface RegistrationToken {

@@ -11,11 +11,5 @@ export const load: PageLoad = async ({ params }) => {
         throw error(400, 'Graph ID is required');
     }
 
-    try {
-        const graph = await api.graph.get(id);
-        return { graph };
-    } catch (err) {
-        console.error('Failed to load graph:', err);
-        throw error(404, 'Graph not found');
-    }
+	return { graph: await api.graph.get(id) };
 };

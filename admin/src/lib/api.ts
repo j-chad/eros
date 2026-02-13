@@ -14,7 +14,13 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api
 
 async function request<T = void>(endpoint: string, options: RequestInit = {}): Promise<T> {
     if (!auth.apiKey) {
-        throw error(401, 'Unauthorized: No API key provided');
+        throw error(401, {
+			message: 'Unauthorized: API key is missing',
+			base: API_BASE,
+			endpoint,
+			method: options.method ?? 'GET',
+			body: null,
+		});
     }
 
     const headers: HeadersInit = {
@@ -35,7 +41,8 @@ async function request<T = void>(endpoint: string, options: RequestInit = {}): P
             base: API_BASE,
             endpoint,
             method: options.method ?? 'GET',
-        } as App.Error);
+			body: null,
+        });
     }
 
     const contentType = response.headers.get('content-type');
@@ -46,10 +53,11 @@ async function request<T = void>(endpoint: string, options: RequestInit = {}): P
 
         throw error(response.status, {
             message: typeof body === 'string' ? body : body.message,
-            path: endpoint,
-            method: options.method ?? 'GET',
-            body
-        } as App.Error);
+			base: API_BASE,
+			endpoint,
+			method: options.method ?? 'GET',
+			body,
+        });
     }
 
     if (response.status === 204) {
