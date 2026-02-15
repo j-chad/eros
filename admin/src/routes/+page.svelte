@@ -53,13 +53,7 @@
 		})
 
 		const url = URL.createObjectURL(blob);
-		const link = document.createElement('a');
-		link.href = url;
-		link.download = `registration_${registrationCode!.code}.pdf`;
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-		URL.revokeObjectURL(url);
+		window.open(url, '_blank');
 	}
 </script>
 
