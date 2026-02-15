@@ -1,13 +1,20 @@
 import { db, promisifyRequest } from '../db';
 
-export interface KVSchema {
-	'auth:session': {
+export enum KVKey {
+	AuthSession = 'auth:session',
+}
+
+interface KVValueMap {
+	[KVKey.AuthSession]: {
 		token: string;
 		expiresAt: number;
 	};
 }
 
-export type KVKey = keyof KVSchema;
+export type KVSchema = {
+	[K in KVKey]: KVValueMap[K];
+};
+
 export type KVValue<K extends KVKey> = KVSchema[K];
 
 export class KVStore {
