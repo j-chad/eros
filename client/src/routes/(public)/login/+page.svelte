@@ -27,10 +27,10 @@
 	let stream: MediaStream | null = null;
 	let rafId: number | null = null;
 
-	let videoEl: HTMLVideoElement | null = null;
-	let canvasEl: HTMLCanvasElement | null = null;
-	let codeEl: HTMLInputElement | null = null;
-	let nameEl: HTMLInputElement | null = null;
+	let videoEl = $state<HTMLVideoElement | null>(null);
+	let canvasEl = $state<HTMLCanvasElement | null>(null);
+	let codeEl = $state<HTMLInputElement | null>(null);
+	let nameEl = $state<HTMLInputElement | null>(null);
 
 	onMount(async () => {
 		canScan =

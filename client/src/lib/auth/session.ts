@@ -1,6 +1,11 @@
 import {browser} from '$app/environment';
 import {KVKey, KVStore} from "$lib/db/stores/kv";
 
+export async function isAuthenticated(): Promise<boolean> {
+	const token = await readCachedToken();
+	return !!token;
+}
+
 export async function readCachedToken(): Promise<string | null> {
 	if (!browser) return null;
 	const cached = await KVStore.get(KVKey.AuthSession);
