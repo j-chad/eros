@@ -1,5 +1,5 @@
 import QRCode from "qrcode";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import {PDFDocument, PDFPage, type PDFPageDrawRectangleOptions, rgb, StandardFonts} from "pdf-lib";
 
 type Options = {
 	code: string;
@@ -53,7 +53,7 @@ export async function buildRegistrationPdf({
 		height: cardH,
 		color: rgb(1, 0.98, 0.995), // very soft pink-white
 		borderColor: rgb(0.92, 0.7, 0.82),
-		borderWidth: 1.2
+		borderWidth: 1.2,
 	});
 
 	// Header
@@ -86,14 +86,15 @@ export async function buildRegistrationPdf({
 	const pillX = margin + (cardW - pillW) / 2;
 	const pillY = qrY - 66;
 
-	page.drawRectangle({
+	drawRoundedRect(page, {
 		x: pillX,
 		y: pillY,
 		width: pillW,
 		height: pillH,
 		color: rgb(1, 0.92, 0.96),
 		borderColor: rgb(0.92, 0.6, 0.78),
-		borderWidth: 1
+		borderWidth: 1,
+		borderRadius: 22
 	});
 
 	const codeLabel = `Code: ${code}`;
@@ -147,4 +148,37 @@ function dataUrlToBytes(dataUrl: string) {
 	const bytes = new Uint8Array(bin.length);
 	for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
 	return bytes;
+}
+
+function drawRoundedRect(page: PDFPage, options: {
+	x: number,
+	y: number,
+	width: number,
+	height: number,
+	color: ReturnType<typeof rgb>,
+	borderColor: ReturnType<typeof rgb>,
+	borderWidth: number,
+	borderRadius: number
+}) {
+	// pdf-lib doesn't support rounded rects, so we'd have to draw them manually with svg
+	const { x, y, width, height, color, borderColor, borderWidth, borderRadius } = options;
+	const { height: pageHeight } = page.getSize();
+
+	const correctedY = pageHeight - y - height;
+
+	const r = Math.min(borderRadius, width / 2, height / 2);
+	const path = `
+		M ${x + r} ${correctedY}
+		h ${width - 2 * r}
+		a ${r} ${r} 0 0 1 ${r} ${r}
+		v ${height - 2 * r}
+		a ${r} ${r} 0 0 1 -${r} ${r}
+		h -${width - 2 * r}
+		a ${r} ${r} 0 0 1 -${r} -${r}
+		v -${height - 2 * r}
+		a ${r} ${r} 0 0 1 ${r} -${r}
+		Z
+	`;
+	console.log("Rounded rect path:", path);
+	page.drawSvgPath(path, { x, y, color, borderColor, borderWidth });
 }
