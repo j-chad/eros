@@ -4,10 +4,7 @@ export const DB_VERSION = 1;
 export interface DBSchema {
 	kv: {
 		key: string;
-		value: {
-			key: string;
-			value: any;
-		}
+		value: unknown
 	};
 }
 

@@ -7,7 +7,6 @@ export interface KVSchema {
 	};
 }
 
-
 export type KVKey = keyof KVSchema;
 export type KVValue<K extends KVKey> = KVSchema[K];
 
@@ -27,7 +26,7 @@ export class KVStore {
 	static async get<K extends KVKey>(key: K): Promise<KVValue<K> | null> {
 		const store = await db.getStore('kv', 'readonly');
 		const result = await promisifyRequest(store.get(key));
-		return result ? result.value : null;
+		return result ? result as KVValue<K> : null;
 	}
 
 	// Delete a value
@@ -67,7 +66,7 @@ export class KVStore {
 			keys.map(async (key) => {
 				const result = await promisifyRequest(store.get(key));
 				if (result) {
-					results.set(key, result.value);
+					results.set(key, result as KVValue<K>);
 				}
 			})
 		);
@@ -96,29 +95,5 @@ export class KVStore {
 	): Promise<KVValue<K>> {
 		const value = await this.get(key);
 		return value ?? defaultValue;
-	}
-
-	// Update a value (only if it exists)
-	static async update<K extends KVKey>(
-		key: K,
-		updater: (current: KVValue<K>) => KVValue<K>
-	): Promise<boolean> {
-		const store = await db.getStore('kv', 'readwrite');
-		const current = await promisifyRequest(store.get(key));
-
-		if (!current) {
-			return false;
-		}
-
-		const updated = updater(current.value);
-		await promisifyRequest(
-			store.put({
-				key,
-				value: updated,
-				timestamp: Date.now()
-			})
-		);
-
-		return true;
 	}
 }

@@ -1,5 +1,12 @@
 import {createObjectStores, DB_NAME, DB_VERSION, type DBSchema} from "./schema";
 
+interface TypedStore<T extends keyof DBSchema> extends IDBObjectStore {
+	add(value: DBSchema[T]['value'], key?: DBSchema[T]['key']): IDBRequest<IDBValidKey>;
+	get(key: DBSchema[T]['key']): IDBRequest<DBSchema[T]['value'] | undefined>;
+	put(value: DBSchema[T]['value'], key?: DBSchema[T]['key']): IDBRequest<IDBValidKey>;
+	delete(key: DBSchema[T]['key']): IDBRequest<undefined>;
+}
+
 class Database {
 	private dbp: Promise<IDBDatabase> | null = null;
 
@@ -24,7 +31,7 @@ class Database {
 	async getStore<T extends keyof DBSchema>(
 		storeName: T,
 		mode: IDBTransactionMode = 'readonly'
-	): Promise<IDBObjectStore> {
+	): Promise<TypedStore<T>> {
 		const db = await this.init()
 		const transaction = db.transaction(storeName, mode);
 		return transaction.objectStore(storeName);
