@@ -8,8 +8,8 @@ export async function initAuth(){
 	authToken.set(token);
 }
 
-export async function setToken(token: string, expiresAt: number) {
-	await setTokenDB(token, expiresAt)
+export async function setToken(token: string) {
+	await setTokenDB(token)
 	authToken.set(token);
 }
 

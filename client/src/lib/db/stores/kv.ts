@@ -5,10 +5,7 @@ export enum KVKey {
 }
 
 interface KVValueMap {
-	[KVKey.AuthSession]: {
-		token: string;
-		expiresAt: number;
-	};
+	[KVKey.AuthSession]: string;
 }
 
 export type KVSchema = {

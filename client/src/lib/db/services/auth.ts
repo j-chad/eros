@@ -8,21 +8,12 @@ export async function isAuthenticated(): Promise<boolean> {
 
 export async function getToken(): Promise<string | null> {
 	if (!browser) return null;
-	const cached = await KVStore.get(KVKey.AuthSession);
-	if (!cached) return null;
-
-	const now = Math.floor(Date.now() / 1000);
-	if (cached.expiresAt && cached.expiresAt <= now) {
-		await clearToken()
-		return null;
-	}
-
-	return cached.token;
+	return await KVStore.get(KVKey.AuthSession);
 }
 
-export async function setToken(token: string, expiresAt: number): Promise<void> {
+export async function setToken(token: string): Promise<void> {
 	if (!browser) return;
-	await KVStore.set(KVKey.AuthSession, { token, expiresAt });
+	await KVStore.set(KVKey.AuthSession, token);
 }
 
 export async function clearToken(): Promise<void> {
