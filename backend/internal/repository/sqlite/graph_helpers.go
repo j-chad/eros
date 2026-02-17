@@ -45,7 +45,7 @@ func (s *sqliteDB) getGraph(ctx context.Context, graphID string) (*models.Graph,
 
 // scanNodeFull scans a row from node_full view into a Node struct
 func (s *sqliteDB) scanNodeFull(scanner interface {
-	Scan(dest ...interface{}) error
+	Scan(dest ...any) error
 }) (models.Node, error) {
 	var node models.Node
 	var uiPositionX sql.NullFloat64
