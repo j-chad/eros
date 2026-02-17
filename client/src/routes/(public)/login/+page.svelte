@@ -51,14 +51,13 @@
 
 	onDestroy(() => stopScan());
 
-	function formatRegCode(value: string) {
-		const cleaned = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
-		if (cleaned.length <= 4) return cleaned;
-		return `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
+	function formatRegCode(value: string): string {
+		return value
 	}
 
 	function isValidRegCode(value: string) {
-		return /^[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(value);
+		return true
+		// return /^[A-Z0-9]{4}(?:-[A-Z0-9]{4}){2}$/.test(value);
 	}
 
 	function parseRegisterUrlToCode(raw: string): string | null {
@@ -80,11 +79,11 @@
 
 		// Convert code param into our expected XXXX-XXXX (accept 8 raw alphanum or dashed)
 		const upper = codeParam.toUpperCase();
-		const dashed = upper.match(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/)?.[0];
-		if (dashed) return dashed;
-
-		const raw8 = upper.replace(/[^A-Z0-9]/g, '').match(/^[A-Z0-9]{8}$/)?.[0];
-		if (raw8) return `${raw8.slice(0, 4)}-${raw8.slice(4)}`;
+		// const dashed = upper.match(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/)?.[0];
+		// if (dashed) return dashed;
+		//
+		// const raw8 = upper.replace(/[^A-Z0-9]/g, '').match(/^[A-Z0-9]{8}$/)?.[0];
+		// if (raw8) return `${raw8.slice(0, 4)}-${raw8.slice(4)}`;
 
 		return null;
 	}
@@ -281,14 +280,14 @@
 						<label class="form-control w-full animate-popIn">
 							<div class="label">
 								<span class="label-text font-semibold">Registration code</span>
-								<span class="label-text-alt opacity-60">XXXX-XXXX</span>
+								<span class="label-text-alt opacity-60">XXXX-XXXX-XXXX</span>
 							</div>
 							<input
 								bind:this={codeEl}
 								class="input input-bordered input-secondary w-full rounded-2xl text-lg tracking-widest"
 								inputmode="text"
 								autocomplete="one-time-code"
-								placeholder="ABCD-1234"
+								placeholder="ABCD-1234-XYZ9"
 								value={regCodeRaw}
 								oninput={(e) => regCodeRaw = e.currentTarget.value}
 								onkeydown={(e) => e.key === 'Enter' && goNext()}
