@@ -1,22 +1,31 @@
 package client
 
 import (
+	"backend/internal/models"
 	"backend/internal/service"
 	"backend/pkg/apierror"
 	"backend/pkg/response"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 )
 
 func (h *Handler) RegisterDevice(w http.ResponseWriter, r *http.Request) {
-	registrationCode := r.FormValue("registration_code")
-	if registrationCode == "" {
-		response.Error(r.Context(), w, apierror.BadRequest("registration_code is required"))
+	var req models.RegisterDeviceRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(r.Context(), w, apierror.BadRequest("invalid request body"))
 		return
 	}
 
-	clientDeviceInfo := r.FormValue("device_info")
+	if err := req.Validate(); err != nil {
+		response.Error(r.Context(), w, err)
+		return
+	}
+
+	registrationCode := req.RegistrationCode
+	clientDeviceInfo := req.DeviceInfo
+
 	userAgent := r.UserAgent()
 	ipAddress := r.RemoteAddr
 	deviceInfo := fmt.Sprintf("UserAgent: %s; IPAddress: %s; Info: %s", userAgent, ipAddress, clientDeviceInfo)

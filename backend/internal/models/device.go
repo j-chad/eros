@@ -1,6 +1,22 @@
 package models
 
-import "time"
+import (
+	"backend/pkg/apierror"
+	"time"
+)
+
+type RegisterDeviceRequest struct {
+	DeviceInfo       string `json:"device_info"`
+	RegistrationCode string `json:"registration_code"`
+}
+
+func (r RegisterDeviceRequest) Validate() *apierror.APIError {
+	if r.RegistrationCode == "" {
+		return apierror.BadRequest("registration_code is required")
+	}
+
+	return nil
+}
 
 type Device struct {
 	ID           string    `json:"id"`
