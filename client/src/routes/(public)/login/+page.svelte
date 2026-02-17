@@ -5,6 +5,7 @@
 	import Button from "$lib/ui/base/Button.svelte";
 	import {ArrowLeft, ArrowRight} from "lucide-svelte";
 	import Card from "$lib/ui/base/Card.svelte";
+	import {login} from "$lib/services/auth";
 
 	type Mode = 'scan' | 'manual';
 	let mode = $state<Mode>('scan');
@@ -204,11 +205,10 @@
 
 		busy = true;
 		try {
-			localStorage.setItem('eros.regCode', regCode);
-			localStorage.setItem('eros.deviceName', deviceName.trim());
+			await login(regCode, deviceName);
 			window.location.href = '/';
 		} catch {
-			error = 'Could not save your setup. Please try again.';
+			error = 'Unable to log in. Please try again.';
 		} finally {
 			busy = false;
 		}

@@ -1,5 +1,6 @@
 import {error} from "@sveltejs/kit";
-import {readCachedToken} from "$lib/services/session";
+import {authToken} from "./auth";
+import {get} from "svelte/store";
 
 const API_BASE: string = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api';
 
@@ -11,7 +12,7 @@ export interface APIError {
 }
 
 export async function request<T = void>(endpoint: string, options: RequestInit = {}): Promise<T> {
-	const token = await readCachedToken()
+	const token = get(authToken)
 
 	if (!token) {
 		throw error(401, {
