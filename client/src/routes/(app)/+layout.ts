@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import { browser } from '$app/environment';
-import {isAuthenticated} from '$lib/auth/session';
+import {isAuthenticated} from '$lib/services/session';
 
 export const ssr = false;
 
