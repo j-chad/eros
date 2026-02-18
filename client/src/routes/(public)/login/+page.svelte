@@ -57,7 +57,6 @@
 
 	function isValidRegCode(value: string) {
 		return true
-		// return /^[A-Z0-9]{4}(?:-[A-Z0-9]{4}){2}$/.test(value);
 	}
 
 	function parseRegisterUrlToCode(raw: string): string | null {
