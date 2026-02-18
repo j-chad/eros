@@ -10,7 +10,7 @@ import (
 )
 
 // JSON writes a JSON response with the given status code
-func JSON(w http.ResponseWriter, status int, data interface{}) {
+func JSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
@@ -26,8 +26,8 @@ func Error(ctx context.Context, w http.ResponseWriter, err *apierror.APIError) {
 	}
 
 	// Build error response
-	errorResponse := map[string]interface{}{
-		"error": map[string]interface{}{
+	errorResponse := map[string]any{
+		"error": map[string]any{
 			"code":    err.Code,
 			"message": err.Message,
 		},
@@ -35,12 +35,12 @@ func Error(ctx context.Context, w http.ResponseWriter, err *apierror.APIError) {
 
 	// Add details if present
 	if err.Details != nil && len(err.Details) > 0 {
-		errorResponse["error"].(map[string]interface{})["details"] = err.Details
+		errorResponse["error"].(map[string]any)["details"] = err.Details
 	}
 
 	// Add internal error if admin
 	if authctx.IsAdmin(ctx) && err.Err != nil {
-		errorResponse["error"].(map[string]interface{})["internal"] = err.Err.Error()
+		errorResponse["error"].(map[string]any)["internal"] = err.Err.Error()
 	}
 
 	JSON(w, err.StatusCode, errorResponse)

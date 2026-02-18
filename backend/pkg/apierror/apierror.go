@@ -7,11 +7,11 @@ import (
 )
 
 type APIError struct {
-	Code       string                 `json:"code"`
-	Message    string                 `json:"message"`
-	StatusCode int                    `json:"-"` // Not serialized to JSON
-	Details    map[string]interface{} `json:"details,omitempty"`
-	Err        error                  `json:"err,omitempty"`
+	Code       string         `json:"code"`
+	Message    string         `json:"message"`
+	StatusCode int            `json:"-"` // Not serialized to JSON
+	Details    map[string]any `json:"details,omitempty"`
+	Err        error          `json:"err,omitempty"`
 }
 
 func (e *APIError) Error() string {
@@ -26,15 +26,15 @@ func (e *APIError) Unwrap() error {
 }
 
 // WithDetails adds additional context to the error
-func (e *APIError) WithDetails(details map[string]interface{}) *APIError {
+func (e *APIError) WithDetails(details map[string]any) *APIError {
 	e.Details = details
 	return e
 }
 
 // WithDetail adds a single detail field
-func (e *APIError) WithDetail(key string, value interface{}) *APIError {
+func (e *APIError) WithDetail(key string, value any) *APIError {
 	if e.Details == nil {
-		e.Details = make(map[string]interface{})
+		e.Details = make(map[string]any)
 	}
 	e.Details[key] = value
 	return e
