@@ -33,7 +33,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/device", h.client.RegisterDevice)
 
 	adminMux := http.NewServeMux()
-	adminMux.HandleFunc("GET /api/admin/ping", h.admin.Ping)
+	adminMux.HandleFunc("GET /api/admin/ping", ping)
 	adminMux.HandleFunc("POST /api/admin/registration-codes", h.admin.CreateRegistrationCode)
 	adminMux.HandleFunc("GET /api/admin/registration-codes", h.admin.GetRegistrationCode)
 	adminMux.HandleFunc("DELETE /api/admin/registration-codes", h.admin.InvalidateRegistrationCode)
@@ -54,6 +54,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.Handle("/api/admin/", withAdminAuth(adminMux, *h.auth))
 
 	clientMux := http.NewServeMux()
+	clientMux.HandleFunc("GET /api/ping", ping)
 	clientMux.HandleFunc("GET /api/favours/choices", h.client.ListFavourChoices)
 	clientMux.HandleFunc("GET /api/favours", h.client.GetFavourCount)
 	clientMux.HandleFunc("POST /api/favours/request", h.client.RequestFavour)
@@ -70,4 +71,8 @@ func routeNotFound(w http.ResponseWriter, r *http.Request) {
 	response.Error(r.Context(), w, apierror.NotFound("no such route").
 		WithDetail("path", r.URL.Path).
 		WithDetail("method", r.Method))
+}
+
+func ping(w http.ResponseWriter, _ *http.Request) {
+	response.NoContent(w)
 }
