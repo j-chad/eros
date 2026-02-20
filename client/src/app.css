@@ -1,11 +1,12 @@
 @import "tailwindcss";
-@plugin "daisyui" {}
-
+@plugin "daisyui" {
+	themes: ["valentine"];
+}
 @plugin "daisyui/theme" {
 	name: "valentine";
 	default: true;
-	--color-secondary: oklch(82% 0.12 346.018);
-	--color-secondary-content: oklch(52% 0.223 3.958);
+	--color-secondary: var(--color-pink-300);
+	--color-secondary-content: var(--color-pink-900);
 }
 
 
