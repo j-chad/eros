@@ -9,11 +9,7 @@ export const ssr = false;
 export async function load({ url }) {
 	if (!browser) return;
 
-	const authed = await isAuthenticated()
-	const token = get(authToken)
-	console.log('isAuthenticated', authed, 'token', token);
-
-	if (!authed) {
+	if (!await isAuthenticated()) {
 		const returnTo = encodeURIComponent(url.pathname + url.search);
 		throw redirect(307, `/login?returnTo=${returnTo}`);
 	}
