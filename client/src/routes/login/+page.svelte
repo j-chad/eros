@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import {onDestroy, onMount} from 'svelte';
 	import jsQR from 'jsqr';
 	import BrandHeader from "$lib/ui/BrandHeader.svelte";
 	import Button from "$lib/ui/base/Button.svelte";
@@ -203,9 +203,12 @@
 
 		busy = true;
 		try {
+			console.log('Logging in with code', regCode, 'and device name', deviceName);
 			await login(regCode, deviceName);
-			window.location.href = '/';
-		} catch {
+
+			window.location.href = new URLSearchParams(window.location.search).get('returnTo') ?? '/';
+		} catch (err) {
+			console.error('Login failed', err);
 			error = 'Unable to log in. Please try again.';
 		} finally {
 			busy = false;

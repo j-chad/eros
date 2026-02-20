@@ -1,5 +1,7 @@
 import {redirect} from "@sveltejs/kit";
+import {isAuthenticated} from "$lib/services/auth";
+import {browser} from "$app/environment";
 
-export function load() {
-	throw redirect(307, '/login');
+export async function load() {
+	return redirect(307, '/test');
 }

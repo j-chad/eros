@@ -18,5 +18,5 @@ export function login(registration_code: string, device_info: string): Promise<s
 			registration_code,
 			device_info,
 		}),
-	});
+	}, false);
 }
