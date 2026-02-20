@@ -9,7 +9,11 @@ interface KVValueMap {
 }
 
 export type KVSchema = {
-	[K in KVKey]: KVValueMap[K];
+	[K in KVKey]: {
+		key: K;
+		value: KVValueMap[K]
+		timestamp: number;
+	};
 };
 
 export type KVValue<K extends KVKey> = KVSchema[K];
