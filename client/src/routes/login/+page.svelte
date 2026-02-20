@@ -299,6 +299,7 @@
 
 						<Button
 							block
+							variant="primary"
 							disabled={!regCodeValid}
 							onclick={goNext}
 						>
@@ -351,7 +352,7 @@
 							Back
 						</Button>
 						<button
-							class="btn btn-secondary flex-1 rounded-2xl"
+							class="btn btn-primary flex-1 rounded-2xl"
 							disabled={!deviceNameValid || busy}
 							onclick={finish}
 						>
