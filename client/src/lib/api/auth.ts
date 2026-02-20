@@ -10,7 +10,6 @@ export async function loadToken(): Promise<string| null> {
 }
 
 export async function setToken(token: string) {
-	console.log('Setting auth token:', token);
 	await KVStore.set(KVKey.AuthSession, token);
 	authToken.set(token);
 }

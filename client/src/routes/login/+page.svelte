@@ -203,9 +203,7 @@
 
 		busy = true;
 		try {
-			console.log('Logging in with code', regCode, 'and device name', deviceName);
 			await login(regCode, deviceName);
-
 			window.location.href = new URLSearchParams(window.location.search).get('returnTo') ?? '/';
 		} catch (err) {
 			console.error('Login failed', err);
