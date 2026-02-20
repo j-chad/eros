@@ -1,11 +1,15 @@
 import {createObjectStores, DB_NAME, DB_VERSION, type DBSchema} from "./schema";
 
-interface TypedStore<T extends keyof DBSchema> extends IDBObjectStore {
-	add(value: DBSchema[T]['value'], key?: DBSchema[T]['key']): IDBRequest<IDBValidKey>;
-	get(key: DBSchema[T]['key']): IDBRequest<DBSchema[T]['value'] | undefined>;
-	put(value: DBSchema[T]['value'], key?: DBSchema[T]['key']): IDBRequest<IDBValidKey>;
-	delete(key: DBSchema[T]['key']): IDBRequest<undefined>;
+interface TypedStore<K extends IDBValidKey, V> extends IDBObjectStore {
+	add(value: V, key?: K): IDBRequest<IDBValidKey>;
+	get(key: K): IDBRequest<V | undefined>;
+	put(value: V, key?: K): IDBRequest<IDBValidKey>;
+	delete(key: K): IDBRequest<undefined>;
+	getAllKeys(query?: K | IDBKeyRange | null, count?: number): IDBRequest<IDBValidKey[]>;
+
 }
+
+type AutoStore<T extends keyof DBSchema> = TypedStore<DBSchema[T]['key'], DBSchema[T]['value']>;
 
 class Database {
 	private dbp: Promise<IDBDatabase> | null = null;
@@ -28,10 +32,14 @@ class Database {
 		return this.dbp;
 	}
 
-	async getStore<T extends keyof DBSchema>(
+	async getStore<K extends IDBValidKey = never, V = unknown, T extends keyof DBSchema = any>(
 		storeName: T,
 		mode: IDBTransactionMode = 'readonly'
-	): Promise<TypedStore<T>> {
+	): Promise<
+		[K] extends [never]
+			? AutoStore<T>
+			: TypedStore<K, V>
+	> {
 		const db = await this.init()
 		const transaction = db.transaction(storeName, mode);
 		return transaction.objectStore(storeName);
