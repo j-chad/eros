@@ -1,22 +1,22 @@
-import {writable, derived} from "svelte/store";
-import {getToken, setToken as setTokenDB, clearToken as clearTokenDB} from "$lib/db/services/auth";
+import {derived, writable} from "svelte/store";
+import {KVKey, KVStore} from "$lib/db/stores/kv";
 
 export const authToken = writable<string | null>(null);
 
 export const isAuthenticated = derived(authToken, ($authToken) => !!$authToken);
 
 export async function initAuth(){
-	const token = await getToken();
+	const token = await KVStore.get(KVKey.AuthSession);
 	authToken.set(token);
 }
 
 export async function setToken(token: string) {
-	await setTokenDB(token)
+	await KVStore.set(KVKey.AuthSession, token);
 	authToken.set(token);
 }
 
 export async function clearToken() {
-	await clearTokenDB();
+	await KVStore.delete(KVKey.AuthSession);
 	authToken.set(null);
 }
 

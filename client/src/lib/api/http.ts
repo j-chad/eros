@@ -11,7 +11,7 @@ export interface APIError {
 	internal?: string;
 }
 
-export async function request<T = void>(endpoint: string, options: RequestInit = {}): Promise<T> {
+export async function rawRequest(endpoint: string, options: RequestInit = {}): Promise<Response> {
 	const token = get(authToken)
 
 	if (!token) {
@@ -30,9 +30,8 @@ export async function request<T = void>(endpoint: string, options: RequestInit =
 		...options.headers,
 	};
 
-	let response: Response;
 	try {
-		response = await fetch(`${API_BASE}${endpoint}`, {
+		return await fetch(`${API_BASE}${endpoint}`, {
 			...options,
 			headers,
 		});
@@ -45,13 +44,13 @@ export async function request<T = void>(endpoint: string, options: RequestInit =
 			body: err instanceof Error ? err.message : String(err),
 		});
 	}
+}
+
+export async function request<T = void>(endpoint: string, options: RequestInit = {}): Promise<T> {
+	const response = await rawRequest(endpoint, options);
 
 	const contentType = response.headers.get('content-type');
 	const isJson = !!contentType?.includes('application/json');
-
-	if (response.status === 401) {
-
-	}
 
 	if (!response.ok) {
 		const body: APIError | string = isJson ? (await response.json()).error : await response.text()
@@ -69,5 +68,5 @@ export async function request<T = void>(endpoint: string, options: RequestInit =
 		return null as T;
 	}
 
-	return isJson ? response.json() : null as T;
+	return await (isJson ? response.json() : response.text())
 }
