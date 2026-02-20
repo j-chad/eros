@@ -171,6 +171,9 @@ func (s *sqliteDB) getAccessibleNodes(ctx context.Context, graphID string) ([]mo
 		if err != nil {
 			return nil, err
 		}
+
+		node.UIPosition = nil
+
 		nodes = append(nodes, node)
 	}
 

@@ -49,5 +49,7 @@ func (s *GraphService) GetGraph(ctx context.Context, graphID string) (*models.Gr
 		return nil, err
 	}
 
+	graph.Viewport = nil
+
 	return graph, nil
 }

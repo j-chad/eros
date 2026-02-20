@@ -6,6 +6,9 @@ export interface DBSchema {
 		key: string;
 		value: unknown
 	};
+	graphs: {
+		id: string
+	}
 }
 
 interface StoreParameters extends IDBObjectStoreParameters {
@@ -15,6 +18,16 @@ interface StoreParameters extends IDBObjectStoreParameters {
 const STORES:Record<keyof DBSchema, StoreParameters> = {
 	kv: {
 		keyPath: 'key',
+	},
+	graphs: {
+		keyPath: 'id',
+		indexes: [
+			{
+				name: 'byStartDate',
+				keyPath: 'starting_at',
+				options: { unique: false },
+			}
+		]
 	}
 }
 
