@@ -32,6 +32,7 @@ export class KVStore {
 	static async get<K extends KVKey>(key: K): Promise<KVValue[K] | null> {
 		const store = await db.getStore<KVKey, KVSchema[K]>('kv', 'readonly');
 		const result = await promisifyRequest(store.get(key));
+		console.log(`KVStore.get(${key}) =>`, result);
 		return result ? result.value : null;
 	}
 

@@ -7,6 +7,7 @@ export const AUTH_DEPENDENCY = 'auth:session';
 export async function isAuthenticated(): Promise<boolean> {
 	const token = await loadToken();
 	if (!token) {
+		console.warn('No auth token found, user is not authenticated.');
 		return false;
 	}
 
@@ -14,7 +15,12 @@ export async function isAuthenticated(): Promise<boolean> {
 		return true;
 	}
 
-	return !(await isSessionValid())
+	if (!await isSessionValid()) {
+		console.warn('Auth session is not valid, user is not authenticated.');
+		return false;
+	}
+
+	return true;
 }
 
 export async function login(registration_code: string, device_info: string): Promise<void> {
