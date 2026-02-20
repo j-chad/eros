@@ -11,24 +11,26 @@ export interface APIError {
 	internal?: string;
 }
 
-export async function rawRequest(endpoint: string, options: RequestInit = {}): Promise<Response> {
-	const token = get(authToken)
-
-	if (!token) {
-		throw error(401, {
-			message: 'Unauthorized: API key is missing',
-			base: API_BASE,
-			endpoint,
-			method: options.method ?? 'GET',
-			body: null,
-		});
+export async function rawRequest(endpoint: string, options: RequestInit = {}, auth = true): Promise<Response> {
+	const headers = new Headers(options?.headers)
+	if (!headers.has('Content-Type')) {
+		headers.set('Content-Type', 'application/json');
 	}
 
-	const headers: HeadersInit = {
-		'Content-Type': 'application/json',
-		'Authorization': token,
-		...options.headers,
-	};
+	if (auth) {
+		const token = get(authToken)
+		if (!token) {
+			throw error(401, {
+				message: 'Unauthorized: No authentication token found',
+				base: API_BASE,
+				endpoint,
+				method: options.method ?? 'GET',
+				body: null,
+			});
+		}
+
+		headers.set('Authorization', `Bearer ${token}`);
+	}
 
 	try {
 		return await fetch(`${API_BASE}${endpoint}`, {
@@ -46,8 +48,8 @@ export async function rawRequest(endpoint: string, options: RequestInit = {}): P
 	}
 }
 
-export async function request<T = void>(endpoint: string, options: RequestInit = {}): Promise<T> {
-	const response = await rawRequest(endpoint, options);
+export async function request<T = void>(endpoint: string, options: RequestInit = {}, auth = true): Promise<T> {
+	const response = await rawRequest(endpoint, options, auth);
 
 	const contentType = response.headers.get('content-type');
 	const isJson = !!contentType?.includes('application/json');

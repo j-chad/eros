@@ -10,6 +10,7 @@ interface KVValue {
 
 export type KVSchema = {
 	[K in KVKey]: {
+		key: K;
 		value: KVValue[K]
 		timestamp: number;
 	};
@@ -20,10 +21,11 @@ export class KVStore {
 	static async set<K extends KVKey>(key: K, value: KVValue[K]): Promise<void> {
 		const store = await db.getStore<KVKey, KVSchema[K]>('kv', 'readwrite');
 		const data: KVSchema[K] = {
+			key,
 			value,
 			timestamp: Date.now()
 		};
-		await promisifyRequest(store.put(data, key));
+		await promisifyRequest(store.put(data));
 	}
 
 	// Get a value with type inference
