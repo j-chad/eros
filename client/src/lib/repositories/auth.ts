@@ -1,9 +1,14 @@
-import {request} from "$lib/api/http";
+import {rawRequest, request} from "$lib/api/http";
 
-export function checkAuth(): Promise<void> {
-	return request('/ping', {
-		method: 'GET',
-	});
+export async function isSessionValid(): Promise<boolean> {
+	try {
+		const response = await rawRequest('/ping', {
+			method: 'GET',
+		});
+		return response.ok;
+	} catch {
+		return false;
+	}
 }
 
 export function login(registration_code: string, device_info: string): Promise<string> {
