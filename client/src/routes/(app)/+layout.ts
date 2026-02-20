@@ -1,13 +1,13 @@
 import { redirect } from '@sveltejs/kit';
 import { browser } from '$app/environment';
-import {get} from "svelte/store";
-import {isAuthenticated} from "$lib/services/auth";
-import {authToken} from "$lib/api/auth";
+import {AUTH_DEPENDENCY, isAuthenticated} from "$lib/services/auth";
 
 export const ssr = false;
 
-export async function load({ url }) {
+export async function load({ url, depends }) {
 	if (!browser) return;
+
+	depends(AUTH_DEPENDENCY)
 
 	if (!await isAuthenticated()) {
 		const returnTo = encodeURIComponent(url.pathname + url.search);
