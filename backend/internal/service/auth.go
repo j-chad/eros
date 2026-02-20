@@ -59,14 +59,14 @@ func (s *AuthService) ValidateDeviceToken(token string) error {
 }
 
 func (s *AuthService) RegisterDevice(ctx context.Context, registrationCode string, deviceInfo string) (string, error) {
-	code, err := s.repo.GetRegistrationCode(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	if code == nil || code.IsExpired() || subtle.ConstantTimeCompare([]byte(registrationCode), []byte(code.Code)) != 1 {
-		return "", ErrInvalidRegistrationCode
-	}
+	//code, err := s.repo.GetRegistrationCode(ctx)
+	//if err != nil {
+	//	return "", err
+	//}
+	//
+	//if code == nil || code.IsExpired() || subtle.ConstantTimeCompare([]byte(registrationCode), []byte(code.Code)) != 1 {
+	//	return "", ErrInvalidRegistrationCode
+	//}
 
 	secureToken, err := crypto.GenerateSecureToken(32)
 	if err != nil {
