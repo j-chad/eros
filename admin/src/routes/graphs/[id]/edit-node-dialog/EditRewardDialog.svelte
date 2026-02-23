@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type {RewardNode} from '$lib/types';
+	import {type RewardNode, RewardType} from '$lib/types';
 	import {Calendar, Gift, Image, NotebookPen, Sparkles, Star, Video} from 'lucide-svelte';
 
 	let {
@@ -16,10 +16,10 @@
 
 	let editForm = $state({
 		title: node.title,
-		description: node.description || '',
-		reward_type: node.data?.reward_type || 'favour',
-		payload: node.data?.payload || '',
-		give_favours: node.data?.give_favours || 0
+		description: node.description ?? '',
+		reward_type: node.data?.reward_type ?? RewardType.FAVOUR,
+		payload: node.data?.payload ?? '',
+		give_favours: node.data?.give_favours ?? 0
 	});
 
 	// Parse payload based on type for easier editing
@@ -27,13 +27,15 @@
 		try {
 			const parsed = editForm.payload ? JSON.parse(editForm.payload) : {};
 			return {
-				url: parsed.url || '',
-				coupon_data: parsed.coupon_data || {},
-				event_title: parsed.event_title || '',
-				event_start: parsed.event_start || '',
-				event_end: parsed.event_end || '',
-				event_location: parsed.event_location || '',
-				event_notes: parsed.event_notes || ''
+				url: parsed.url ?? '',
+				coupon_data: parsed.coupon_data ?? {},
+				event_title: parsed.event_title ?? '',
+				event_start: parsed.event_start ?? '',
+				event_end: parsed.event_end ?? '',
+				event_location: parsed.event_location ?? '',
+				event_notes: parsed.event_notes ?? '',
+				filename: parsed.filename ?? '',
+				file_url: parsed.file_url ?? ''
 			};
 		} catch {
 			return {
@@ -43,7 +45,9 @@
 				event_start: '',
 				event_end: '',
 				event_location: '',
-				event_notes: ''
+				event_notes: '',
+				filename: '',
+				file_url: ''
 			};
 		}
 	});
@@ -53,20 +57,25 @@
 
 		// Create clean payload based on type
 		let payload: any = {};
-		if (editForm.reward_type === 'video' || editForm.reward_type === 'image') {
+		if (editForm.reward_type === RewardType.VIDEO || editForm.reward_type === RewardType.IMAGE) {
 			payload = { url: updated.url };
-		} else if (editForm.reward_type === 'coupon') {
+		} else if (editForm.reward_type === RewardType.WALLET) {
 			payload = {
 				url: updated.url,
 				coupon_data: updated.coupon_data
 			};
-		} else if (editForm.reward_type === 'calendar') {
+		} else if (editForm.reward_type === RewardType.CALENDAR) {
 			payload = {
 				event_title: updated.event_title,
 				event_start: updated.event_start,
 				event_end: updated.event_end,
 				event_location: updated.event_location,
 				event_notes: updated.event_notes
+			};
+		} else if (editForm.reward_type === RewardType.FILE) {
+			payload = {
+				filename: updated.filename,
+				file_url: updated.file_url
 			};
 		}
 		// favour type has no payload, just give_favours
@@ -93,12 +102,13 @@
 	}
 
 	const rewardTypes = [
-		{ value: 'favour', label: 'Favour Points', icon: Star, description: 'Award currency to the user' },
-		{ value: 'image', label: 'Image', icon: Image, description: 'Show a celebratory image' },
-		{ value: 'video', label: 'Video', icon: Video, description: 'Play a reward video' },
-		{ value: 'calendar', label: 'Calendar Event', icon: Calendar, description: 'Add event to calendar' },
-		{ value: 'coupon', label: 'Coupon', icon: Gift, description: 'Apple Wallet coupon' },
-		{ value: 'markdown', label: 'Markdown', icon: NotebookPen, description: 'Custom message with markdown formatting' }
+		{ value: RewardType.FAVOUR, label: 'Favour Points', icon: Star, description: 'Award currency to the user' },
+		{ value: RewardType.IMAGE, label: 'Image', icon: Image, description: 'Show a celebratory image' },
+		{ value: RewardType.VIDEO, label: 'Video', icon: Video, description: 'Play a reward video' },
+		{ value: RewardType.CALENDAR, label: 'Calendar Event', icon: Calendar, description: 'Add event to calendar' },
+		{ value: RewardType.WALLET, label: 'Coupon', icon: Gift, description: 'Apple Wallet coupon' },
+		{ value: RewardType.MARKDOWN, label: 'Markdown', icon: NotebookPen, description: 'Custom message with markdown formatting' },
+		{ value: RewardType.FILE, label: 'File', icon: Image, description: 'Provide a downloadable file' }
 	];
 </script>
 
@@ -327,7 +337,7 @@
 					<p>Users will be prompted to add this event to their device calendar.</p>
 				</div>
 
-			{:else if editForm.reward_type === 'coupon'}
+			{:else if editForm.reward_type === RewardType.WALLET}
 				<div class="form-group">
 					<label for="coupon_url">Coupon Pass URL</label>
 					<input

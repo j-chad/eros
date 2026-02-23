@@ -121,8 +121,19 @@ export type ManualNode = Node<NodeType.MANUAL, {
 	instructions: string;
 	unlocked_at?: string | null; // ISO 8601 date string
 }>;
+
+export enum RewardType {
+	IMAGE = 'image',
+	VIDEO = 'video',
+	CALENDAR = 'calendar',
+	WALLET = 'wallet',
+	FAVOUR = 'favour',
+	FILE = 'file',
+	MARKDOWN = 'markdown',
+}
+
 export type RewardNode = Node<NodeType.REWARD, {
-    reward_type: string; // not sure what the possible types are yet
+    reward_type: RewardType;
     payload: string;
     give_favours: number;
 }>;
