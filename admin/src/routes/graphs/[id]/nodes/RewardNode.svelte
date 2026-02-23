@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Gift, Eye, EyeOff, Star, Image, Video, Calendar, Ticket } from 'lucide-svelte';
-	import type { RewardNode } from '$lib/types';
+	import {Gift, Eye, EyeOff, Star, Image, Video, Calendar, Ticket, Files} from 'lucide-svelte';
+	import {type RewardNode, RewardType} from '$lib/types';
 	import BaseNode from './BaseNode.svelte';
 	import type { NodeProps } from './types';
 
@@ -9,20 +9,21 @@
 
 	let showPayload = $state(false);
 
-	const rewardType = $derived(node.data?.reward_type ?? 'favour');
+	const rewardType = $derived(node.data?.reward_type ?? RewardType.FAVOUR);
 	const payload = $derived(node.data?.payload ?? '');
 	const giveFavours = $derived(node.data?.give_favours ?? 0);
 
 	const hasPayload = $derived(!!payload?.trim() && rewardType !== 'favour');
 
 	// Get icon for reward type
-	const rewardTypeIcon = $derived.by(() => {
+	const RewardTypeIcon = $derived.by(() => {
 		switch (rewardType) {
-			case 'image': return Image;
-			case 'video': return Video;
-			case 'calendar': return Calendar;
-			case 'coupon': return Ticket;
-			case 'favour': return Star;
+			case RewardType.IMAGE: return Image;
+			case RewardType.VIDEO: return Video;
+			case RewardType.CALENDAR: return Calendar;
+			case RewardType.WALLET: return Ticket;
+			case RewardType.FAVOUR: return Star;
+			case RewardType.FILE: return Files;
 			default: return Gift;
 		}
 	});
@@ -30,11 +31,12 @@
 	// Format reward type display name
 	const rewardTypeLabel = $derived.by(() => {
 		switch (rewardType) {
-			case 'image': return 'Image';
-			case 'video': return 'Video';
-			case 'calendar': return 'Calendar Event';
-			case 'coupon': return 'Coupon';
-			case 'favour': return 'Favour Points';
+			case RewardType.IMAGE: return 'Image';
+			case RewardType.VIDEO: return 'Video';
+			case RewardType.CALENDAR: return 'Calendar Event';
+			case RewardType.WALLET: return 'Coupon';
+			case RewardType.FAVOUR: return 'Favour Points';
+			case RewardType.FILE: return 'File';
 			default: return rewardType;
 		}
 	});
@@ -45,13 +47,15 @@
 		try {
 			const parsed = JSON.parse(payload);
 			switch (rewardType) {
-				case 'image':
-				case 'video':
+				case RewardType.IMAGE:
+				case RewardType.VIDEO:
 					return parsed.url ? new URL(parsed.url).hostname : '—';
-				case 'calendar':
+				case RewardType.CALENDAR:
 					return parsed.event_title || '—';
-				case 'coupon':
+				case RewardType.WALLET:
 					return parsed.url ? 'Wallet Pass' : '—';
+				case RewardType.FILE:
+					return parsed.filename || '—';
 				default:
 					return `${payload.length} chars`;
 			}
@@ -76,7 +80,7 @@
 			<div class="reward-card">
 				<div class="top-row">
 					<div class="type-badge" title="Reward type">
-						<svelte:component this={rewardTypeIcon} size={12} />
+						<RewardTypeIcon size={12} />
 						<span class="type-text">{rewardTypeLabel}</span>
 					</div>
 
