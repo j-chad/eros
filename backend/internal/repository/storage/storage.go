@@ -15,7 +15,7 @@ type PresignCapable interface {
 }
 
 type FileStore interface {
-	Put(ctx context.Context, filename string, r io.ReadSeeker) (string, error)
+	Put(ctx context.Context, filename, mime string, r io.ReadSeeker) (string, error)
 	Get(ctx context.Context, key string) (io.ReadCloser, error)
 	Delete(ctx context.Context, key string) error
 	List(ctx context.Context) iter.Seq2[string, error]

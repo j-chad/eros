@@ -146,7 +146,7 @@ func (s *AdminService) UpdateGraph(ctx context.Context, graph models.Graph) erro
 }
 
 func (s *AdminService) UploadFile(ctx context.Context, nodeID, filename, mime string, size int64, reader io.ReadSeeker) (*models.File, error) {
-	storageKey, err := s.files.Put(ctx, filename, reader)
+	storageKey, err := s.files.Put(ctx, filename, mime, reader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file to storage: %w", err)
 	}
