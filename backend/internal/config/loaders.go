@@ -7,9 +7,10 @@ import (
 // Load loads configuration from environment variables
 func Load() (*Config, error) {
 	cfg := &Config{
-		Server:   loadServerConfig(),
-		Database: loadDatabaseConfig(),
-		Auth:     loadAuthConfig(),
+		Server:      loadServerConfig(),
+		Database:    loadDatabaseConfig(),
+		Auth:        loadAuthConfig(),
+		FileStorage: loadFileStorageConfig(),
 	}
 
 	return cfg, nil
@@ -41,4 +42,29 @@ func loadAuthConfig() AuthConfig {
 	return AuthConfig{
 		AdminAPIKey: requireEnv("ADMIN_API_KEY"),
 	}
+}
+
+// loadFileStorageConfig loads file storage configuration
+func loadFileStorageConfig() FileStorageConfig {
+	storageType := getEnv("FILE_STORAGE_TYPE", "local")
+	cfg := FileStorageConfig{Type: FileStorageType(storageType)}
+
+	switch cfg.Type {
+	case FileStorageLocal:
+		cfg.Local = LocalFileStorageConfig{
+			BasePath: getEnv("FILE_STORAGE_LOCAL_BASE_PATH", "./files"),
+		}
+	case FileStorageS3:
+		cfg.S3 = S3FileStorageConfig{
+			Region:    getEnv("FILE_STORAGE_S3_REGION", ""),
+			Bucket:    requireEnv("FILE_STORAGE_S3_BUCKET"),
+			Endpoint:  getEnv("FILE_STORAGE_S3_ENDPOINT", ""),
+			AccessKey: requireEnv("FILE_STORAGE_S3_ACCESS_KEY"),
+			SecretKey: requireEnv("FILE_STORAGE_S3_SECRET_KEY"),
+		}
+	default:
+		panic("invalid file storage type: " + storageType)
+	}
+
+	return cfg
 }

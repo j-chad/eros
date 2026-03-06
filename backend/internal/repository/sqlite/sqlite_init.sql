@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS node_reward
 CREATE TABLE IF NOT EXISTS reward_file
 (
 	id          INTEGER PRIMARY KEY AUTOINCREMENT,
-	node_id     TEXT NOT NULL CHECK ( node_id IN (SELECT id FROM node WHERE type = 'reward') ),
+	node_id     TEXT     NOT NULL,
 
 	filename    TEXT     NOT NULL,
 	mime_type   TEXT     NOT NULL,
@@ -199,6 +199,17 @@ CREATE TABLE IF NOT EXISTS favour_requests
 -- ----------------------------------------------------------------------------
 -- TRIGGERS
 -- ----------------------------------------------------------------------------
+
+CREATE TRIGGER IF NOT EXISTS trg_file_is_reward_node
+	BEFORE INSERT
+	ON reward_file
+	FOR EACH ROW
+BEGIN
+	SELECT CASE
+			   WHEN NOT EXISTS (SELECT 1 FROM node WHERE node_id = NEW.node_id AND type = 'reward')
+				   THEN RAISE(ABORT, 'Cannot add reward file to a node that is not a reward node')
+			   END;
+END;
 
 CREATE TRIGGER IF NOT EXISTS trg_update_favour_count_updated_at
 	AFTER UPDATE
