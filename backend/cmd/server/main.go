@@ -33,8 +33,9 @@ func main() {
 	adminService := service.NewAdminService(database, fileStore)
 	favourService := service.NewFavourService(database)
 	graphService := service.NewGraphService(database)
+	fileService := service.NewFileService(database, fileStore)
 
-	h := handler.NewHandler(authService, adminService, favourService, graphService)
+	h := handler.NewHandler(authService, adminService, favourService, graphService, fileService)
 
 	mux := http.NewServeMux()
 	h.RegisterRoutes(mux)

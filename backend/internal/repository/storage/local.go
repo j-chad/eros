@@ -5,9 +5,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"iter"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 )
 
 var ALLOWED_KEY_REGEX = regexp.MustCompile(fmt.Sprintf("^%s(\\.[a-zA-Z]{1,3})?$", crypto.UUIDV4Regex.String()))
@@ -64,6 +66,31 @@ func (s *LocalFileStore) Delete(_ context.Context, key string) error {
 		return fmt.Errorf("delete file: %w", err)
 	}
 	return nil
+}
+
+func (s *LocalFileStore) DeleteMany(ctx context.Context, keys []string) error {
+	for _, key := range keys {
+		if err := s.Delete(ctx, key); err != nil {
+			return fmt.Errorf("delete file %s: %w", key, err)
+		}
+	}
+	return nil
+}
+
+func (s *LocalFileStore) List(_ context.Context) (iter.Seq[string], error) {
+	files, err := os.ReadDir(s.root)
+	if err != nil {
+		return nil, fmt.Errorf("list files: %w", err)
+	}
+
+	keys := make([]string, 0, len(files))
+	for _, f := range files {
+		if !f.IsDir() {
+			keys = append(keys, f.Name())
+		}
+	}
+
+	return slices.Values(keys), nil
 }
 
 // safePath resolves the key to an absolute path and ensures it stays within the root.

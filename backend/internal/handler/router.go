@@ -20,6 +20,7 @@ func NewHandler(
 	adminService *service.AdminService,
 	favourService *service.FavourService,
 	graphService *service.GraphService,
+	fileService *service.FileService,
 ) *Handler {
 	handler := &Handler{
 		auth:   authService,
