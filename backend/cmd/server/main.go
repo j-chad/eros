@@ -43,7 +43,7 @@ func main() {
 	serverAddr := fmt.Sprintf("%s:%d", conf.Server.Host, conf.Server.Port)
 	server := &http.Server{
 		Addr:         serverAddr,
-		Handler:      handler.WithCORS(mux, conf.Server.CORS_Origins),
+		Handler:      handler.WithCORS(mux, conf.Server.CorsOrigins),
 		ReadTimeout:  conf.Server.ReadTimeout,
 		WriteTimeout: conf.Server.WriteTimeout,
 		IdleTimeout:  conf.Server.IdleTimeout,
