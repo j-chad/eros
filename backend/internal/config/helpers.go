@@ -36,30 +36,118 @@ func mergeFromEmbed(cfg *Config, configFile string, required bool) error {
 }
 
 func mergeFromJSON(dst *Config, data []byte) error {
-	overlay := &Config{}
-	if err := json.Unmarshal(data, overlay); err != nil {
+	// Decode into generic map so strings stay as strings
+	// (avoids encoding/json trying to put "10s" into time.Duration)
+	var raw map[string]any
+	if err := json.Unmarshal(data, &raw); err != nil {
 		return fmt.Errorf("unmarshal config JSON: %w", err)
 	}
-	mergeStructs(reflect.ValueOf(dst).Elem(), reflect.ValueOf(overlay).Elem())
-	return nil
+	return mergeMap(reflect.ValueOf(dst).Elem(), raw)
 }
 
-// mergeStructs recursively copies non-zero fields from src into dst.
-func mergeStructs(dst, src reflect.Value) {
-	for i := 0; i < dst.NumField(); i++ {
-		dstField := dst.Field(i)
-		srcField := src.Field(i)
+// mergeMap recursively applies values from a map[string]any onto a struct,
+// skipping zero/nil values. It handles time.Duration from string values.
+func mergeMap(dst reflect.Value, src map[string]any) error {
+	dstType := dst.Type()
 
-		if srcField.IsZero() {
+	for i := 0; i < dstType.NumField(); i++ {
+		field := dst.Field(i)
+		ft := dstType.Field(i)
+
+		jsonTag := ft.Tag.Get("json")
+		if jsonTag == "" || jsonTag == "-" {
+			continue
+		}
+		key := strings.Split(jsonTag, ",")[0]
+
+		val, ok := src[key]
+		if !ok || val == nil {
 			continue
 		}
 
-		if dstField.Kind() == reflect.Struct && dstField.Type() != reflect.TypeOf(time.Duration(0)) {
-			mergeStructs(dstField, srcField)
-		} else {
-			dstField.Set(srcField)
+		if err := setField(field, val); err != nil {
+			return fmt.Errorf("field %s: %w", ft.Name, err)
 		}
 	}
+	return nil
+}
+
+func setField(field reflect.Value, val any) error {
+	// Nested struct — recurse with sub-map
+	if field.Kind() == reflect.Struct && field.Type() != reflect.TypeOf(time.Time{}) {
+		sub, ok := val.(map[string]any)
+		if !ok {
+			return fmt.Errorf("expected object, got %T", val)
+		}
+		return mergeMap(field, sub)
+	}
+
+	// time.Duration from string (e.g. "10s", "5m")
+	if field.Type() == reflect.TypeOf(time.Duration(0)) {
+		s, ok := val.(string)
+		if !ok {
+			return fmt.Errorf("expected duration string, got %T", val)
+		}
+		d, err := time.ParseDuration(s)
+		if err != nil {
+			return fmt.Errorf("invalid duration %q: %w", s, err)
+		}
+		field.Set(reflect.ValueOf(d))
+		return nil
+	}
+
+	switch field.Kind() {
+	case reflect.String:
+		s, ok := val.(string)
+		if !ok {
+			return fmt.Errorf("expected string, got %T", val)
+		}
+		field.SetString(s)
+
+	case reflect.Int, reflect.Int64:
+		// JSON numbers decode as float64
+		f, ok := val.(float64)
+		if !ok {
+			return fmt.Errorf("expected number, got %T", val)
+		}
+		field.SetInt(int64(f))
+
+	case reflect.Bool:
+		b, ok := val.(bool)
+		if !ok {
+			return fmt.Errorf("expected bool, got %T", val)
+		}
+		field.SetBool(b)
+
+	case reflect.Float64:
+		f, ok := val.(float64)
+		if !ok {
+			return fmt.Errorf("expected number, got %T", val)
+		}
+		field.SetFloat(f)
+
+	case reflect.Slice:
+		if field.Type().Elem().Kind() == reflect.String {
+			arr, ok := val.([]any)
+			if !ok {
+				return fmt.Errorf("expected array, got %T", val)
+			}
+			strs := make([]string, 0, len(arr))
+			for _, v := range arr {
+				s, ok := v.(string)
+				if !ok {
+					return fmt.Errorf("expected string in array, got %T", v)
+				}
+				strs = append(strs, s)
+			}
+			field.Set(reflect.ValueOf(strs))
+		}
+
+	default:
+		return fmt.Errorf("unsupported field kind %s", field.Kind())
+	}
+
+	return nil
 }
 
 // applyEnvVars walks the config struct tree and applies env var overrides
