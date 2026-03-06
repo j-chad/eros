@@ -318,7 +318,7 @@ SELECT n.id,
 			   'reward_type', nr.reward_type,
 			   'payload', nr.payload,
 			   'give_favours', nr.give_favours
-							  )
+		   )
 		   ELSE json('{}')
 		   END AS data_json
 

@@ -52,3 +52,19 @@ func (h *Handler) UploadFile(w http.ResponseWriter, r *http.Request) {
 
 	response.JSON(w, http.StatusCreated, fileModel)
 }
+
+func (h *Handler) ListFiles(w http.ResponseWriter, r *http.Request) {
+	nodeID := r.URL.Query().Get("node_id")
+	if nodeID == "" {
+		response.Error(r.Context(), w, apierror.BadRequest("node_id query parameter is required"))
+		return
+	}
+
+	files, err := h.adminService.ListFiles(r.Context(), nodeID)
+	if err != nil {
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
+		return
+	}
+
+	response.JSON(w, http.StatusOK, files)
+}

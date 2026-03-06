@@ -171,3 +171,7 @@ func (s *AdminService) UploadFile(ctx context.Context, node_id, filename, mime s
 
 	return &file, nil
 }
+
+func (s *AdminService) ListFiles(ctx context.Context, nodeID string) ([]models.File, error) {
+	return s.repo.ListFiles(ctx, nodeID)
+}
