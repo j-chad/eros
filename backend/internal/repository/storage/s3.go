@@ -84,11 +84,12 @@ func (s *S3FileStore) Put(ctx context.Context, filename string, r io.ReadSeeker)
 	key := s.generateKey(filename)
 
 	hasher := sha256.New()
-	if _, err := io.Copy(hasher, r); err != nil {
+	size, err := io.Copy(hasher, r)
+	if err != nil {
 		return "", err
 	}
 	payloadHash := fmt.Sprintf("%x", hasher.Sum(nil))
-	_, err := r.Seek(0, io.SeekStart)
+	_, err = r.Seek(0, io.SeekStart)
 	if err != nil {
 		return "", err
 	}
@@ -97,8 +98,10 @@ func (s *S3FileStore) Put(ctx context.Context, filename string, r io.ReadSeeker)
 	if err != nil {
 		return "", err
 	}
+	req.ContentLength = size
 
 	s.signer.SignRequest(req, payloadHash)
+
 	resp, err := s.client.Do(req)
 	if err != nil {
 		return "", err

@@ -44,7 +44,7 @@ func (s *SigV4Signer) PresignRequest(req *http.Request, expires time.Duration) {
 	canonicalReq := s.buildCanonicalRequest(req, unsignedPayload, signedHeaders, canonicalHeaders)
 	stringToSign := s.buildStringToSign(canonicalReq, credentialScope, t)
 	signingKey := s.deriveSigningKey(t)
-	signature := fmt.Sprintf("%x", hmac.New(sha256.New, signingKey).Sum([]byte(stringToSign)))
+	signature := fmt.Sprintf("%x", hmacSHA256(signingKey, stringToSign))
 
 	query := req.URL.Query()
 	query.Set("X-Amz-Algorithm", signingAlgo)
@@ -75,7 +75,7 @@ func (s *SigV4Signer) SignRequest(req *http.Request, payloadHash string) {
 	canonicalReq := s.buildCanonicalRequest(req, payloadHash, signedHeaders, canonicalHeaders)
 	stringToSign := s.buildStringToSign(canonicalReq, credentialScope, t)
 	signingKey := s.deriveSigningKey(t)
-	signature := fmt.Sprintf("%x", hmac.New(sha256.New, signingKey).Sum([]byte(stringToSign)))
+	signature := fmt.Sprintf("%x", hmacSHA256(signingKey, stringToSign))
 
 	authHeader := fmt.Sprintf("%s Credential=%s/%s, SignedHeaders=%s, Signature=%s",
 		signingAlgo, s.accessKey, credentialScope, signedHeaders, signature)
@@ -83,10 +83,10 @@ func (s *SigV4Signer) SignRequest(req *http.Request, payloadHash string) {
 }
 
 func (s *SigV4Signer) deriveSigningKey(t time.Time) []byte {
-	dateKey := hmac.New(sha256.New, []byte("AWS4"+s.secretKey)).Sum([]byte(t.Format(dateFormat)))
-	regionKey := hmac.New(sha256.New, dateKey).Sum([]byte(s.region))
-	serviceKey := hmac.New(sha256.New, regionKey).Sum([]byte(service))
-	signingKey := hmac.New(sha256.New, serviceKey).Sum([]byte(aws4Request))
+	dateKey := hmacSHA256([]byte("AWS4"+s.secretKey), t.Format(dateFormat))
+	regionKey := hmacSHA256(dateKey, s.region)
+	serviceKey := hmacSHA256(regionKey, service)
+	signingKey := hmacSHA256(serviceKey, aws4Request)
 	return signingKey
 }
 
@@ -98,7 +98,7 @@ func (s *SigV4Signer) buildStringToSign(canonicalReq, scope string, t time.Time)
 		hash
 }
 
-func (s *SigV4Signer) buildCanonicalRequest(req *http.Request, payloadHash, canonicalHeaders, signedHeaders string) string {
+func (s *SigV4Signer) buildCanonicalRequest(req *http.Request, payloadHash, signedHeaders, canonicalHeaders string) string {
 	if req.Method == "" {
 		req.Method = "GET"
 	}
@@ -119,7 +119,7 @@ func (s *SigV4Signer) buildCanonicalHeaders(req *http.Request) (signed string, c
 	var headers []hdr
 	for k, v := range req.Header {
 		lk := strings.ToLower(k)
-		if lk == "host" || strings.HasPrefix(lk, "x-amz-") || lk == "content-type" {
+		if lk == "host" || strings.HasPrefix(lk, "x-amz-") || lk == "content-type" || lk == "content-length" {
 			headers = append(headers, hdr{lk, strings.TrimSpace(v[0])})
 		}
 	}
@@ -170,4 +170,10 @@ func (s *SigV4Signer) awsURIEncode(path string, encodeSlash bool) string {
 		}
 	}
 	return b.String()
+}
+
+func hmacSHA256(key []byte, data string) []byte {
+	mac := hmac.New(sha256.New, key)
+	mac.Write([]byte(data))
+	return mac.Sum(nil)
 }
