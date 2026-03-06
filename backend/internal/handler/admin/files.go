@@ -10,7 +10,7 @@ import (
 
 const FileSizeLimit = 10 * 1024 * 1024 // 10 MB
 
-func (h *Handler) UploadFile(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UploadFiles(w http.ResponseWriter, r *http.Request) {
 	nodeID := r.PathValue("node_id")
 	if nodeID == "" {
 		response.Error(r.Context(), w, apierror.BadRequest("node_id query parameter is required"))
