@@ -147,9 +147,9 @@ CREATE TABLE IF NOT EXISTS node_reward
 CREATE TABLE IF NOT EXISTS reward_file
 (
 	id          INTEGER PRIMARY KEY AUTOINCREMENT,
-	node_id     TEXT NOT NULL,
+	node_id     TEXT NOT NULL CHECK ( node_id IN (SELECT id FROM node WHERE type = 'reward') ),
 
-	filename    TEXT     NOT NULL, -- Original upload filename
+	filename    TEXT     NOT NULL,
 	mime_type   TEXT     NOT NULL,
 	storage_key TEXT     NOT NULL,
 	size_bytes  INTEGER  NOT NULL,
