@@ -15,6 +15,7 @@ type Repository interface {
 	DeviceRepository
 	FavourRepository
 	GraphRepository
+	FileRepository
 }
 
 type RegistrationRepository interface {
@@ -54,4 +55,9 @@ type GraphRepository interface {
 	GetGraph(ctx context.Context, graphID string) (*models.Graph, error)
 	GetAccessibleGraph(ctx context.Context, graphID string) (*models.Graph, error)
 	UpdateGraph(ctx context.Context, graph models.Graph) error
+}
+
+type FileRepository interface {
+	CreateFile(ctx context.Context, file *models.File) error // The ID of the newly created file is set in the provided file object.
+	ListFiles(ctx context.Context, nodeID string) ([]models.File, error)
 }
