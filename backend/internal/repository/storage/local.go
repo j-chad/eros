@@ -30,7 +30,7 @@ func NewLocalFileStore(root string) (*LocalFileStore, error) {
 	return &LocalFileStore{root: root}, nil
 }
 
-func (s *LocalFileStore) Put(_ context.Context, filename string, r io.Reader) (string, error) {
+func (s *LocalFileStore) Put(_ context.Context, filename string, r io.ReadSeeker) (string, error) {
 	key := s.getKey(filename)
 	dst, err := s.safePath(key)
 	if err != nil {
@@ -77,10 +77,12 @@ func (s *LocalFileStore) DeleteMany(ctx context.Context, keys []string) error {
 	return nil
 }
 
-func (s *LocalFileStore) List(_ context.Context) (iter.Seq[string], error) {
+func (s *LocalFileStore) List(_ context.Context) iter.Seq2[string, error] {
 	files, err := os.ReadDir(s.root)
 	if err != nil {
-		return nil, fmt.Errorf("list files: %w", err)
+		return func(yield func(string, error) bool) {
+			yield("", fmt.Errorf("list files: %w", err))
+		}
 	}
 
 	keys := make([]string, 0, len(files))
@@ -90,7 +92,15 @@ func (s *LocalFileStore) List(_ context.Context) (iter.Seq[string], error) {
 		}
 	}
 
-	return slices.Values(keys), nil
+	seq := slices.Values(keys)
+	return func(yield func(string, error) bool) {
+		for key := range seq {
+			if !yield(key, nil) {
+				return
+			}
+		}
+	}
+
 }
 
 // safePath resolves the key to an absolute path and ensures it stays within the root.
