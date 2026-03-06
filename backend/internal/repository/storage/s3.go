@@ -66,6 +66,7 @@ func (s *S3FileStore) Put(ctx context.Context, filename, mime string, r io.ReadS
 		return "", fmt.Errorf("s3 put: build request: %w", err)
 	}
 	req.ContentLength = size
+	req.Header.Set("Content-Type", mime)
 
 	s.signer.SignRequest(req, payloadHash)
 

@@ -30,7 +30,7 @@ func NewLocalFileStore(root string) (*LocalFileStore, error) {
 	return &LocalFileStore{root: root}, nil
 }
 
-func (s *LocalFileStore) Put(_ context.Context, filename string, r io.ReadSeeker) (string, error) {
+func (s *LocalFileStore) Put(_ context.Context, filename, _ string, r io.ReadSeeker) (string, error) {
 	key := s.getKey(filename)
 	dst, err := s.safePath(key)
 	if err != nil {
