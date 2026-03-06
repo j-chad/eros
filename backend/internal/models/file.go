@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type File struct {
 	ID     string `json:"id"`
@@ -8,7 +10,7 @@ type File struct {
 
 	Filename   string `json:"filename"`
 	MimeType   string `json:"mime_type"`
-	StorageKey string `json:"storage_key"`
+	StorageKey string `json:"-"`
 	SizeBytes  int64  `json:"size_bytes"`
 
 	CreatedAt time.Time `json:"created_at"`

@@ -4,8 +4,12 @@ import (
 	"backend/internal/crypto"
 	"backend/internal/models"
 	"backend/internal/repository"
+	"backend/internal/repository/storage"
 	"context"
 	"errors"
+	"fmt"
+	"io"
+	"log"
 	"time"
 )
 
@@ -16,7 +20,8 @@ var (
 )
 
 type AdminService struct {
-	repo repository.Repository
+	repo  repository.Repository
+	files storage.FileStore
 }
 
 func NewAdminService(repo repository.Repository) *AdminService {
@@ -138,4 +143,31 @@ func (s *AdminService) UpdateGraph(ctx context.Context, graph models.Graph) erro
 	}
 
 	return s.repo.UpdateGraph(ctx, graph)
+}
+
+func (s *AdminService) UploadFile(ctx context.Context, node_id, filename, mime string, size int64, reader io.Reader) (*models.File, error) {
+	storageKey, err := s.files.Put(ctx, reader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to upload file to storage: %w", err)
+	}
+
+	file := models.File{
+		NodeID:     node_id,
+		Filename:   filename,
+		MimeType:   mime,
+		SizeBytes:  size,
+		StorageKey: storageKey,
+		CreatedAt:  time.Now(),
+	}
+
+	err = s.repo.CreateFile(ctx, &file)
+	if err != nil {
+		// Attempt to clean up the uploaded file if database operation fails
+		if delErr := s.files.Delete(ctx, storageKey); delErr != nil {
+			log.Printf("failed to clean up uploaded file after database error: %v", delErr)
+		}
+		return nil, fmt.Errorf("failed to create file record in database: %w", err)
+	}
+
+	return &file, nil
 }
