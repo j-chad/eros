@@ -206,7 +206,7 @@ CREATE TRIGGER IF NOT EXISTS trg_file_is_reward_node
 	FOR EACH ROW
 BEGIN
 	SELECT CASE
-			   WHEN NOT EXISTS (SELECT 1 FROM node WHERE node_id = NEW.node_id AND type = 'reward')
+			   WHEN NOT EXISTS (SELECT 1 FROM node WHERE id = NEW.node_id AND type = 'reward')
 				   THEN RAISE(ABORT, 'Cannot add reward file to a node that is not a reward node')
 			   END;
 END;

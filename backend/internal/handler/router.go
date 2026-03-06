@@ -50,7 +50,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	adminMux.HandleFunc("POST /api/admin/graphs", h.admin.CreateGraph)
 	adminMux.HandleFunc("GET /api/admin/graphs/{id}", h.admin.GetGraph)
 	adminMux.HandleFunc("PUT /api/admin/graphs/{id}", h.admin.UpdateGraph)
-	adminMux.HandleFunc("PUT /api/admin/nodes/{node_id}/files", h.admin.UploadFile)
+	adminMux.HandleFunc("PUT /api/admin/nodes/{node_id}/files", h.admin.UploadFiles)
 	adminMux.HandleFunc("GET /api/admin/nodes/{node_id}/files", h.admin.ListFiles)
 	adminMux.HandleFunc("/", routeNotFound)
 	mux.Handle("/api/admin/", withAdminAuth(adminMux, *h.auth))
