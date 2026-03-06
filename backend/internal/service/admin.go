@@ -24,8 +24,8 @@ type AdminService struct {
 	files storage.FileStore
 }
 
-func NewAdminService(repo repository.Repository) *AdminService {
-	return &AdminService{repo: repo}
+func NewAdminService(repo repository.Repository, fileStore storage.FileStore) *AdminService {
+	return &AdminService{repo: repo, files: fileStore}
 }
 
 func (s *AdminService) CreateRegistrationCode(ctx context.Context) (models.RegistrationCode, error) {
@@ -145,14 +145,14 @@ func (s *AdminService) UpdateGraph(ctx context.Context, graph models.Graph) erro
 	return s.repo.UpdateGraph(ctx, graph)
 }
 
-func (s *AdminService) UploadFile(ctx context.Context, node_id, filename, mime string, size int64, reader io.Reader) (*models.File, error) {
+func (s *AdminService) UploadFile(ctx context.Context, nodeID, filename, mime string, size int64, reader io.Reader) (*models.File, error) {
 	storageKey, err := s.files.Put(ctx, reader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file to storage: %w", err)
 	}
 
 	file := models.File{
-		NodeID:     node_id,
+		NodeID:     nodeID,
 		Filename:   filename,
 		MimeType:   mime,
 		SizeBytes:  size,

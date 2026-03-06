@@ -3,6 +3,7 @@ package main
 import (
 	"backend/internal/config"
 	"backend/internal/repository/sqlite"
+	"backend/internal/repository/storage"
 	"backend/internal/service"
 	"fmt"
 	"log"
@@ -23,8 +24,13 @@ func main() {
 	}
 	defer database.Close()
 
+	fileStore, err := storage.NewFileStore(conf.FileStorage)
+	if err != nil {
+		log.Fatalf("error initializing file storage: %v", err)
+	}
+
 	authService := service.NewAuthService(conf.Auth, database)
-	adminService := service.NewAdminService(database)
+	adminService := service.NewAdminService(database, fileStore)
 	favourService := service.NewFavourService(database)
 	graphService := service.NewGraphService(database)
 
