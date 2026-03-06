@@ -7,14 +7,14 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
+	"regexp"
 )
+
+var ALLOWED_KEY_REGEX = regexp.MustCompile(fmt.Sprintf("^%s(\\.[a-zA-Z]{1,3})?$", crypto.UUIDV4Regex.String()))
 
 type LocalFileStore struct {
 	root string
 }
-
-var _ FileStore = &LocalFileStore{}
 
 func NewLocalFileStore(root string) (*LocalFileStore, error) {
 	if root == "" {
@@ -28,9 +28,12 @@ func NewLocalFileStore(root string) (*LocalFileStore, error) {
 	return &LocalFileStore{root: root}, nil
 }
 
-func (s *LocalFileStore) Put(_ context.Context, r io.Reader) (string, error) {
-	key := crypto.UUIDV4()
-	dst := filepath.Join(s.root, key)
+func (s *LocalFileStore) Put(_ context.Context, filename string, r io.Reader) (string, error) {
+	key := s.getKey(filename)
+	dst, err := s.safePath(key)
+	if err != nil {
+		return "", err
+	}
 
 	f, err := os.Create(dst)
 	if err != nil {
@@ -65,13 +68,15 @@ func (s *LocalFileStore) Delete(_ context.Context, key string) error {
 
 // safePath resolves the key to an absolute path and ensures it stays within the root.
 func (s *LocalFileStore) safePath(key string) (string, error) {
-	full := filepath.Join(s.root, filepath.Clean("/"+key))
-
-	// filepath.Clean + Join can still produce something outside root
-	// if the resolved path doesn't start with root, reject it
-	if !strings.HasPrefix(full, s.root+string(filepath.Separator)) && full != s.root {
-		return "", fmt.Errorf("path traversal detected: %s", key)
+	if !ALLOWED_KEY_REGEX.MatchString(key) {
+		return "", fmt.Errorf("invalid key format")
 	}
 
-	return full, nil
+	return filepath.Join(s.root, key), nil
+}
+
+func (s *LocalFileStore) getKey(filename string) string {
+	ext := filepath.Ext(filename)
+	uuid := crypto.UUIDV4()
+	return uuid + ext
 }

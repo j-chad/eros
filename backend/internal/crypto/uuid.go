@@ -4,7 +4,10 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"io"
+	"regexp"
 )
+
+var UUIDV4Regex = regexp.MustCompile("[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}")
 
 // UUIDV4 generates a random UUID version 4 as per RFC 4122.
 func UUIDV4() string {

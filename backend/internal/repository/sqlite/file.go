@@ -12,7 +12,7 @@ func (s *sqliteDB) CreateFile(ctx context.Context, file *models.File) error {
 		VALUES (?, ?, ?, ?, ?)
 	`, file.NodeID, file.Filename, file.MimeType, file.StorageKey, file.SizeBytes)
 	if err != nil {
-		return fmt.Errorf("failed to insert file: %w", err)
+		return fmt.Errorf("failed to insert file row: %w", err)
 	}
 
 	fileID, err := result.LastInsertId()

@@ -8,7 +8,7 @@ import (
 )
 
 type FileStore interface {
-	Put(ctx context.Context, r io.Reader) (string, error)
+	Put(ctx context.Context, filename string, r io.Reader) (string, error)
 	Get(ctx context.Context, key string) (io.ReadCloser, error)
 	Delete(ctx context.Context, key string) error
 }
