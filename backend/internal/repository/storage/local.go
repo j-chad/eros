@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"backend/internal/crypto"
 	"context"
 	"fmt"
 	"io"
@@ -27,26 +28,20 @@ func NewLocalFileStore(root string) (*LocalFileStore, error) {
 	return &LocalFileStore{root: root}, nil
 }
 
-func (s *LocalFileStore) Put(_ context.Context, key string, r io.Reader) error {
-	dst, err := s.safePath(key)
-	if err != nil {
-		return err
-	}
-
-	if err := os.MkdirAll(filepath.Dir(dst), 0o750); err != nil {
-		return fmt.Errorf("mkdir: %w", err)
-	}
+func (s *LocalFileStore) Put(_ context.Context, r io.Reader) (string, error) {
+	key := crypto.UUIDV4()
+	dst := filepath.Join(s.root, key)
 
 	f, err := os.Create(dst)
 	if err != nil {
-		return fmt.Errorf("create file: %w", err)
+		return "", fmt.Errorf("create file: %w", err)
 	}
 	defer f.Close()
 
 	if _, err := io.Copy(f, r); err != nil {
-		return fmt.Errorf("write file: %w", err)
+		return "", fmt.Errorf("write file: %w", err)
 	}
-	return nil
+	return key, nil
 }
 
 func (s *LocalFileStore) Get(_ context.Context, key string) (io.ReadCloser, error) {
