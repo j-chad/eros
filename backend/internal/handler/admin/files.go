@@ -11,7 +11,7 @@ import (
 const FileSizeLimit = 10 * 1024 * 1024 // 10 MB
 
 func (h *Handler) UploadFile(w http.ResponseWriter, r *http.Request) {
-	nodeID := r.URL.Query().Get("node_id")
+	nodeID := r.PathValue("node_id")
 	if nodeID == "" {
 		response.Error(r.Context(), w, apierror.BadRequest("node_id query parameter is required"))
 		return
@@ -42,6 +42,10 @@ func (h *Handler) UploadFile(w http.ResponseWriter, r *http.Request) {
 	mimeType := header.Header.Get("Content-Type")
 	if mimeType == "" {
 		mimeType = mime.TypeByExtension(filepath.Ext(header.Filename))
+		if mimeType == "" {
+			response.Error(r.Context(), w, apierror.BadRequest("unable to determine file MIME type"))
+			return
+		}
 	}
 
 	fileModel, err := h.adminService.UploadFile(r.Context(), nodeID, header.Filename, mimeType, header.Size, file)
@@ -54,7 +58,7 @@ func (h *Handler) UploadFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListFiles(w http.ResponseWriter, r *http.Request) {
-	nodeID := r.URL.Query().Get("node_id")
+	nodeID := r.PathValue("node_id")
 	if nodeID == "" {
 		response.Error(r.Context(), w, apierror.BadRequest("node_id query parameter is required"))
 		return
