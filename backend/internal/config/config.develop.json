@@ -12,5 +12,10 @@
 		"local": {
 			"base_path": "./files"
 		}
+	},
+	"logger": {
+		"level": "debug",
+		"json": false,
+		"add_source": true
 	}
 }
