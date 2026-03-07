@@ -3,6 +3,7 @@ package handler
 import (
 	"backend/internal/handler/admin"
 	"backend/internal/handler/client"
+	"backend/internal/logger"
 	"backend/internal/service"
 	"backend/pkg/apierror"
 	"backend/pkg/response"
@@ -34,6 +35,9 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/device", h.client.RegisterDevice)
 
 	adminMux := http.NewServeMux()
+	if logger.DefaultCollector != nil {
+		adminMux.HandleFunc("GET /api/admin/debug/traces", logger.DefaultCollector.ServeHTTP)
+	}
 	adminMux.HandleFunc("GET /api/admin/ping", ping)
 	adminMux.HandleFunc("POST /api/admin/registration-codes", h.admin.CreateRegistrationCode)
 	adminMux.HandleFunc("GET /api/admin/registration-codes", h.admin.GetRegistrationCode)

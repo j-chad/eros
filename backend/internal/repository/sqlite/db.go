@@ -45,7 +45,7 @@ func NewSQLiteDB(conf config.DatabaseConfig) (repository.Repository, error) {
 		}
 	}
 
-	// initialize the database schema
+	// initialise the database schema
 	if _, err := db.Exec(sqliteInitSQL); err != nil {
 		return nil, fmt.Errorf("error initializing database: %w", err)
 	}

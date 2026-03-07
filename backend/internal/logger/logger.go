@@ -23,7 +23,8 @@ func Init(config config.LoggingConfig) {
 	}
 
 	if config.Collector.Enabled {
-		defaultCollector = NewCollector(config.Collector)
+		DefaultCollector = NewCollector(config.Collector)
+		handler = newCollectingHandler(handler, DefaultCollector)
 	}
 
 	slog.SetDefault(slog.New(handler))

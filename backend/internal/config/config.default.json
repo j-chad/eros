@@ -8,8 +8,8 @@
 		"busy_timeout": "5s",
 		"wal": true
 	},
-	"logger": {
-		"level": "info",
+	"logging": {
+		"level": 0,
 		"json": true,
 		"add_source": false,
 		"collector": {

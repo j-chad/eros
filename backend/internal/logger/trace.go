@@ -20,8 +20,12 @@ func newID(n int) string {
 
 // WithTrace starts a new trace and attaches the trace ID to the context logger.
 // Call this once at the start of a request (e.g. in middleware).
-func WithTrace(ctx context.Context) context.Context {
+func WithTrace(ctx context.Context) (context.Context, string) {
 	traceID := newID(16)
+	return WithExistingTrace(ctx, traceID), traceID
+}
+
+func WithExistingTrace(ctx context.Context, traceID string) context.Context {
 	ctx = context.WithValue(ctx, traceKey{}, traceID)
 
 	l := FromContext(ctx).With("trace_id", traceID)
@@ -78,16 +82,16 @@ func durationMS(start time.Time) string {
 	return fmt.Sprintf("%.2f", float64(time.Since(start).Microseconds())/1000)
 }
 
-// defaultCollector is the global span collector.
+// DefaultCollector is the global span collector.
 // If non-nil, spans will be recorded to it when they end. This is set up by Init() if the collector is enabled in config.
-var defaultCollector *Collector
+var DefaultCollector *Collector
 
 // End completes the span and logs its duration.
 func (s *Span) End(attrs ...any) {
 	args := append([]any{"duration_ms", durationMS(s.Start)}, attrs...)
 	s.logger.Info("span ended", args...)
-	if defaultCollector != nil {
-		defaultCollector.Record(s, nil)
+	if DefaultCollector != nil {
+		DefaultCollector.Record(s, nil)
 	}
 }
 
@@ -99,7 +103,7 @@ func (s *Span) EndWithError(err error) {
 	} else {
 		s.logger.Info("span ended", "duration_ms", dur)
 	}
-	if defaultCollector != nil {
-		defaultCollector.Record(s, err)
+	if DefaultCollector != nil {
+		DefaultCollector.Record(s, err)
 	}
 }
