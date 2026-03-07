@@ -8,6 +8,7 @@ import (
 	"backend/pkg/response"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 )
 
@@ -110,6 +111,29 @@ func WithCORS(next http.Handler, allowedOrigins []string) http.Handler {
 	})
 }
 
+// statusWriter wraps http.ResponseWriter to capture the status code.
+type statusWriter struct {
+	http.ResponseWriter
+	code    int
+	written bool
+}
+
+func (w *statusWriter) WriteHeader(code int) {
+	if !w.written {
+		w.code = code
+		w.written = true
+	}
+	w.ResponseWriter.WriteHeader(code)
+}
+
+func (w *statusWriter) Write(b []byte) (int, error) {
+	if !w.written {
+		w.code = http.StatusOK
+		w.written = true
+	}
+	return w.ResponseWriter.Write(b)
+}
+
 func WithTracing(headerName string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -121,9 +145,29 @@ func WithTracing(headerName string, next http.Handler) http.Handler {
 			ctx, traceID = logger.WithTrace(ctx)
 		}
 
+		ctx, span := logger.StartSpan(ctx, fmt.Sprintf("%s %s", r.Method, r.URL.Path))
+		span.Logger().Debug("request started",
+			"method", r.Method,
+			"path", r.URL.Path,
+			"remote_addr", r.RemoteAddr,
+			"query", r.URL.RawQuery,
+			"user_agent", r.UserAgent(),
+		)
+
 		w.Header().Set(headerName, traceID)
 
-		next.ServeHTTP(w, r.WithContext(ctx))
+		sw := &statusWriter{ResponseWriter: w}
+		next.ServeHTTP(sw, r.WithContext(ctx))
+
+		level := slog.LevelInfo
+		switch {
+		case sw.code >= 500:
+			level = slog.LevelError
+		case sw.code >= 400:
+			level = slog.LevelWarn
+		}
+		span.Logger().Log(ctx, level, "request completed", "status", sw.code)
+		span.End()
 	})
 }
 
