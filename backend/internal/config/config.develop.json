@@ -13,8 +13,8 @@
 			"base_path": "./files"
 		}
 	},
-	"logger": {
-		"level": "debug",
+	"logging": {
+		"level": -4,
 		"json": false,
 		"add_source": true
 	}

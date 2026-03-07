@@ -8,6 +8,7 @@ import (
 	"backend/internal/service"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 
 	"backend/internal/handler"
@@ -46,13 +47,13 @@ func main() {
 	serverAddr := fmt.Sprintf("%s:%d", conf.Server.Host, conf.Server.Port)
 	server := &http.Server{
 		Addr:         serverAddr,
-		Handler:      handler.WithCORS(mux, conf.Server.CorsOrigins),
+		Handler:      handler.WithTracing(conf.Logging.Collector.TraceHeader, handler.WithCORS(mux, conf.Server.CorsOrigins)),
 		ReadTimeout:  conf.Server.ReadTimeout,
 		WriteTimeout: conf.Server.WriteTimeout,
 		IdleTimeout:  conf.Server.IdleTimeout,
 	}
 
-	log.Println(fmt.Sprintf("Listening at %s", serverAddr))
+	slog.Default().Info("starting server", "address", serverAddr)
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatalf("error starting server: %v", err)
 	}

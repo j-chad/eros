@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"backend/internal/logger"
 	"backend/internal/service"
 	"backend/pkg/apierror"
 	"backend/pkg/authctx"
@@ -106,6 +107,23 @@ func WithCORS(next http.Handler, allowedOrigins []string) http.Handler {
 		}
 
 		next.ServeHTTP(w, r)
+	})
+}
+
+func WithTracing(headerName string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		var traceID string
+		if traceID = r.Header.Get(headerName); traceID != "" {
+			ctx = logger.WithExistingTrace(ctx, traceID)
+		} else {
+			ctx, traceID = logger.WithTrace(ctx)
+		}
+
+		w.Header().Set(headerName, traceID)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
