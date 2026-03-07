@@ -16,10 +16,10 @@ type Config struct {
 
 // LoggingConfig contains logging settings
 type LoggingConfig struct {
-	Level     slog.Level       `json:"level" env:"LOG_LEVEL"`
-	JSON      bool             `json:"json" env:"LOG_JSON"`
-	AddSource bool             `json:"add_source" env:"LOG_ADD_SOURCE"`
-	Collector *CollectorConfig `json:"collector"` // nil if disabled
+	Level     slog.Level      `json:"level" env:"LOG_LEVEL"`
+	JSON      bool            `json:"json" env:"LOG_JSON"`
+	AddSource bool            `json:"add_source" env:"LOG_ADD_SOURCE"`
+	Collector CollectorConfig `json:"collector"`
 }
 
 // CollectorConfig contains settings for the log collector

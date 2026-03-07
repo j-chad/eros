@@ -22,8 +22,8 @@ func Init(config config.LoggingConfig) {
 		handler = slog.NewTextHandler(os.Stdout, opts)
 	}
 
-	if config.Collector != nil && config.Collector.Enabled {
-		defaultCollector = NewCollector(*config.Collector)
+	if config.Collector.Enabled {
+		defaultCollector = NewCollector(config.Collector)
 	}
 
 	slog.SetDefault(slog.New(handler))
