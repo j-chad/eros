@@ -74,7 +74,6 @@ func StartSpan(ctx context.Context, name string) (context.Context, *Span) {
 	ctx = context.WithValue(ctx, spanKey{}, s)
 	ctx = NewContext(ctx, l)
 
-	l.Info("span started")
 	return ctx, s
 }
 
@@ -87,23 +86,12 @@ func durationMS(start time.Time) string {
 var DefaultCollector *Collector
 
 // End completes the span and logs its duration.
-func (s *Span) End(attrs ...any) {
-	args := append([]any{"duration_ms", durationMS(s.Start)}, attrs...)
-	s.logger.Info("span ended", args...)
+func (s *Span) End() {
 	if DefaultCollector != nil {
 		DefaultCollector.Record(s, nil)
 	}
 }
 
-// EndWithError completes the span, logging the error if non-nil.
-func (s *Span) EndWithError(err error) {
-	dur := durationMS(s.Start)
-	if err != nil {
-		s.logger.Error("span failed", "duration_ms", dur, "err", err)
-	} else {
-		s.logger.Info("span ended", "duration_ms", dur)
-	}
-	if DefaultCollector != nil {
-		DefaultCollector.Record(s, err)
-	}
+func (s *Span) Logger() *slog.Logger {
+	return s.logger
 }
