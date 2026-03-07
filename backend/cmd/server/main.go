@@ -2,6 +2,7 @@ package main
 
 import (
 	"backend/internal/config"
+	"backend/internal/logger"
 	"backend/internal/repository/sqlite"
 	"backend/internal/repository/storage"
 	"backend/internal/service"
@@ -17,6 +18,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("error loading config: %v", err)
 	}
+
+	logger.Init(conf.Logging)
 
 	database, err := sqlite.NewSQLiteDB(conf.Database)
 	if err != nil {

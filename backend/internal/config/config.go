@@ -1,17 +1,32 @@
 package config
 
 import (
+	"log/slog"
 	"time"
 )
 
-type Env string
-
 // Config holds all application configuration
 type Config struct {
+	Logging     LoggingConfig     `json:"logging"`
 	Server      ServerConfig      `json:"server"`
 	Database    DatabaseConfig    `json:"database"`
 	Auth        AuthConfig        `json:"auth"`
 	FileStorage FileStorageConfig `json:"file_storage"`
+}
+
+// LoggingConfig contains logging settings
+type LoggingConfig struct {
+	Level     slog.Level       `json:"level" env:"LOG_LEVEL"`
+	JSON      bool             `json:"json" env:"LOG_JSON"`
+	AddSource bool             `json:"add_source" env:"LOG_ADD_SOURCE"`
+	Collector *CollectorConfig `json:"collector"` // nil if disabled
+}
+
+// CollectorConfig contains settings for the log collector
+type CollectorConfig struct {
+	Enabled     bool   `json:"enabled" env:"COLLECTOR_ENABLED"`
+	MaxSpans    int    `json:"max_spans" env:"LOG_COLLECTOR_MAX_SPANS"`
+	TraceHeader string `json:"trace_header" env:"LOG_COLLECTOR_TRACE_HEADER"`
 }
 
 // ServerConfig contains HTTP server settings

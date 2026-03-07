@@ -7,5 +7,15 @@
 	"database": {
 		"busy_timeout": "5s",
 		"wal": true
+	},
+	"logger": {
+		"level": "info",
+		"json": true,
+		"add_source": false,
+		"collector": {
+			"enabled": true,
+			"max_spans": 10000,
+			"trace_header": "X-Trace-Id"
+		}
 	}
 }
