@@ -1,4 +1,4 @@
-package logger
+package internal
 
 import (
 	"backend/internal/config"
@@ -20,11 +20,6 @@ func Init(config config.LoggingConfig) {
 		handler = slog.NewJSONHandler(os.Stdout, opts)
 	} else {
 		handler = slog.NewTextHandler(os.Stdout, opts)
-	}
-
-	if config.Collector.Enabled {
-		DefaultCollector = NewCollector(config.Collector)
-		handler = newCollectingHandler(handler, DefaultCollector)
 	}
 
 	slog.SetDefault(slog.New(handler))
