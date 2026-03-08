@@ -3,7 +3,7 @@ package handler
 import (
 	"backend/internal/handler/admin"
 	"backend/internal/handler/client"
-	"backend/internal/logger"
+	"backend/internal/handler/middleware"
 	"backend/internal/service"
 	"backend/pkg/apierror"
 	"backend/pkg/response"
@@ -35,9 +35,6 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/device", h.client.RegisterDevice)
 
 	adminMux := http.NewServeMux()
-	if logger.DefaultCollector != nil {
-		adminMux.HandleFunc("GET /api/admin/debug/traces", logger.DefaultCollector.ServeHTTP)
-	}
 	adminMux.HandleFunc("GET /api/admin/ping", ping)
 	adminMux.HandleFunc("POST /api/admin/registration-codes", h.admin.CreateRegistrationCode)
 	adminMux.HandleFunc("GET /api/admin/registration-codes", h.admin.GetRegistrationCode)
@@ -58,7 +55,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	adminMux.HandleFunc("PUT /api/admin/nodes/{node_id}/files", h.admin.UploadFiles)
 	adminMux.HandleFunc("GET /api/admin/nodes/{node_id}/files", h.admin.ListFiles)
 	adminMux.HandleFunc("/", routeNotFound)
-	mux.Handle("/api/admin/", withAdminAuth(adminMux, *h.auth))
+	mux.Handle("/api/admin/", middleware.WithAdminAuth(adminMux, *h.auth))
 
 	clientMux := http.NewServeMux()
 	clientMux.HandleFunc("GET /api/ping", ping)
@@ -69,7 +66,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	clientMux.HandleFunc("DELETE /api/favours/request/{id}", h.client.DeleteFavourRequest)
 	clientMux.HandleFunc("GET /api/graphs", h.client.ListGraphs)
 	clientMux.HandleFunc("GET /api/graphs/{id}", h.client.GetGraph)
-	mux.Handle("/api/", withClientAuth(clientMux, *h.auth))
+	mux.Handle("/api/", middleware.WithClientAuth(clientMux, *h.auth))
 
 	mux.HandleFunc("/", routeNotFound)
 }
