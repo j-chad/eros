@@ -1,42 +1,32 @@
-# sv
+# Eros — Client App
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+The partner-facing Progressive Web App (PWA). Users register their device via QR code, then follow their reward journey, unlock nodes, and manage their favour wallet.
 
-## Creating a project
+## Development
 
-If you're seeing this, you've probably already done this step. Congrats!
-
-```sh
-# create a new project
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
-
-```sh
-# recreate this project
-npx sv create --template minimal --types ts --add prettier eslint sveltekit-adapter="adapter:auto" --install npm client
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+```bash
+npm install
+npm run dev        # start dev server
+npm run dev -- --open  # start and open in browser
 ```
 
 ## Building
 
-To create a production version of your app:
-
-```sh
-npm run build
+```bash
+npm run build      # production build
+npm run preview    # preview the production build locally
 ```
 
-You can preview the production build with `npm run preview`.
+> The app uses `@sveltejs/adapter-auto`. For deployment you may need to install a specific [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+## Other commands
+
+```bash
+npm run check      # TypeScript type-check
+npm run lint       # ESLint + Prettier check
+npm run format     # auto-format
+```
+
+## Environment
+
+The app expects the backend API to be reachable. Configure the API base URL via the `PUBLIC_API_BASE` environment variable (or `.env` file) if it differs from the default.
