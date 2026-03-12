@@ -4,12 +4,15 @@ import (
 	"backend/internal/models"
 	"backend/internal/repository"
 	"context"
+	"errors"
 	"time"
 )
 
 type GraphService struct {
 	repo repository.Repository
 }
+
+var NodeUnlockIncorrect = errors.New("node unlock incorrect")
 
 func NewGraphService(repo repository.Repository) *GraphService {
 	return &GraphService{repo: repo}
@@ -52,4 +55,8 @@ func (s *GraphService) GetGraph(ctx context.Context, graphID string) (*models.Gr
 	graph.Viewport = nil
 
 	return graph, nil
+}
+
+func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload string) error {
+	if
 }
