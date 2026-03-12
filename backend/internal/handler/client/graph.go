@@ -1,8 +1,11 @@
 package client
 
 import (
+	"backend/internal/service"
 	"backend/pkg/apierror"
 	"backend/pkg/response"
+	"errors"
+	"io"
 	"net/http"
 )
 
@@ -29,4 +32,24 @@ func (h *Handler) GetGraph(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.JSON(w, http.StatusOK, graph)
+}
+
+func (h *Handler) UnlockNode(w http.ResponseWriter, r *http.Request) {
+	payload, err := io.ReadAll(io.LimitReader(r.Body, 1024)) // limit to 1KB to prevent abuse
+	if err != nil {
+		response.Error(r.Context(), w, apierror.BadRequest("failed to read request body"))
+		return
+	}
+
+	if err := h.graphService.UnlockNode(r.Context(), r.PathValue("id"), string(payload)); err != nil {
+		if errors.Is(err, service.NodeUnlockIncorrect) {
+			response.Error(r.Context(), w, apierror.Forbidden("incorrect unlock payload"))
+			return
+		}
+
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
+		return
+	}
+
+	response.NoContent(w)
 }
