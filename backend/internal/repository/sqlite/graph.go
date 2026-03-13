@@ -201,3 +201,29 @@ func (s *sqliteDB) UpdateGraph(ctx context.Context, req models.Graph) error {
 		return nil
 	})
 }
+
+func (s *sqliteDB) GetNode(ctx context.Context, nodeID string) (*models.Node, error) {
+	node, err := s.scanNodeFull(s.executor().QueryRowContext(ctx, `
+		SELECT *
+		FROM node_full
+		WHERE id = ?
+	`, nodeID))
+	if err != nil {
+		return nil, err
+	}
+
+	return &node, nil
+}
+
+func (s *sqliteDB) UnlockNode(ctx context.Context, nodeID string) error {
+	_, err := s.executor().ExecContext(ctx, `
+		UPDATE node
+		SET unlocked_at = CURRENT_TIMESTAMP
+		WHERE id = ? AND unlocked_at IS NULL
+	`, nodeID)
+	if err != nil {
+		return fmt.Errorf("failed to unlock node %s: %w", nodeID, err)
+	}
+
+	return nil
+}
