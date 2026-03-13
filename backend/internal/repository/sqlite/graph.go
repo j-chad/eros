@@ -202,15 +202,38 @@ func (s *sqliteDB) UpdateGraph(ctx context.Context, req models.Graph) error {
 	})
 }
 
-func (s *sqliteDB) GetNode(ctx context.Context, nodeID string) (*models.Node, error) {
-	node, err := s.scanNodeFull(s.executor().QueryRowContext(ctx, `
-		SELECT *
-		FROM node_full
-		WHERE id = ?
-	`, nodeID))
+func (s *sqliteDB) GetAccessibleNode(ctx context.Context, nodeID string) (*models.Node, error) {
+	row := s.executor().QueryRowContext(ctx, `
+       WITH
+       node_graph AS (
+          SELECT graph_id FROM node WHERE id = ?1
+       ),
+       unlocked AS (
+          SELECT id
+          FROM node
+          WHERE graph_id = (SELECT graph_id FROM node_graph)
+            AND unlocked_at IS NOT NULL
+            OR type = 'start'
+       ),
+       accessible AS (
+          SELECT id FROM unlocked
+          UNION
+          SELECT e.destination_node_id
+          FROM edge e
+                 JOIN unlocked u ON u.id = e.source_node_id
+          WHERE e.graph_id = (SELECT graph_id FROM node_graph)
+       )
+       SELECT * FROM node_full
+       WHERE id = ?1
+         AND id IN (SELECT id FROM accessible);
+    `, nodeID)
+
+	node, err := s.scanNodeFull(row)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to query accessible node: %w", err)
 	}
+
+	node.UIPosition = nil
 
 	return &node, nil
 }
