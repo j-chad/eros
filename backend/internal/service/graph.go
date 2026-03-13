@@ -59,7 +59,7 @@ func (s *GraphService) GetGraph(ctx context.Context, graphID string) (*models.Gr
 }
 
 func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload string) error {
-	node, err := s.repo.GetNode(ctx, nodeID)
+	node, err := s.repo.GetAccessibleNode(ctx, nodeID)
 	if err != nil {
 		return err
 	}

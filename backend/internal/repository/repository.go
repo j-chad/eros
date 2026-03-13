@@ -55,7 +55,7 @@ type GraphRepository interface {
 	GetGraph(ctx context.Context, graphID string) (*models.Graph, error)
 	GetAccessibleGraph(ctx context.Context, graphID string) (*models.Graph, error)
 	UpdateGraph(ctx context.Context, graph models.Graph) error
-	GetNode(ctx context.Context, nodeID string) (*models.Node, error)
+	GetAccessibleNode(ctx context.Context, nodeID string) (*models.Node, error)
 	UnlockNode(ctx context.Context, nodeID string) error
 }
 
