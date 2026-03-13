@@ -5,6 +5,7 @@ import (
 	"backend/internal/repository"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -58,5 +59,63 @@ func (s *GraphService) GetGraph(ctx context.Context, graphID string) (*models.Gr
 }
 
 func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload string) error {
-	if
+	node, err := s.repo.GetNode(ctx, nodeID)
+	if err != nil {
+		return err
+	}
+
+	if err := validateUnlockPayload(node, payload); err != nil {
+		return err
+	}
+
+	return s.repo.UnlockNode(ctx, nodeID)
+}
+
+func validateUnlockPayload(node *models.Node, payload string) error {
+	switch node.Type {
+	case models.CodeGateNode:
+		return validateCodeGatePayload(node, payload)
+	case models.LocationGateNode:
+		return validateLocationGatePayload(node, payload)
+	default:
+		return fmt.Errorf("unsupported node type %s for unlocking", node.Type)
+	}
+}
+
+func validateCodeGatePayload(node *models.Node, payload string) error {
+	nodeData, ok := node.Data.(models.CodeData)
+	if !ok {
+		return fmt.Errorf("invalid node data for code gate node %s", node.ID)
+	}
+
+	if nodeData.Code != payload {
+		return NodeUnlockIncorrect
+	}
+
+	return nil
+}
+
+func validateLocationGatePayload(node *models.Node, payload string) error {
+	nodeData, ok := node.Data.(models.LocationData)
+	if !ok {
+		return fmt.Errorf("invalid node data for location gate node %s", node.ID)
+	}
+
+	var lat, lng float64
+	_, err := fmt.Sscanf(payload, "%f,%f", &lat, &lng)
+	if err != nil {
+		return fmt.Errorf("invalid payload format for location gate node %s: %w", node.ID, err)
+	}
+
+	radius := nodeData.RadiusM
+	if radius <= 0 {
+		radius = 10
+	}
+
+	distance := haversineDistance(lat, lng, nodeData.Latitude, nodeData.Longitude)
+	if distance > float64(radius) {
+		return NodeUnlockIncorrect
+	}
+
+	return nil
 }
