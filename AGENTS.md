@@ -192,7 +192,8 @@ Flat config: `@eslint/js` recommended + `typescript-eslint` recommended + `eslin
 ### Styling
 
 - **Admin:** hand-written scoped `<style>` blocks, hardcoded hex colors, `:global()` selectors, flexbox/grid
-- **Client:** Tailwind CSS v4 utility classes + DaisyUI v5 component classes (valentine theme), minimal scoped CSS
+- **Client:** Tailwind CSS v4 utility classes + DaisyUI v5 component classes (valentine theme), minimal scoped CSS. See `client/DESIGN.md` for the full design language reference — colours, typography, spacing, radius, shadows, components, motion, and conventions.
+- **No emojis in UI copy.** They cheapen the feel.
 
 ### Error Handling
 
