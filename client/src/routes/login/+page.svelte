@@ -374,18 +374,3 @@
 	</div>
 </div>
 
-<style>
-	:global(.animate-popIn) {
-		animation: popIn 220ms ease-out both;
-	}
-	@keyframes popIn {
-		from {
-			opacity: 0;
-			transform: translateY(6px) scale(0.99);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0) scale(1);
-		}
-	}
-</style>
