@@ -27,7 +27,7 @@
 		</div>
 	</div>
 
-	<div class="min-w-40 flex justify-end">
+	<div class="flex shrink-0 justify-end">
 		{@render rightContent?.()}
 	</div>
 </div>
