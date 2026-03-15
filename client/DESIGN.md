@@ -10,14 +10,15 @@ The visual language is soft and romantic: blush pinks, rounded everything, gentl
 
 ---
 
+## Responsiveness & Layout
+The app should work beautifully on both mobile and desktop. The most common use case is mobile, so that should be the primary focus, but the layout should adapt gracefully to wider screens.
+
 ## Colour
 
 Built on DaisyUI's `valentine` theme. The palette is blush pinks with deep rose accents. Don't introduce colours outside this set.
 
-- **Page backgrounds** use a soft diagonal gradient: `from-pink-50 via-base-100 to-pink-100`
 - **Cards** sit on `base-100` (white/off-white) with a pink-tinted shadow (`shadow-pink-200/40`)
 - **Primary actions** use the DaisyUI `primary` colour (deep rose)
-- **Secondary / focus** uses `pink-300` (overridden from DaisyUI default)
 - **Subtle insets** use `base-200` (a light grey-pink)
 
 ---
