@@ -38,7 +38,7 @@
 	<title>{status} – {content().title} • Eros</title>
 </svelte:head>
 
-<div class="min-h-dvh bg-linear-to-br from-pink-50 via-base-100 to-pink-100">
+<div class="min-h-dvh bg-base-200">
 	<div class="mx-auto min-h-dvh max-w-md px-4 py-6 flex flex-col">
 		<div class="flex flex-1 items-center justify-center py-12">
 			<div class="w-full animate-popIn">
