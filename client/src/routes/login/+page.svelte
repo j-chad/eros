@@ -220,18 +220,18 @@
 </svelte:head>
 
 <div class="min-h-dvh bg-linear-to-br from-pink-50 via-base-100 to-pink-100">
-	<div class="mx-auto min-h-dvh max-w-md px-4 py-6">
+	<div class="mx-auto min-h-dvh max-w-md px-4 py-6 flex flex-col">
 		<BrandHeader subtitle="Link this device">
 			{#snippet rightContent()}
-				<ul class="steps steps-horizontal w-full max-w-45">
+				<ul class="steps steps-horizontal shrink-0">
 					<li class="step {step >= 1 ? 'step-secondary' : ''}">Code</li>
 					<li class="step {step === 2 ? 'step-secondary' : ''}">Device</li>
 				</ul>
 			{/snippet}
 		</BrandHeader>
 
-		<Card padded class="mt-5">
-			<div class="card-body gap-4">
+		<Card padded={false} class="mt-4 sm:mt-5">
+			<div class="card-body gap-3 sm:gap-4">
 				{#if error}
 					<div class="alert alert-error rounded-2xl">
 						<span class="text-sm">{error}</span>
@@ -368,7 +368,7 @@
 			</div>
 		</Card>
 
-		<div class="mt-5 text-center text-xs opacity-60">
+		<div class="mt-auto pt-5 text-center text-xs opacity-60">
 			Tip: install the app for the smoothest scanning experience.
 		</div>
 	</div>

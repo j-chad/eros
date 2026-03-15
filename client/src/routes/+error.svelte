@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import BrandHeader from '$lib/ui/BrandHeader.svelte';
-	import Card from '$lib/ui/base/Card.svelte';
 	import Button from '$lib/ui/base/Button.svelte';
 
 	const status = $derived(page.status);
@@ -38,33 +36,32 @@
 	<title>{status} – {content().title} • Eros</title>
 </svelte:head>
 
-<div class="min-h-dvh bg-base-200">
-	<div class="mx-auto min-h-dvh max-w-md px-4 py-6 flex flex-col">
-		<div class="flex flex-1 items-center justify-center py-12">
+<div class="min-h-dvh bg-secondary sm:bg-base-200">
+	<div class="mx-auto min-h-dvh max-w-md px-4 py-6 flex flex-col sm:px-4">
+		<div class="flex flex-1 items-center justify-center sm:py-12">
 			<div class="w-full animate-popIn">
-				<Card class="bg-secondary">
-					<div class="card-body gap-6 text-center">
-						<p class="text-5xl font-black text-primary/30">{status}</p>
+				<!-- Full-bleed on mobile, card on sm+ -->
+				<div class="card-body gap-6 text-center sm:card sm:rounded-3xl sm:bg-secondary sm:shadow-xl sm:shadow-pink-200/40">
+					<p class="text-5xl font-black text-primary/30">{status}</p>
 
-						<div class="space-y-2">
-							<h1 class="text-xl font-bold">{content().title}</h1>
-							{#if showRawError && page.error}
-								<pre class="mt-2 text-left text-xs bg-base-200 rounded-2xl p-4 overflow-x-auto text-base-content/70">{JSON.stringify(page.error, null, 2)}</pre>
-							{:else}
-								<p class="text-sm opacity-70">{content().description}</p>
-							{/if}
-						</div>
-
-						<div class="flex flex-col gap-3 pt-1">
-							<Button block variant="primary" onclick={() => goto('/')}>Go Home</Button>
-							{#if page.error}
-								<Button ghost onclick={() => { showRawError = !showRawError; }}>
-									{showRawError ? 'Hide details' : 'Details'}
-								</Button>
-							{/if}
-						</div>
+					<div class="space-y-2">
+						<h1 class="text-xl font-bold">{content().title}</h1>
+						{#if showRawError && page.error}
+							<pre class="mt-2 text-left text-xs bg-base-200 rounded-2xl p-4 overflow-x-auto text-base-content/70">{JSON.stringify(page.error, null, 2)}</pre>
+						{:else}
+							<p class="text-sm opacity-70">{content().description}</p>
+						{/if}
 					</div>
-				</Card>
+
+					<div class="flex flex-col gap-3 pt-1">
+						<Button block variant="primary" onclick={() => goto('/')}>Go Home</Button>
+						{#if page.error}
+							<Button ghost onclick={() => { showRawError = !showRawError; }}>
+								{showRawError ? 'Hide details' : 'Details'}
+							</Button>
+						{/if}
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
