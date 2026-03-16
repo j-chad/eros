@@ -16,6 +16,10 @@
 	height: 1em;
 }
 
+body {
+	background: var(--color-base-200);
+}
+
 /* Entrance animation used on step/state transitions */
 .animate-popIn {
 	animation: popIn 220ms ease-out both;
