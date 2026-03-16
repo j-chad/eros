@@ -25,6 +25,9 @@ export default defineConfig(({mode}) => {
 				cert: fs.readFileSync('.cert/cert.pem'),
 			} : undefined
 		},
+		preview: {
+			port: env.HTTPS ? 443 : 80
+		},
 		plugins,
 		define: {'process.env.NODE_ENV': JSON.stringify(mode)},
 	});
