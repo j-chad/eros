@@ -96,9 +96,9 @@
 
 			stream = await navigator.mediaDevices.getUserMedia({
 				video: {
-					facingMode: { ideal: 'environment' },
-					width: { ideal: 1280 },
-					height: { ideal: 720 }
+					facingMode: {ideal: 'environment'},
+					width: {ideal: 1280},
+					height: {ideal: 720}
 				},
 				audio: false
 			});
@@ -124,7 +124,7 @@
 					canvasEl.width = targetW;
 					canvasEl.height = targetH;
 
-					const ctx = canvasEl.getContext('2d', { willReadFrequently: true });
+					const ctx = canvasEl.getContext('2d', {willReadFrequently: true});
 					if (ctx) {
 						ctx.drawImage(videoEl, 0, 0, targetW, targetH);
 						const imageData = ctx.getImageData(0, 0, targetW, targetH);
@@ -216,161 +216,161 @@
 
 <svelte:head>
 	<title>Login • Eros</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta content="width=device-width, initial-scale=1" name="viewport"/>
 </svelte:head>
 
-<div class="min-h-dvh bg-linear-to-br from-pink-50 via-base-100 to-pink-100">
-	<div class="mx-auto min-h-dvh max-w-md px-4 py-6 flex flex-col">
-		<BrandHeader subtitle="Link this device">
-			{#snippet rightContent()}
-				<ul class="steps steps-horizontal shrink-0">
-					<li class="step {step >= 1 ? 'step-secondary' : ''}">Code</li>
-					<li class="step {step === 2 ? 'step-secondary' : ''}">Device</li>
-				</ul>
-			{/snippet}
-		</BrandHeader>
 
-		<Card padded={false} class="mt-4 sm:mt-5">
-			<div class="card-body gap-3 sm:gap-4">
-				{#if error}
-					<div class="alert alert-error rounded-2xl">
-						<span class="text-sm">{error}</span>
-					</div>
-				{/if}
+<div class="mx-auto min-h-dvh max-w-md px-4 py-6 flex flex-col justify-between">
+	<BrandHeader subtitle="Link this device">
+		{#snippet rightContent()}
+			<ul class="steps steps-horizontal shrink-0">
+				<li class="step {step >= 1 ? 'step-secondary' : ''}">Code</li>
+				<li class="step {step === 2 ? 'step-secondary' : ''}">Device</li>
+			</ul>
+		{/snippet}
+	</BrandHeader>
 
-				{#if step === 1}
-					{#if mode === 'scan'}
-						<div class="relative overflow-hidden rounded-3xl bg-base-200 animate-popIn">
-							<video
-								bind:this={videoEl}
-								class="aspect-3/4 w-full object-cover"
-								playsinline
-								muted
-							></video>
+	<Card padded={false}>
+		<div class="card-body gap-3 sm:gap-4">
+			{#if error}
+				<div class="alert alert-error rounded-2xl">
+					<span class="text-sm">{error}</span>
+				</div>
+			{/if}
 
-							<!-- hidden canvas for decoding -->
-							<canvas bind:this={canvasEl} class="hidden"></canvas>
+			{#if step === 1}
+				{#if mode === 'scan'}
+					<div class="relative overflow-hidden rounded-xl sm:rounded-lg bg-base-200 animate-popIn">
+						<video
+							bind:this={videoEl}
+							class="aspect-3/4 w-full object-cover"
+							playsinline
+							muted
+						></video>
 
-							<div class="pointer-events-none absolute inset-0 grid place-items-center">
-								<div class="w-[72%] max-w-70 aspect-square rounded-3xl border-2 border-white/70 shadow-[0_0_0_999px_rgba(0,0,0,0.25)]">
-									<div class="h-full w-full rounded-3xl ring-2 ring-pink-300/60"></div>
-								</div>
-							</div>
+						<!-- hidden canvas for decoding -->
+						<canvas bind:this={canvasEl} class="hidden"></canvas>
 
-							<div class="absolute bottom-3 left-3 right-3">
-								<div class="rounded-2xl bg-base-100/80 backdrop-blur p-3 text-sm">
-									{#if scanning}
-										<div class="flex items-center gap-2">
-											<span class="loading loading-spinner loading-sm"></span>
-											Scanning…
-										</div>
-									{:else}
-										<div class="opacity-80">Camera ready.</div>
-									{/if}
-								</div>
+						<div class="pointer-events-none absolute inset-0 grid place-items-center">
+							<div
+								class="w-[72%] max-w-70 aspect-square rounded-3xl border-2 border-white/70 shadow-[0_0_0_999px_rgba(0,0,0,0.25)]">
+								<div class="h-full w-full rounded-3xl ring-2 ring-pink-300/60"></div>
 							</div>
 						</div>
 
-						<div class="divider my-1 opacity-60">Trouble scanning?</div>
-						<button class="btn btn-ghost w-full rounded-2xl" onclick={switchToManual}>
-							Enter code manually
-						</button>
-
-					{:else}
-						<label class="form-control w-full animate-popIn">
-							<div class="label">
-								<span class="label-text font-semibold">Registration code</span>
-								<span class="label-text-alt opacity-60">XXXX-XXXX-XXXX</span>
+						<div class="absolute bottom-3 left-3 right-3">
+							<div class="rounded-2xl bg-base-100/80 backdrop-blur p-3 text-sm">
+								{#if scanning}
+									<div class="flex items-center gap-2">
+										<span class="loading loading-spinner loading-sm"></span>
+										Scanning…
+									</div>
+								{:else}
+									<div class="opacity-80">Camera ready.</div>
+								{/if}
 							</div>
-							<input
-								bind:this={codeEl}
-								class="input input-bordered input-secondary w-full rounded-2xl text-lg tracking-widest"
-								inputmode="text"
-								autocomplete="one-time-code"
-								placeholder="ABCD-1234-XYZ9"
-								value={regCodeRaw}
-								oninput={(e) => regCodeRaw = e.currentTarget.value}
-								onkeydown={(e) => e.key === 'Enter' && goNext()}
-							/>
-							<div class="label">
-								<span class="label-text-alt opacity-70">{regCodeValid ? 'Looks good ✨' : ' '}</span>
-							</div>
-						</label>
+						</div>
+					</div>
 
-						<Button
-							block
-							variant="primary"
-							disabled={!regCodeValid}
-							onclick={goNext}
-						>
-							Continue
-							<ArrowRight class="font-icon"/>
-						</Button>
-
-						{#if canScan}
-							<div class="divider my-1 opacity-60">or</div>
-							<Button block ghost onclick={switchToScan}>
-								Back to scanning
-							</Button>
-						{/if}
-					{/if}
+					<div class="divider my-1 opacity-60">Trouble scanning?</div>
+					<button class="btn btn-ghost w-full rounded-2xl" onclick={switchToManual}>
+						Enter code manually
+					</button>
 
 				{:else}
-					<div class="space-y-1 animate-popIn">
-						<h1 class="text-xl font-bold">Name this device</h1>
-						<p class="text-sm opacity-70">You can change it later.</p>
-					</div>
-
-					<div class="rounded-2xl bg-base-200/60 p-4 animate-popIn">
-						<div class="text-xs font-semibold opacity-60">Registration code</div>
-						<div class="font-mono text-sm">{regCode}</div>
-					</div>
-
 					<label class="form-control w-full animate-popIn">
 						<div class="label">
-							<span class="label-text font-semibold">Device name</span>
-							<span class="label-text-alt opacity-60">2+ chars</span>
+							<span class="label-text font-semibold">Registration code</span>
+							<span class="label-text-alt opacity-60">XXXX-XXXX-XXXX</span>
 						</div>
 						<input
-							bind:this={nameEl}
-							class="input input-bordered input-secondary w-full rounded-2xl text-lg"
-							autocomplete="nickname"
-							placeholder="e.g. Eros iPhone"
-							bind:value={deviceName}
-							onkeydown={(e) => e.key === 'Enter' && finish()}
+							bind:this={codeEl}
+							class="input input-bordered input-secondary w-full rounded-2xl text-lg tracking-widest"
+							inputmode="text"
+							autocomplete="one-time-code"
+							placeholder="ABCD-1234-XYZ9"
+							value={regCodeRaw}
+							oninput={(e) => regCodeRaw = e.currentTarget.value}
+							onkeydown={(e) => e.key === 'Enter' && goNext()}
 						/>
 						<div class="label">
-              <span class="label-text-alt opacity-70">
-                {deviceNameValid ? 'Nice ✨' : 'Give it a short name.'}
-              </span>
+							<span class="label-text-alt opacity-70">{regCodeValid ? 'Looks good ✨' : ' '}</span>
 						</div>
 					</label>
 
-					<div class="flex gap-3 pt-1 animate-popIn">
-						<Button ghost disabled={busy} onclick={back}>
-							<ArrowLeft class="font-icon"/>
-							Back
-						</Button>
-						<button
-							class="btn btn-primary flex-1 rounded-2xl"
-							disabled={!deviceNameValid || busy}
-							onclick={finish}
-						>
-							{#if busy}
-								<span class="loading loading-spinner loading-sm"></span>
-								Saving…
-							{:else}
-								Finish
-							{/if}
-						</button>
-					</div>
-				{/if}
-			</div>
-		</Card>
+					<Button
+						block
+						variant="primary"
+						disabled={!regCodeValid}
+						onclick={goNext}
+					>
+						Continue
+						<ArrowRight class="font-icon"/>
+					</Button>
 
-		<div class="mt-auto pt-5 text-center text-xs opacity-60">
-			Tip: install the app for the smoothest scanning experience.
+					{#if canScan}
+						<div class="divider my-1 opacity-60">or</div>
+						<Button block ghost onclick={switchToScan}>
+							Back to scanning
+						</Button>
+					{/if}
+				{/if}
+
+			{:else}
+				<div class="space-y-1 animate-popIn">
+					<h1 class="text-xl font-bold">Name this device</h1>
+					<p class="text-sm opacity-70">You can change it later.</p>
+				</div>
+
+				<div class="rounded-2xl bg-base-200/60 p-4 animate-popIn">
+					<div class="text-xs font-semibold opacity-60">Registration code</div>
+					<div class="font-mono text-sm">{regCode}</div>
+				</div>
+
+				<label class="form-control w-full animate-popIn">
+					<div class="label">
+						<span class="label-text font-semibold">Device name</span>
+						<span class="label-text-alt opacity-60">2+ chars</span>
+					</div>
+					<input
+						bind:this={nameEl}
+						class="input input-bordered input-secondary w-full rounded-2xl text-lg"
+						autocomplete="nickname"
+						placeholder="e.g. Eros iPhone"
+						bind:value={deviceName}
+						onkeydown={(e) => e.key === 'Enter' && finish()}
+					/>
+					<div class="label">
+              <span class="label-text-alt opacity-70">
+                {deviceNameValid ? 'Nice ✨' : 'Give it a short name.'}
+              </span>
+					</div>
+				</label>
+
+				<div class="flex gap-3 pt-1 animate-popIn">
+					<Button ghost disabled={busy} onclick={back}>
+						<ArrowLeft class="font-icon"/>
+						Back
+					</Button>
+					<button
+						class="btn btn-primary flex-1 rounded-2xl"
+						disabled={!deviceNameValid || busy}
+						onclick={finish}
+					>
+						{#if busy}
+							<span class="loading loading-spinner loading-sm"></span>
+							Saving…
+						{:else}
+							Finish
+						{/if}
+					</button>
+				</div>
+			{/if}
 		</div>
+	</Card>
+
+	<div class="text-center text-xs opacity-60">
+		Tip: install the app for the smoothest scanning experience.
 	</div>
 </div>
 
