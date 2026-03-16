@@ -53,10 +53,14 @@
 
 	function formatRegCode(value: string): string {
 		return value
+			.toUpperCase()
+			.replace(/[^A-Z0-9]/g, '')
+			.slice(0, 8)
+			.replace(/(.{4})/, '$1-');
 	}
 
 	function isValidRegCode(value: string) {
-		return true
+		return /^[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(value);
 	}
 
 	function parseRegisterUrlToCode(raw: string): string | null {
@@ -280,21 +284,20 @@
 				{:else}
 					<label class="form-control w-full animate-popIn">
 						<div class="label">
-							<span class="label-text font-semibold">Registration code</span>
-							<span class="label-text-alt opacity-60">XXXX-XXXX-XXXX</span>
+							<span class="label-text font-bold pb-2">Registration code</span>
 						</div>
 						<input
 							bind:this={codeEl}
 							class="input input-bordered input-secondary w-full rounded-2xl text-lg tracking-widest"
 							inputmode="text"
 							autocomplete="one-time-code"
-							placeholder="ABCD-1234-XYZ9"
+							placeholder="ABCD-1234"
 							value={regCodeRaw}
 							oninput={(e) => regCodeRaw = e.currentTarget.value}
 							onkeydown={(e) => e.key === 'Enter' && goNext()}
 						/>
 						<div class="label">
-							<span class="label-text-alt opacity-70">{regCodeValid ? 'Looks good ✨' : ' '}</span>
+							<span class="label-text-alt opacity-70">{regCodeValid ? 'Looks good' : ' '}</span>
 						</div>
 					</label>
 
