@@ -2,7 +2,7 @@
 	import { onDestroy } from 'svelte';
 	import BrandHeader from '$lib/ui/BrandHeader.svelte';
 	import Card from '$lib/ui/base/Card.svelte';
-	import type { GraphSummary } from '$lib/domain/graph.types';
+	import type { GraphSummary } from '$lib/types/graph';
 
 	const { data }: { data: { graph: GraphSummary | null } } = $props();
 
@@ -99,23 +99,6 @@
 									<span class="text-xs font-semibold opacity-60">{unit.label}</span>
 								</div>
 							{/each}
-						</div>
-
-						<div class="w-full rounded-2xl bg-base-200/60 px-4 py-3 text-center">
-							<span class="text-xs font-semibold opacity-60">Unlocks</span>
-							<div class="mt-0.5 text-sm font-semibold">
-								{target?.toLocaleDateString(undefined, {
-									weekday: 'long',
-									month: 'long',
-									day: 'numeric',
-								})}
-								<span class="font-normal opacity-70">
-									at {target?.toLocaleTimeString(undefined, {
-										hour: 'numeric',
-										minute: '2-digit',
-									})}
-								</span>
-							</div>
 						</div>
 					</div>
 				</Card>
