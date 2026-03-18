@@ -1,8 +1,7 @@
 import {error} from "@sveltejs/kit";
 import {authToken} from "./auth";
 import {get} from "svelte/store";
-
-const API_BASE: string = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api';
+import { PUBLIC_SERVER_URL as API_BASE } from '$env/static/public';
 
 export interface APIError {
 	code: string;

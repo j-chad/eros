@@ -82,11 +82,11 @@
 
 		// Convert code param into our expected XXXX-XXXX (accept 8 raw alphanum or dashed)
 		const upper = codeParam.toUpperCase();
-		// const dashed = upper.match(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/)?.[0];
-		// if (dashed) return dashed;
-		//
-		// const raw8 = upper.replace(/[^A-Z0-9]/g, '').match(/^[A-Z0-9]{8}$/)?.[0];
-		// if (raw8) return `${raw8.slice(0, 4)}-${raw8.slice(4)}`;
+		const dashed = upper.match(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/)?.[0];
+		if (dashed) return dashed;
+
+		const raw8 = upper.replace(/[^A-Z0-9]/g, '').match(/^[A-Z0-9]{8}$/)?.[0];
+		if (raw8) return `${raw8.slice(0, 4)}-${raw8.slice(4)}`;
 
 		return null;
 	}
