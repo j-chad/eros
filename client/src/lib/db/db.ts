@@ -6,7 +6,7 @@ interface TypedStore<K extends IDBValidKey, V> extends IDBObjectStore {
 	put(value: V, key?: K): IDBRequest<IDBValidKey>;
 	delete(key: K): IDBRequest<undefined>;
 	getAllKeys(query?: K | IDBKeyRange | null, count?: number): IDBRequest<IDBValidKey[]>;
-
+	getAll(query?: K | IDBKeyRange | null, count?: number): IDBRequest<V[]>;
 }
 
 type AutoStore<T extends keyof DBSchema> = TypedStore<DBSchema[T]['key'], DBSchema[T]['value']>;

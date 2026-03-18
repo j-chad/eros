@@ -1,14 +1,24 @@
+import type { GraphSummary } from '$lib/types/graph';
+
 export const DB_NAME = 'eros';
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
+
+// Graphs are stored with date fields as ISO strings (as returned by the API).
+export type StoredGraph = Omit<GraphSummary, 'starting_at' | 'created_at' | 'updated_at'> & {
+	starting_at: string;
+	created_at: string;
+	updated_at: string;
+};
 
 export interface DBSchema {
 	kv: {
 		key: string;
-		value: unknown
+		value: unknown;
 	};
 	graphs: {
-		id: string
-	}
+		key: string;
+		value: StoredGraph;
+	};
 }
 
 interface StoreParameters extends IDBObjectStoreParameters {

@@ -1,4 +1,4 @@
-import {login as loginRequest, isSessionValid} from "$lib/repositories/auth";
+import {loginRequest, isSessionValid} from "$lib/api/auth.api";
 import {setToken, loadToken, clearToken} from "$lib/api/auth";
 import { invalidate } from "$app/navigation";
 

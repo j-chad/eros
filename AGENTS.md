@@ -184,10 +184,28 @@ Flat config: `@eslint/js` recommended + `typescript-eslint` recommended + `eslin
 ### API Interaction
 
 - Admin: centralized `api` object in `lib/api.ts` with namespaced methods (`api.graph.list()`)
-- Client: layered architecture — `api/http.ts` → `repositories/` → `services/` → `domain/`
-- Both use generic `request<T>()` with `VITE_API_BASE_URL` env var
+- Client: layered architecture — see below
+- Both use generic `request<T>()` with `PUBLIC_SERVER_URL` env var (no `/api` suffix — all endpoint strings include `/api/...`)
 - Admin auth: `Authorization: Admin <key>`, Client auth: `Authorization: Bearer <token>`
 - Data loading in `+page.ts` with browser guard (`if (!browser) return defaults`)
+
+### Client Data Layer
+
+The client uses a strict layered architecture for offline-first data access:
+
+| Layer | Path | Responsibility |
+|---|---|---|
+| **Types** | `src/lib/types/` | TypeScript interfaces and enums only. No logic. |
+| **API** | `src/lib/api/*.api.ts` | Raw HTTP calls via `request()`/`rawRequest()`. One file per resource (e.g. `graph.api.ts`, `auth.api.ts`). No storage, no business logic. |
+| **DB stores** | `src/lib/db/stores/` | IndexedDB read/write for a single object store. One file per store (e.g. `graph.ts`, `kv.ts`). No network calls. |
+| **Services** | `src/lib/services/` | Orchestration: if online → fetch from API and write to IndexedDB; if offline → read from IndexedDB. This is what pages call. |
+
+`src/lib/db/db.ts` — typed `Database` wrapper around the raw IndexedDB API.
+`src/lib/db/schema.ts` — `DBSchema` interface and `createObjectStores()` for upgrades. `StoredGraph` and similar stored types live here (dates as ISO strings, matching what the API returns).
+`src/lib/db/index.ts` — barrel re-export for the db layer.
+`src/lib/api/auth.ts` — `authToken` Svelte store + `loadToken`/`setToken`/`clearToken` backed by `KVStore`. Not an `.api.ts` file because it manages client-side token state, not just HTTP.
+
+**Auth token hydration:** `api/http.ts` reads `authToken` from the store, falling back to `loadToken()` from IndexedDB if the store is empty. Pages inside `(app)/` can assume the token is available without any extra setup — `rawRequest` handles it transparently.
 
 ### Styling
 
