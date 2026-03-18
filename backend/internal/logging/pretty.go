@@ -14,11 +14,12 @@ func newPrettyHandler(w io.Writer, level slog.Level) slog.Handler {
 }
 
 const (
-	reset  = "\033[0m"
-	grey   = "\033[90m"
-	green  = "\033[32m"
-	yellow = "\033[33m"
-	red    = "\033[31m"
+	reset     = "\033[0m"
+	grey      = "\033[90m"
+	lightGrey = "\033[37m"
+	green     = "\033[32m"
+	yellow    = "\033[33m"
+	red       = "\033[31m"
 )
 
 func levelColor(l slog.Level) string {
@@ -106,5 +107,5 @@ func appendAttr(buf []byte, a slog.Attr) []byte {
 	if a.Equal(slog.Attr{}) {
 		return buf
 	}
-	return fmt.Appendf(buf, " %s=%v", a.Key, a.Value)
+	return fmt.Appendf(buf, " %s%s=%s%v%s", grey, a.Key, lightGrey, a.Value, reset)
 }
