@@ -12,8 +12,16 @@ export default defineConfig(({mode}) => {
 		sveltekit()
 	]
 
+	console.log(mode, env)
 	if (mode === 'development') {
 		plugins.push(devtoolsJson())
+	}
+
+	const proxy = {
+		'/api': {
+			target: 'http://localhost:8080',
+			changeOrigin: true,
+		}
 	}
 
 	return ({
@@ -23,10 +31,16 @@ export default defineConfig(({mode}) => {
 			https: env.HTTPS ? {
 				key: fs.readFileSync('.cert/key.pem'),
 				cert: fs.readFileSync('.cert/cert.pem'),
-			} : undefined
+			} : undefined,
+			proxy,
 		},
 		preview: {
-			port: env.HTTPS ? 443 : 80
+			port: env.HTTPS ? 443 : 80,
+			https: env.HTTPS ? {
+				key: fs.readFileSync('.cert/key.pem'),
+				cert: fs.readFileSync('.cert/cert.pem'),
+			} : undefined,
+			proxy,
 		},
 		plugins,
 		define: {'process.env.NODE_ENV': JSON.stringify(mode)},

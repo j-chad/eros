@@ -16,6 +16,6 @@
 	"logging": {
 		"level": -4,
 		"json": true,
-		"add_source": true
+		"add_source": false
 	}
 }
