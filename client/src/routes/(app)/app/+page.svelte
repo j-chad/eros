@@ -79,27 +79,25 @@
 					<div class="flex flex-col items-center gap-6 py-2">
 						<p class="text-sm font-semibold opacity-60 tracking-wide uppercase">Starts in</p>
 
-						<div class="grid grid-cols-4 gap-3 w-full">
-							{#each [
-								{ value: timeLeft.days, label: 'days' },
-								{ value: timeLeft.hours, label: 'hours' },
-								{ value: timeLeft.minutes, label: 'min' },
-								{ value: timeLeft.seconds, label: 'sec' },
-							] as unit (unit.label)}
-								<div class="flex flex-col items-center gap-1.5">
-									<div class="bg-base-200 rounded-2xl w-full aspect-square flex items-center justify-center">
-										<span class="countdown font-mono text-3xl sm:text-4xl font-bold">
-											<span
-												style="--value:{unit.value};"
-												aria-live="polite"
-												aria-label="{unit.value} {unit.label}"
-											></span>
-										</span>
-									</div>
-									<span class="text-xs font-semibold opacity-60">{unit.label}</span>
-								</div>
-							{/each}
-						</div>
+					<div class="flex flex-col sm:grid sm:grid-cols-4 gap-3 w-full">
+						{#each [
+							{ value: timeLeft.days, label: 'days' },
+							{ value: timeLeft.hours, label: 'hours' },
+							{ value: timeLeft.minutes, label: 'min' },
+							{ value: timeLeft.seconds, label: 'sec' },
+						] as unit (unit.label)}
+							<div class="flex sm:flex-col items-center gap-4 sm:gap-1.5 bg-base-200 rounded-2xl px-5 py-3">
+								<span class="countdown font-mono text-5xl sm:text-4xl font-bold w-16 sm:w-auto text-center">
+									<span
+										style="--value:{unit.value};"
+										aria-live="polite"
+										aria-label="{unit.value} {unit.label}"
+									></span>
+								</span>
+								<span class="text-sm sm:text-xs font-semibold opacity-60">{unit.label}</span>
+							</div>
+						{/each}
+					</div>
 					</div>
 				</Card>
 			</div>
