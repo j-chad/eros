@@ -1,4 +1,4 @@
-package internal
+package logging
 
 import (
 	"backend/internal/config"
@@ -18,11 +18,21 @@ func Init(config config.LoggingConfig) {
 	var handler slog.Handler
 	if config.JSON {
 		handler = slog.NewJSONHandler(os.Stdout, opts)
+	} else if isTerminal(os.Stderr) {
+		handler = newPrettyHandler(os.Stdout, config.Level)
 	} else {
 		handler = slog.NewTextHandler(os.Stdout, opts)
 	}
 
 	slog.SetDefault(slog.New(handler))
+}
+
+func isTerminal(f *os.File) bool {
+	stat, err := f.Stat()
+	if err != nil {
+		return false
+	}
+	return stat.Mode()&os.ModeCharDevice != 0
 }
 
 // FromContext extracts a logger from context, falling back to the default.
