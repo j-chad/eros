@@ -12,6 +12,7 @@ export default defineConfig(({mode}) => {
 		sveltekit()
 	]
 
+	console.log(mode, env)
 	if (mode === 'development') {
 		plugins.push(devtoolsJson())
 	}
