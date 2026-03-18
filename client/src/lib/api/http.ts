@@ -1,5 +1,5 @@
 import {error} from "@sveltejs/kit";
-import {authToken} from "./auth";
+import {authToken, loadToken} from "./auth";
 import {get} from "svelte/store";
 import { PUBLIC_SERVER_URL as API_BASE } from '$env/static/public';
 
@@ -17,7 +17,10 @@ export async function rawRequest(endpoint: string, options: RequestInit = {}, au
 	}
 
 	if (auth) {
-		const token = get(authToken)
+		// Use the cached store value, or fall back to loading from IndexedDB if
+		// the store hasn't been hydrated yet (e.g. a child load running concurrently
+		// with the layout load that normally does this).
+		const token = get(authToken) ?? await loadToken();
 		if (!token) {
 			throw error(401, {
 				message: 'Unauthorized: No authentication token found',
