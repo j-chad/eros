@@ -10,6 +10,7 @@
     <package value="backend/cmd/server" />
     <directory value="$PROJECT_DIR$" />
     <filePath value="$PROJECT_DIR$/backend/cmd/server/main.go" />
+    <pty_enabled value="true" />
     <method v="2" />
   </configuration>
 </component>

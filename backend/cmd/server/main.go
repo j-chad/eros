@@ -1,9 +1,9 @@
 package main
 
 import (
-	"backend/internal"
 	"backend/internal/config"
 	"backend/internal/handler/middleware"
+	"backend/internal/logging"
 	"backend/internal/repository/sqlite"
 	"backend/internal/repository/storage"
 	"backend/internal/service"
@@ -21,7 +21,7 @@ func main() {
 		log.Fatalf("error loading config: %v", err)
 	}
 
-	internal.Init(conf.Logging)
+	logging.Init(conf.Logging)
 
 	database, err := sqlite.NewSQLiteDB(conf.Database)
 	if err != nil {
@@ -48,7 +48,7 @@ func main() {
 	serverAddr := fmt.Sprintf("%s:%d", conf.Server.Host, conf.Server.Port)
 	server := &http.Server{
 		Addr:         serverAddr,
-		Handler:      middleware.WithCORS(mux, conf.Server.CorsOrigins),
+		Handler:      middleware.WithLogging(middleware.WithCORS(mux, conf.Server.CorsOrigins)),
 		ReadTimeout:  conf.Server.ReadTimeout,
 		WriteTimeout: conf.Server.WriteTimeout,
 		IdleTimeout:  conf.Server.IdleTimeout,
