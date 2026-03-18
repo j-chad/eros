@@ -3,7 +3,6 @@
     <module name="eros" />
     <working_directory value="$PROJECT_DIR$/backend" />
     <envs>
-      <env name="ADMIN_API_KEY" value="test" />
       <env name="APP_ENV" value="develop" />
       <env name="DATABASE_PATH" value="../db.sqlite" />
     </envs>
