@@ -19,11 +19,9 @@ const precache_list: PrecacheEntry[] = [...build, ...files, ...prerendered].map(
 precacheAndRoute(precache_list)
 
 self.addEventListener('install', (event) => {
-	self.skipWaiting().catch(() => console.error('Failed to skip waiting during service worker installation'));
+	event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener('activate', (event) => {
-	event.waitUntil((async () => {
-		await self.clients.claim().catch(() => console.error('Failed to claim clients during service worker activation'));
-	})());
+	event.waitUntil(self.clients.claim());
 });
