@@ -2,7 +2,8 @@ import {browser} from "$app/environment";
 import {isAuthenticated} from "$lib/services/auth";
 import {redirect} from "@sveltejs/kit";
 
-export const prerender = true
+export const prerender = true;
+export const ssr = true;
 
 export async function load() {
 	if (!browser) return;
