@@ -6,11 +6,17 @@
 
 	let { children } = $props();
 
-	if (PUBLIC_SERVICE_WORKER === 'true' && 'serviceWorker' in navigator) {
-		addEventListener('load', function () {
-			navigator.serviceWorker.register('./path/to/service-worker.js', {
-				type: dev ? 'module' : 'classic'
-			});
+	if (!!PUBLIC_SERVICE_WORKER && 'serviceWorker' in navigator) {
+		if (document.readyState === 'complete') {
+			registerSW();
+		} else {
+			addEventListener('load', registerSW);
+		}
+	}
+
+	function registerSW() {
+		navigator.serviceWorker.register('/service-worker.js', {
+			type: dev ? 'module' : 'classic'
 		});
 	}
 </script>
