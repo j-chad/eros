@@ -6,6 +6,8 @@ Eros is a full-stack couples app — a graph-based scavenger/treasure hunt syste
 
 **Architecture:** Go backend + two SvelteKit frontends (admin + client) in a monorepo.
 
+**Current roadmap and outstanding work:** See [TODO.md](./TODO.md) for the prioritized task list. P0 critical path is backend missing routes/file serving and the client graph play experience. P1 is admin file upload UI and client favour system. Tech debt is P2.
+
 ## Build & Run Commands
 
 ### Backend (Go)
