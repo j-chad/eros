@@ -39,8 +39,6 @@
 		"daisyui": "^5.5.14",
 		"jsqr": "^1.4.0",
 		"lucide-svelte": "^0.563.0",
-		"tailwindcss": "^4.1.18",
-		"workbox-precaching": "^7.4.0",
-		"workbox-routing": "^7.4.0"
+		"tailwindcss": "^4.1.18"
 	}
 }
