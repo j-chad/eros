@@ -181,7 +181,7 @@
 						{cell.day}
 					</span>
 					{#if isPast}
-						<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+						<span class="w-1.5 h-1.5 rounded-full bg-primary {isToday ? 'animate-softPulse' : ''}"></span>
 					{:else if isFuture}
 						<span class="w-1.5 h-1.5 rounded-full bg-base-300"></span>
 					{:else}
