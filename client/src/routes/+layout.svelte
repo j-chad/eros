@@ -1,10 +1,22 @@
 <script lang="ts">
 	import { dev } from '$app/environment'
+	import { onNavigate } from '$app/navigation';
 	import { PUBLIC_SERVICE_WORKER } from '$env/static/public';
 
 	import "../app.css";
 
 	let { children } = $props();
+
+	onNavigate((navigation) => {
+		if (!document.startViewTransition) return;
+
+		return new Promise((resolve) => {
+			document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+		});
+	});
 
 	if (!!PUBLIC_SERVICE_WORKER && 'serviceWorker' in navigator) {
 		if (document.readyState === 'complete') {

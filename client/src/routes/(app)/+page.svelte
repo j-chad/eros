@@ -62,7 +62,7 @@
 <div class="mx-auto min-h-dvh max-w-md px-4 py-6 flex flex-col justify-between gap-8">
 	<BrandHeader subtitle={hasUnlocked ? undefined : "Something's coming"} />
 
-	<div class="flex-1 flex flex-col justify-center gap-6">
+	<div class="flex-1 flex flex-col justify-center gap-6" style="view-transition-name: card-content">
 		{#if hasUnlocked}
 			<!-- Calendar view: at least one graph has been unlocked -->
 			<Card>

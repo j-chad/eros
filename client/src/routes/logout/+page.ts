@@ -6,5 +6,5 @@ export async function load() {
 	if (!browser) return
 
 	await logout()
-	return redirect(307, '/');
+	throw redirect(307, '/');
 }

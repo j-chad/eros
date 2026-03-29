@@ -5,6 +5,7 @@
 	import Button from "$lib/ui/base/Button.svelte";
 	import {ArrowLeft, ArrowRight} from "lucide-svelte";
 	import Card from "$lib/ui/base/Card.svelte";
+	import {goto} from "$app/navigation";
 	import {login} from "$lib/services/auth";
 
 	type Mode = 'scan' | 'manual';
@@ -208,7 +209,7 @@
 		busy = true;
 		try {
 			await login(regCode, deviceName);
-			window.location.href = new URLSearchParams(window.location.search).get('returnTo') ?? '/';
+			await goto(new URLSearchParams(window.location.search).get('returnTo') ?? '/', { invalidateAll: true });
 		} catch (err) {
 			console.error('Login failed', err);
 			error = 'Unable to log in. Please try again.';
@@ -234,6 +235,7 @@
 		{/snippet}
 	</BrandHeader>
 
+	<div style="view-transition-name: card-content">
 	<Card padded={false}>
 		<div class="card-body gap-3 sm:gap-4">
 			{#if error}
@@ -371,6 +373,7 @@
 			{/if}
 		</div>
 	</Card>
+	</div>
 
 	<div class="text-center text-xs opacity-60">
 		Tip: install the app for the smoothest scanning experience.
