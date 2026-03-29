@@ -18,7 +18,7 @@
 		});
 	});
 
-	if (!!PUBLIC_SERVICE_WORKER && 'serviceWorker' in navigator) {
+	if (PUBLIC_SERVICE_WORKER == "true" && 'serviceWorker' in navigator) {
 		if (document.readyState === 'complete') {
 			registerSW();
 		} else {
