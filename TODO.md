@@ -4,7 +4,7 @@
 
 ## Graph Play Experience (P0)
 
-The core gameplay loop. The client can list graphs and show a countdown, but cannot navigate or play through them.
+The core gameplay loop. The client can list graphs, show a countdown to the next one, and display a calendar of unlocked graphs — but cannot navigate or play through them.
 
 - [ ] Backend: register `UnlockNode` route in `router.go` — handler exists in `handler/client/graph.go` but no route is registered
 - [ ] Backend: fix `ManualData` missing from `nodeDataDecoders` map in `internal/models/graph.go`
@@ -15,6 +15,7 @@ The core gameplay loop. The client can list graphs and show a countdown, but can
   - [ ] Build graph navigation service with online-first + IndexedDB fallback in `client/src/lib/services/`
 - [ ] Client: graph navigation UI
   - [ ] Create graph detail route (e.g. `client/src/routes/(app)/graphs/[id]/`)
+  - [ ] Wire calendar day-click to navigate to the graph detail route
   - [ ] Build node map / progression component showing the player's position in the graph
   - [ ] Implement node detail view (shows gate requirements or reward content)
 - [ ] Client: gate unlock flows
