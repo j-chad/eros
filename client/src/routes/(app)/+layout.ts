@@ -1,12 +1,9 @@
 import { redirect } from '@sveltejs/kit';
-import { browser } from '$app/environment';
 import {AUTH_DEPENDENCY, isAuthenticated} from "$lib/services/auth";
 
 export const ssr = false;
 
 export async function load({ url, depends }) {
-	if (!browser) return;
-
 	depends(AUTH_DEPENDENCY)
 
 	if (!await isAuthenticated()) {
