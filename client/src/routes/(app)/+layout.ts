@@ -1,7 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import {AUTH_DEPENDENCY, isAuthenticated} from "$lib/services/auth";
-
-export const ssr = false;
+import { AUTH_DEPENDENCY, isAuthenticated } from '$lib/services/auth';
 
 export async function load({ url, depends }) {
 	depends(AUTH_DEPENDENCY)

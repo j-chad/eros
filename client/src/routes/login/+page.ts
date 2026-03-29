@@ -1,13 +1,10 @@
-import {isAuthenticated} from "$lib/services/auth";
-import {redirect} from "@sveltejs/kit";
+import { isAuthenticated } from '$lib/services/auth';
+import { redirect } from '@sveltejs/kit';
 
-export const prerender = true;
-export const ssr = true;
-
-export async function load() {
+export async function load({ url }) {
 	if (await isAuthenticated()) {
-		const returnURL = new URLSearchParams(window.location.search).get('returnTo') ?? '/';
-		throw redirect(307, returnURL);
+		const returnTo = url.searchParams.get('returnTo') ?? '/';
+		throw redirect(307, returnTo);
 	}
 
 	return {};

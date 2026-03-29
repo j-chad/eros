@@ -1,6 +1,6 @@
-import {loginRequest, isSessionValid} from "$lib/api/auth.api";
-import {setToken, loadToken, clearToken} from "$lib/api/auth";
-import { invalidate } from "$app/navigation";
+import { loginRequest, isSessionValid } from '$lib/api/auth.api';
+import { setToken, loadToken, clearToken } from '$lib/api/auth';
+import { invalidate } from '$app/navigation';
 
 export const AUTH_DEPENDENCY = 'auth:session';
 
@@ -26,10 +26,9 @@ export async function isAuthenticated(): Promise<boolean> {
 export async function login(registration_code: string, device_info: string): Promise<void> {
 	const token = await loginRequest(registration_code, device_info);
 	await setToken(token);
-	await invalidate(AUTH_DEPENDENCY)
+	await invalidate(AUTH_DEPENDENCY);
 }
 
 export async function logout(): Promise<void> {
 	await clearToken();
-	await invalidate(AUTH_DEPENDENCY)
 }

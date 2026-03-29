@@ -2,6 +2,8 @@ import { error } from '@sveltejs/kit';
 import { getGraph } from '$lib/services/graph';
 import type { GraphDetail } from '$lib/types/graph';
 
+export const prerender = false;
+
 export async function load({ params }): Promise<{ graph: GraphDetail }> {
 	const graph = await getGraph(params.id);
 	if (!graph) {
