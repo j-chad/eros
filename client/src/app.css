@@ -79,6 +79,26 @@ body {
 	}
 }
 
+/* Navigation progress bar — indeterminate sweep while a page load is in-flight */
+.animate-navProgress {
+	animation: navProgress 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+	transform-origin: left center;
+}
+@keyframes navProgress {
+	0%   { transform: scaleX(0) translateX(0); }
+	60%  { transform: scaleX(0.75) translateX(40%); }
+	100% { transform: scaleX(0.1) translateX(1100%); }
+}
+
+/* Fade-in used for the navigation dim overlay — delayed slightly so it won't flash on fast navigations */
+.animate-fadeIn {
+	animation: fadeIn 150ms ease-out 80ms both;
+}
+@keyframes fadeIn {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+
 /* Animated cursor tap hint */
 .animate-cursorTap {
 	animation: cursorTap 2s ease-in-out infinite;

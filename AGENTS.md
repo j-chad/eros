@@ -77,13 +77,13 @@ Bruno collections in `bruno/` directory for manual API testing against localhost
 
 ## Tech Stack Details
 
-| Layer | Technology |
-|-------|-----------|
-| Backend | Go 1.26, stdlib `net/http`, SQLite via `go-sqlite3` (CGo) |
-| Admin frontend | SvelteKit (Svelte 5), TypeScript, Vite 7, hand-written scoped CSS |
+| Layer           | Technology                                                          |
+|-----------------|---------------------------------------------------------------------|
+| Backend         | Go 1.26, stdlib `net/http`, SQLite via `go-sqlite3` (CGo)           |
+| Admin frontend  | SvelteKit (Svelte 5), TypeScript, Vite 7, hand-written scoped CSS   |
 | Client frontend | SvelteKit (Svelte 5), TypeScript, Vite 7, Tailwind CSS 4, DaisyUI 5 |
-| Icons | lucide-svelte (both frontends) |
-| Graph editor | @xyflow/svelte (admin only) |
+| Icons           | lucide-svelte (both frontends)                                      |
+| Graph editor    | @xyflow/svelte (admin only)                                         |
 
 ## Code Style — Go Backend
 
@@ -189,18 +189,17 @@ Flat config: `@eslint/js` recommended + `typescript-eslint` recommended + `eslin
 - Client: layered architecture — see below
 - Both use generic `request<T>()` with `PUBLIC_SERVER_URL` env var (no `/api` suffix — all endpoint strings include `/api/...`)
 - Admin auth: `Authorization: Admin <key>`, Client auth: `Authorization: Bearer <token>`
-- Data loading in `+page.ts` with browser guard (`if (!browser) return defaults`)
 
 ### Client Data Layer
 
 The client uses a strict layered architecture for offline-first data access:
 
-| Layer | Path | Responsibility |
-|---|---|---|
-| **Types** | `src/lib/types/` | TypeScript interfaces and enums only. No logic. |
-| **API** | `src/lib/api/*.api.ts` | Raw HTTP calls via `request()`/`rawRequest()`. One file per resource (e.g. `graph.api.ts`, `auth.api.ts`). No storage, no business logic. |
-| **DB stores** | `src/lib/db/stores/` | IndexedDB read/write for a single object store. One file per store (e.g. `graph.ts`, `kv.ts`). No network calls. |
-| **Services** | `src/lib/services/` | Orchestration: if online → fetch from API and write to IndexedDB; if offline → read from IndexedDB. This is what pages call. |
+| Layer         | Path                   | Responsibility                                                                                                                            |
+|---------------|------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| **Types**     | `src/lib/types/`       | TypeScript interfaces and enums only. No logic.                                                                                           |
+| **API**       | `src/lib/api/*.api.ts` | Raw HTTP calls via `request()`/`rawRequest()`. One file per resource (e.g. `graph.api.ts`, `auth.api.ts`). No storage, no business logic. |
+| **DB stores** | `src/lib/db/stores/`   | IndexedDB read/write for a single object store. One file per store (e.g. `graph.ts`, `kv.ts`). No network calls.                          |
+| **Services**  | `src/lib/services/`    | Orchestration: if online → fetch from API and write to IndexedDB; if offline → read from IndexedDB. This is what pages call.              |
 
 `src/lib/db/db.ts` — typed `Database` wrapper around the raw IndexedDB API.
 `src/lib/db/schema.ts` — `DBSchema` interface and `createObjectStores()` for upgrades. `StoredGraph` and similar stored types live here (dates as ISO strings, matching what the API returns).
