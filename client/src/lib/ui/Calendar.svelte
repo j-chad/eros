@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { SvelteMap } from 'svelte/reactivity';
-	import { ChevronLeft, ChevronRight } from 'lucide-svelte';
+	import { ChevronLeft, ChevronRight, Pointer } from 'lucide-svelte';
 	import type { GraphSummary } from '$lib/types/graph';
+	import { KVStore, KVKey } from '$lib/db/stores/kv';
 
 	const {
 		graphs,
@@ -30,6 +31,15 @@
 	// --- state ---
 
 	let currentMonth = $state(new Date());
+
+	// null = not yet loaded from KV (suppress cursor until known to avoid flicker)
+	let showCursor = $state<boolean | null>(null);
+
+	$effect(() => {
+		KVStore.get(KVKey.CalendarTipSeen).then((seen) => {
+			showCursor = !seen;
+		});
+	});
 
 	// --- derived ---
 
@@ -73,32 +83,39 @@
 		const year = currentMonth.getFullYear();
 		const month = currentMonth.getMonth();
 
-		// First day of the month and what weekday it falls on (0=Mon in our grid).
 		const firstOfMonth = new Date(year, month, 1);
 		let startWeekday = firstOfMonth.getDay() - 1; // JS Sunday=0 → Mon=-1
 		if (startWeekday < 0) startWeekday = 6; // Sunday → 6
 
-		// Number of days in this month.
 		const daysInMonth = new Date(year, month + 1, 0).getDate();
 
 		const cells: ({ day: number; key: string } | null)[] = [];
 
-		// Leading blanks.
 		for (let i = 0; i < startWeekday; i++) {
 			cells.push(null);
 		}
 
-		// Actual days.
 		for (let d = 1; d <= daysInMonth; d++) {
 			cells.push({ day: d, key: toDateKey(new Date(year, month, d)) });
 		}
 
-		// Trailing blanks to fill last row.
 		while (cells.length % 7 !== 0) {
 			cells.push(null);
 		}
 
 		return cells;
+	});
+
+	/** Key of the first past-graph day in the visible month — this is where the cursor sits. */
+	const cursorKey = $derived.by(() => {
+		for (const cell of dayCells) {
+			if (!cell) continue;
+			const dayGraphs = graphsByDay.get(cell.key);
+			if (dayGraphs?.some((g) => g.starting_at.getTime() <= Date.now())) {
+				return cell.key;
+			}
+		}
+		return null;
 	});
 
 	// --- actions ---
@@ -113,9 +130,17 @@
 		currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
 	}
 
-	function handleDayClick(key: string) {
+	async function handleDayClick(key: string) {
 		const dayGraphs = graphsByDay.get(key);
-		if (!dayGraphs?.length || !onSelectDate) return;
+		if (!dayGraphs?.length) return;
+
+		// First tap on any past day dismisses the cursor hint.
+		if (showCursor) {
+			showCursor = false;
+			await KVStore.set(KVKey.CalendarTipSeen, true);
+		}
+
+		if (!onSelectDate) return;
 		const [year, month, day] = key.split('-').map(Number);
 		onSelectDate(new Date(year, month - 1, day), dayGraphs);
 	}
@@ -151,23 +176,23 @@
 	</div>
 
 	<!-- Day grid -->
-	<div class="grid grid-cols-7 gap-y-1">
+	<div class="grid grid-cols-7">
 		{#each dayCells as cell, i (cell?.key ?? `blank-${i}`)}
 			{@const dayGraphs = cell ? graphsByDay.get(cell.key) : undefined}
 			{@const hasGraphs = !!dayGraphs?.length}
 			{@const isToday = cell?.key === todayKey}
 			{@const isPast = hasGraphs && dayGraphs.some((g) => g.starting_at.getTime() <= Date.now())}
 			{@const isFuture = hasGraphs && !isPast}
+			{@const hasCursor = showCursor === true && cell?.key === cursorKey}
 
 			{#if cell === null}
 				<div></div>
 			{:else}
 				<button
-					class="flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl transition-colors
+					class="relative overflow-visible flex flex-col items-center justify-center gap-0.5 py-3 rounded-xl transition-colors
 						{isToday ? 'ring-2 ring-primary/30 ring-inset' : ''}
 						{isPast ? 'cursor-pointer hover:bg-primary/10' : ''}
-						{!hasGraphs ? 'cursor-default' : ''}
-						{isFuture ? 'cursor-default' : ''}"
+						{!hasGraphs || isFuture ? 'cursor-default' : ''}"
 					onclick={() => isPast && handleDayClick(cell.key)}
 					disabled={!isPast}
 					aria-label="{cell.day}{hasGraphs ? ', has activity' : ''}{isToday ? ', today' : ''}"
@@ -186,6 +211,12 @@
 						<span class="w-1.5 h-1.5 rounded-full bg-base-300"></span>
 					{:else}
 						<span class="w-1.5 h-1.5"></span>
+					{/if}
+
+					{#if hasCursor}
+						<span class="absolute -bottom-0.5 left-1/2 -rotate-30 text-primary animate-cursorTap pointer-events-none">
+							<Pointer size={16} />
+						</span>
 					{/if}
 				</button>
 			{/if}

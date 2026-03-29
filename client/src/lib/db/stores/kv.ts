@@ -2,10 +2,12 @@ import {db, promisifyRequest} from '../db';
 
 export enum KVKey {
 	AuthSession = 'auth:session',
+	CalendarTipSeen = 'tutorial:calendar-tip',
 }
 
 interface KVValue {
 	[KVKey.AuthSession]: string;
+	[KVKey.CalendarTipSeen]: boolean;
 }
 
 export type KVSchema = {
