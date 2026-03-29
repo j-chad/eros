@@ -3,6 +3,7 @@
 	import Card from '$lib/ui/base/Card.svelte';
 	import Calendar from '$lib/ui/Calendar.svelte';
 	import type { GraphSummary } from '$lib/types/graph';
+	import {goto} from "$app/navigation";
 
 	const { data }: { data: { graphs: GraphSummary[] } } = $props();
 
@@ -66,7 +67,9 @@
 		{#if hasUnlocked}
 			<!-- Calendar view: at least one graph has been unlocked -->
 			<Card>
-				<Calendar graphs={data.graphs} />
+				<Calendar graphs={data.graphs} onSelectDate={() => {
+					goto('/graphs');
+				}} />
 			</Card>
 		{:else if data.graphs.length === 0}
 			<!-- No graphs at all -->
