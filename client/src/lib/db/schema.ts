@@ -1,7 +1,7 @@
-import type { GraphSummary } from '$lib/types/graph';
+import type { GraphDetail, GraphSummary } from '$lib/types/graph';
 
 export const DB_NAME = 'eros';
-export const DB_VERSION = 3;
+export const DB_VERSION = 4;
 
 export interface DBSchema {
 	kv: {
@@ -12,13 +12,17 @@ export interface DBSchema {
 		key: string;
 		value: GraphSummary;
 	};
+	graphDetails: {
+		key: string;
+		value: GraphDetail;
+	};
 }
 
 interface StoreParameters extends IDBObjectStoreParameters {
 	indexes?: { name: string; keyPath: string | string[]; options?: IDBIndexParameters }[];
 }
 
-const STORES:Record<keyof DBSchema, StoreParameters> = {
+const STORES: Record<keyof DBSchema, StoreParameters> = {
 	kv: {
 		keyPath: 'key',
 	},
@@ -29,9 +33,12 @@ const STORES:Record<keyof DBSchema, StoreParameters> = {
 				name: 'byStartDate',
 				keyPath: 'starting_at',
 				options: { unique: false },
-			}
-		]
-	}
+			},
+		],
+	},
+	graphDetails: {
+		keyPath: 'id',
+	},
 }
 
 export function createObjectStores(db: IDBDatabase) {

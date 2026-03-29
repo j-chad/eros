@@ -21,6 +21,7 @@ const (
 var nodeDataDecoders = map[NodeType]func(json.RawMessage) (any, error){
 	LocationGateNode: internal.DecodeInto[LocationData],
 	CodeGateNode:     internal.DecodeInto[CodeData],
+	ManualNode:       internal.DecodeInto[ManualData],
 	RewardNode:       internal.DecodeInto[RewardData],
 }
 

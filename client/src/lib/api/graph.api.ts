@@ -1,5 +1,5 @@
 import { request } from '$lib/api/http';
-import type {GraphSummary} from "$lib/types/graph";
+import type { GraphDetail, GraphSummary } from '$lib/types/graph';
 
 type GraphSummaryResponse = Omit<GraphSummary, 'starting_at' | 'created_at' | 'updated_at'> & {
 	starting_at: string;
@@ -20,4 +20,8 @@ function hydrate(g: GraphSummaryResponse): GraphSummary {
 export async function fetchGraphs(): Promise<GraphSummary[]> {
 	const graphs = await request<GraphSummaryResponse[]>('/graphs');
 	return graphs.map(hydrate);
+}
+
+export async function fetchGraph(id: string): Promise<GraphDetail> {
+	return request<GraphDetail>(`/graphs/${id}`);
 }

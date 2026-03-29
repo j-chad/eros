@@ -66,11 +66,11 @@
 	<div class="flex-1 flex flex-col justify-center gap-6" style="view-transition-name: card-content">
 		{#if hasUnlocked}
 			<!-- Calendar view: at least one graph has been unlocked -->
-			<Card>
-				<Calendar graphs={data.graphs} onSelectDate={() => {
-					goto('/graphs');
-				}} />
-			</Card>
+		<Card>
+			<Calendar graphs={data.graphs} onSelectDate={(_date, graphs) => {
+				if (graphs.length > 0) goto(`/graphs/${graphs[0].id}`);
+			}} />
+		</Card>
 		{:else if data.graphs.length === 0}
 			<!-- No graphs at all -->
 			<Card>

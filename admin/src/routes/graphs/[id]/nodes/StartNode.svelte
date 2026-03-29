@@ -9,7 +9,6 @@
 
 	const node = $derived(data.node as StartNodeType);
 	const connections = useNodeConnections();
-	const isConnectable = $derived(connections.current.length === 0);
 </script>
 
 <BaseNode
@@ -21,6 +20,5 @@
         label: 'Start',
         hasTargetHandle: false,
         hasSourceHandle: true,
-        isSourceConnectable: isConnectable
     }}
 />

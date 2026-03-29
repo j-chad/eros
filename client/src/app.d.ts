@@ -12,10 +12,10 @@ declare global {
 	namespace App {
 		interface Error {
 			message: string;
-			base: string;
-			endpoint: string;
-			method: string;
-			body: unknown;
+			base?: string;
+			endpoint?: string;
+			method?: string;
+			body?: unknown;
 		}
 		// interface Locals {}
 		// interface PageData {}

@@ -66,6 +66,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	clientMux.HandleFunc("DELETE /api/favours/request/{id}", h.client.DeleteFavourRequest)
 	clientMux.HandleFunc("GET /api/graphs", h.client.ListGraphs)
 	clientMux.HandleFunc("GET /api/graphs/{id}", h.client.GetGraph)
+	clientMux.HandleFunc("POST /api/nodes/{id}/unlock", h.client.UnlockNode)
 	mux.Handle("/api/", middleware.WithClientAuth(clientMux, *h.auth))
 
 	mux.HandleFunc("/", routeNotFound)

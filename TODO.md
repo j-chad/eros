@@ -6,18 +6,18 @@
 
 The core gameplay loop. The client can list graphs, show a countdown to the next one, and display a calendar of unlocked graphs — but cannot navigate or play through them.
 
-- [ ] Backend: register `UnlockNode` route in `router.go` — handler exists in `handler/client/graph.go` but no route is registered
-- [ ] Backend: fix `ManualData` missing from `nodeDataDecoders` map in `internal/models/graph.go`
-- [ ] Client: data layer (follow existing architecture: types -> API -> DB store -> service)
-  - [ ] Define proper `RewardType` enum and full node/gate types in `client/src/lib/types/`
-  - [ ] Add graph detail and node unlock methods to `client/src/lib/api/`
-  - [ ] Add graph detail DB store for caching nodes, edges, and unlock state in `client/src/lib/db/stores/`
-  - [ ] Build graph navigation service with online-first + IndexedDB fallback in `client/src/lib/services/`
-- [ ] Client: graph navigation UI
-  - [ ] Create graph detail route (e.g. `client/src/routes/(app)/graphs/[id]/`)
-  - [ ] Wire calendar day-click to navigate to the graph detail route
-  - [ ] Build node map / progression component showing the player's position in the graph
-  - [ ] Implement node detail view (shows gate requirements or reward content)
+- [x] Backend: register `UnlockNode` route in `router.go` — `POST /api/nodes/{id}/unlock`
+- [x] Backend: fix `ManualData` missing from `nodeDataDecoders` map in `internal/models/graph.go`
+- [x] Client: data layer (follow existing architecture: types -> API -> DB store -> service)
+  - [x] Define proper `RewardType` enum and full node/gate types in `client/src/lib/types/`
+  - [x] Add graph detail and node unlock methods to `client/src/lib/api/`
+  - [x] Add graph detail DB store for caching nodes, edges, and unlock state in `client/src/lib/db/stores/`
+  - [x] Build graph navigation service with online-first + IndexedDB fallback in `client/src/lib/services/`
+- [x] Client: graph navigation UI
+  - [x] Create graph detail route (`client/src/routes/(app)/graphs/[id]/`)
+  - [x] Wire calendar day-click to navigate to the graph detail route
+  - [x] Build node progression view — focused full-screen node experience with branching choice screen
+  - [x] Implement node detail view (shows gate requirements or reward content)
 - [ ] Client: gate unlock flows
   - [ ] Location gate — geolocation proximity check + unlock
   - [ ] Code gate — code entry form + validation
