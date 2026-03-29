@@ -22,11 +22,7 @@ export class KVStore {
 	// Set a value with type checking
 	static async set<K extends KVKey>(key: K, value: KVValue[K]): Promise<void> {
 		const store = await db.getStore<KVKey, KVSchema[K]>('kv', 'readwrite');
-		const data: KVSchema[K] = {
-			key,
-			value,
-			timestamp: Date.now()
-		};
+		const data = { key, value, timestamp: Date.now() } as KVSchema[K];
 		await promisifyRequest(store.put(data));
 	}
 
