@@ -78,9 +78,24 @@ func validateUnlockPayload(node *models.Node, payload string) error {
 		return validateCodeGatePayload(node, payload)
 	case models.LocationGateNode:
 		return validateLocationGatePayload(node, payload)
+	case models.ManualNode:
+		return validateManualGateUnlock(node)
 	default:
 		return fmt.Errorf("unsupported node type %s for unlocking", node.Type)
 	}
+}
+
+func validateManualGateUnlock(node *models.Node) error {
+	nodeData, ok := node.Data.(models.ManualData)
+	if !ok {
+		return fmt.Errorf("invalid node data for manual gate node %s", node.ID)
+	}
+
+	if nodeData.UnlockedAt == nil {
+		return NodeUnlockIncorrect
+	}
+
+	return nil
 }
 
 func validateCodeGatePayload(node *models.Node, payload string) error {
