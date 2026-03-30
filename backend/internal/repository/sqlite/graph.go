@@ -18,8 +18,13 @@ func (s *sqliteDB) ListGraphs(ctx context.Context) ([]models.Graph, error) {
             g.description,
             g.created_at,
             g.updated_at,
-            g.starting_at
+            g.starting_at,
+            COUNT(n.id) AS total_nodes,
+            COUNT(n.unlocked_at) AS unlocked_nodes,
+            SUM(CASE WHEN n.type != 'start' AND n.unlocked_at IS NOT NULL THEN 1 ELSE 0 END) AS unlocked_non_start
         FROM graph g
+        LEFT JOIN node n ON n.graph_id = g.id
+        GROUP BY g.id
         ORDER BY g.starting_at DESC
     `
 
@@ -33,6 +38,7 @@ func (s *sqliteDB) ListGraphs(ctx context.Context) ([]models.Graph, error) {
 
 	for rows.Next() {
 		var graph models.Graph
+		var totalNodes, unlockedNodes, unlockedNonStart int
 
 		err := rows.Scan(
 			&graph.ID,
@@ -41,9 +47,21 @@ func (s *sqliteDB) ListGraphs(ctx context.Context) ([]models.Graph, error) {
 			&graph.CreatedAt,
 			&graph.UpdatedAt,
 			&graph.StartingAt,
+			&totalNodes,
+			&unlockedNodes,
+			&unlockedNonStart,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan graph: %w", err)
+		}
+
+		switch {
+		case unlockedNonStart == 0:
+			graph.Status = models.GraphNotStarted
+		case unlockedNodes == totalNodes:
+			graph.Status = models.GraphCompleted
+		default:
+			graph.Status = models.GraphInProgress
 		}
 
 		graphs = append(graphs, graph)

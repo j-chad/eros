@@ -107,11 +107,21 @@ type Viewport struct {
 	Zoom float64 `json:"zoom"`
 }
 
+type GraphStatus string
+
+const (
+	GraphNotStarted GraphStatus = "not_started"
+	GraphInProgress GraphStatus = "in_progress"
+	GraphCompleted  GraphStatus = "completed"
+)
+
 type Graph struct {
 	ID string `json:"id"`
 
 	Title       string `json:"title"`
 	Description string `json:"description,omitempty"`
+
+	Status GraphStatus `json:"status,omitempty"`
 
 	StartingAt time.Time `json:"starting_at"`
 

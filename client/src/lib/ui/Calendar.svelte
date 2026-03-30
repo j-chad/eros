@@ -178,12 +178,19 @@
 	<!-- Day grid -->
 	<div class="grid grid-cols-7">
 		{#each dayCells as cell, i (cell?.key ?? `blank-${i}`)}
-			{@const dayGraphs = cell ? graphsByDay.get(cell.key) : undefined}
-			{@const hasGraphs = !!dayGraphs?.length}
-			{@const isToday = cell?.key === todayKey}
-			{@const isPast = hasGraphs && dayGraphs.some((g) => g.starting_at.getTime() <= Date.now())}
-			{@const isFuture = hasGraphs && !isPast}
-			{@const hasCursor = showCursor === true && cell?.key === cursorKey}
+		{@const dayGraphs = cell ? graphsByDay.get(cell.key) : undefined}
+		{@const hasGraphs = !!dayGraphs?.length}
+		{@const isToday = cell?.key === todayKey}
+		{@const isPast = hasGraphs && dayGraphs.some((g) => g.starting_at.getTime() <= Date.now())}
+		{@const isFuture = hasGraphs && !isPast}
+		{@const hasCursor = showCursor === true && cell?.key === cursorKey}
+		{@const dotClass = isPast
+			? dayGraphs?.some((g) => g.status === 'completed')
+				? 'bg-success'
+				: dayGraphs?.some((g) => g.status === 'in_progress')
+					? 'bg-warning'
+					: 'bg-primary'
+			: 'bg-base-300'}
 
 			{#if cell === null}
 				<div></div>
@@ -205,13 +212,11 @@
 					>
 						{cell.day}
 					</span>
-					{#if isPast}
-						<span class="w-1.5 h-1.5 rounded-full bg-primary {isToday ? 'animate-softPulse' : ''}"></span>
-					{:else if isFuture}
-						<span class="w-1.5 h-1.5 rounded-full bg-base-300"></span>
-					{:else}
-						<span class="w-1.5 h-1.5"></span>
-					{/if}
+				{#if isPast || isFuture}
+					<span class="w-1.5 h-1.5 rounded-full {dotClass} {isToday ? 'animate-softPulse' : ''}"></span>
+				{:else}
+					<span class="w-1.5 h-1.5"></span>
+				{/if}
 
 					{#if hasCursor}
 						<span class="absolute -bottom-0.5 left-1/2 -rotate-30 text-primary animate-cursorTap pointer-events-none">

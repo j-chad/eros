@@ -33,6 +33,7 @@ func (s *GraphService) ListGraphs(ctx context.Context) ([]models.Graph, error) {
 				Title:       graph.Title,
 				Description: graph.Description,
 				StartingAt:  graph.StartingAt,
+				Status:      graph.Status,
 			})
 			continue
 		}

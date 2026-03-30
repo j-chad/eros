@@ -1,7 +1,10 @@
+export type GraphStatus = 'not_started' | 'in_progress' | 'completed';
+
 export interface GraphSummary {
 	id: string;
 	title: string;
 	description?: string;
+	status?: GraphStatus;
 	starting_at: Date;
 	created_at: Date;
 	updated_at: Date;
