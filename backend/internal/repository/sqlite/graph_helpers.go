@@ -6,7 +6,50 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 )
+
+// accessibleCTEsFor returns two CTE definitions that determine which nodes are
+// reachable by the client. The result starts with a newline and is intended to
+// follow a WITH keyword — e.g. `WITH` + accessibleCTEsFor("?1") or after a
+// preceding CTE with a trailing comma.
+//
+//  1. unlocked — every node that is already unlocked or is a start node
+//     (start nodes are always considered unlocked).
+//
+//  2. accessible — the unlocked set, plus destinations that are exactly one
+//     hop away from an unlocked source node. A destination is excluded when a
+//     *sibling* edge from the same source already has its destination unlocked,
+//     meaning the user committed to that other branch and cannot backtrack.
+//
+// graphIDExpr is a SQL expression that resolves to the graph ID — typically
+// "?1" for direct queries or a subquery like "(SELECT graph_id FROM node_graph)".
+func accessibleCTEsFor(graphIDExpr string) string {
+	return strings.ReplaceAll(`
+	unlocked AS (
+		SELECT id
+		FROM node
+		WHERE graph_id = {graph_id}
+		  AND (unlocked_at IS NOT NULL OR type = 'start')
+	),
+	accessible AS (
+		SELECT id FROM unlocked
+		UNION
+		SELECT e.destination_node_id
+		FROM edge e
+			JOIN unlocked u ON u.id = e.source_node_id
+		WHERE e.graph_id = {graph_id}
+		  -- Prevent backtracking: if any sibling edge's destination is already
+		  -- unlocked the user has committed to that branch, so exclude this one.
+		  AND NOT EXISTS (
+			SELECT 1 FROM edge sibling
+				JOIN node n ON n.id = sibling.destination_node_id
+			WHERE sibling.source_node_id = e.source_node_id
+			  AND sibling.id != e.id
+			  AND n.unlocked_at IS NOT NULL
+		  )
+	) `, "{graph_id}", graphIDExpr)
+}
 
 // getGraph retrieves a graph. It does not populate the nodes or edges.
 func (s *sqliteDB) getGraph(ctx context.Context, graphID string) (*models.Graph, error) {
@@ -138,34 +181,12 @@ func (s *sqliteDB) getCompleteNodes(ctx context.Context, graphID string) ([]mode
 
 // getAccessibleNodes retrieves all nodes reachable from a start node that are unlocked or have an edge from an unlocked node
 func (s *sqliteDB) getAccessibleNodes(ctx context.Context, graphID string) ([]models.Node, error) {
-	rows, err := s.executor().QueryContext(ctx, `
-		WITH
-		unlocked AS (
-			SELECT id
-			FROM node
-			WHERE graph_id = ?1
-			  AND unlocked_at IS NOT NULL
-			  OR type = 'start'
-		),
-		accessible AS (
-			SELECT id FROM unlocked
-			UNION
-			SELECT e.destination_node_id
-			FROM edge e
-					 JOIN unlocked u ON u.id = e.source_node_id
-			WHERE e.graph_id = ?1
-			  AND NOT EXISTS (
-				SELECT 1 FROM edge sibling
-					JOIN node n ON n.id = sibling.destination_node_id
-				WHERE sibling.source_node_id = e.source_node_id
-				  AND sibling.id != e.id
-				  AND n.unlocked_at IS NOT NULL
-			  )
-		)
+	query := `WITH` + accessibleCTEsFor("?1") + `
 		SELECT * FROM node_full
 		WHERE graph_id = ?1
-		  AND id IN (SELECT id FROM accessible);
-	`, graphID)
+		  AND id IN (SELECT id FROM accessible);`
+
+	rows, err := s.executor().QueryContext(ctx, query, graphID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query accessible nodes: %w", err)
 	}
@@ -193,30 +214,7 @@ func (s *sqliteDB) getAccessibleNodes(ctx context.Context, graphID string) ([]mo
 
 // getAccessibleEdges retrieves all edges that have a source node that is unlocked or has an edge from an unlocked node
 func (s *sqliteDB) getAccessibleEdges(ctx context.Context, graphID string) ([]models.Edge, error) {
-	rows, err := s.executor().QueryContext(ctx, `
-	WITH
-	unlocked AS (
-		SELECT id
-		FROM node
-		WHERE graph_id = ?1
-		  AND unlocked_at IS NOT NULL
-		  OR type = 'start'
-	),
-	accessible AS (
-		SELECT id FROM unlocked
-		UNION
-		SELECT e.destination_node_id
-		FROM edge e
-			JOIN unlocked u ON u.id = e.source_node_id
-		WHERE e.graph_id = ?1
-		  AND NOT EXISTS (
-			SELECT 1 FROM edge sibling
-				JOIN node n ON n.id = sibling.destination_node_id
-			WHERE sibling.source_node_id = e.source_node_id
-			  AND sibling.id != e.id
-			  AND n.unlocked_at IS NOT NULL
-		  )
-	)
+	query := `WITH` + accessibleCTEsFor("?1") + `
 	SELECT DISTINCT e.id,
 		e.source_node_id,
 		e.destination_node_id,
@@ -225,8 +223,9 @@ func (s *sqliteDB) getAccessibleEdges(ctx context.Context, graphID string) ([]mo
 		e.updated_at
 	FROM edge e
 		JOIN accessible a ON a.id = e.destination_node_id
-	WHERE e.graph_id = ?1;
-	`, graphID)
+	WHERE e.graph_id = ?1;`
+
+	rows, err := s.executor().QueryContext(ctx, query, graphID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query accessible edges: %w", err)
 	}
