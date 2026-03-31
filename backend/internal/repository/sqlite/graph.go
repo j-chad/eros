@@ -240,6 +240,13 @@ func (s *sqliteDB) GetAccessibleNode(ctx context.Context, nodeID string) (*model
           FROM edge e
                  JOIN unlocked u ON u.id = e.source_node_id
           WHERE e.graph_id = (SELECT graph_id FROM node_graph)
+            AND NOT EXISTS (
+              SELECT 1 FROM edge sibling
+                  JOIN node n ON n.id = sibling.destination_node_id
+              WHERE sibling.source_node_id = e.source_node_id
+                AND sibling.id != e.id
+                AND n.unlocked_at IS NOT NULL
+            )
        )
        SELECT * FROM node_full
        WHERE id = ?1

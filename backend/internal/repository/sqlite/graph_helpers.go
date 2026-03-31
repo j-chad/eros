@@ -154,6 +154,13 @@ func (s *sqliteDB) getAccessibleNodes(ctx context.Context, graphID string) ([]mo
 			FROM edge e
 					 JOIN unlocked u ON u.id = e.source_node_id
 			WHERE e.graph_id = ?1
+			  AND NOT EXISTS (
+				SELECT 1 FROM edge sibling
+					JOIN node n ON n.id = sibling.destination_node_id
+				WHERE sibling.source_node_id = e.source_node_id
+				  AND sibling.id != e.id
+				  AND n.unlocked_at IS NOT NULL
+			  )
 		)
 		SELECT * FROM node_full
 		WHERE graph_id = ?1
@@ -202,6 +209,13 @@ func (s *sqliteDB) getAccessibleEdges(ctx context.Context, graphID string) ([]mo
 		FROM edge e
 			JOIN unlocked u ON u.id = e.source_node_id
 		WHERE e.graph_id = ?1
+		  AND NOT EXISTS (
+			SELECT 1 FROM edge sibling
+				JOIN node n ON n.id = sibling.destination_node_id
+			WHERE sibling.source_node_id = e.source_node_id
+			  AND sibling.id != e.id
+			  AND n.unlocked_at IS NOT NULL
+		  )
 	)
 	SELECT DISTINCT e.id,
 		e.source_node_id,
