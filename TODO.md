@@ -54,5 +54,4 @@ Backend is fully implemented (both admin and client endpoints). Admin UI is done
 - [ ] Backend: `CleanupOrphanedFiles` commented out in `internal/service/admin.go`
 - [ ] Admin: impersonate button renders but `handleImpersonate` handler is empty (`admin/src/lib/components/Impersonate.svelte`)
 - [ ] Client: `src/lib/db/sync.ts` is empty — background sync not implemented
-- [ ] `docker-compose.yml` is empty — no containerization configured
-- [ ] No test framework or tests anywhere in the project
+- [x] ~~No test framework or tests anywhere in the project~~ — Go stdlib tests added for core packages
