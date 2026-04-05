@@ -47,7 +47,7 @@ func (s *FavourService) RequestFavour(ctx context.Context, request *models.Favou
 			return ErrFavourTooExpensive
 		}
 
-		return s.repo.CreateFavourRequest(ctx, request)
+		return txRepo.CreateFavourRequest(ctx, request)
 	})
 }
 

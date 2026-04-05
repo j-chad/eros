@@ -69,7 +69,34 @@ Node 24 (see `.nvmrc`). Uses npm. Dev server runs on port 5174 to avoid service 
 
 ### Tests
 
-No test framework is configured. No test files exist in the codebase.
+```bash
+# Run all backend tests (from backend/)
+go test ./...
+
+# Verbose
+go test ./... -v
+
+# Single package
+go test ./internal/service/...
+
+# Include integration tests (requires CGo for SQLite)
+go test -tags integration ./...
+```
+
+Go stdlib `testing` only — no external test dependencies. Test files live next to the code they test.
+
+**Unit vs integration tests:**
+
+- **Unit tests** (`*_test.go`): pure logic, no external deps.
+- **Integration tests** (`*_integration_test.go`): use `testdb.New(t)` for in-memory SQLite or `testdb.NewFileStore(t)` for temp-dir file storage.
+
+**Test helpers** in `internal/testutil/`:
+
+- `testutil.Equal`, `NilErr`, `ErrorIs`, `TypeAssert`, etc. — lightweight assert helpers in `assert.go`
+- `testdb.New(t)` — in-memory SQLite repo (real schema, real triggers, real transactions via `file::memory:?cache=shared`)
+- `testdb.NewFileStore(t)` — real `LocalFileStore` on `t.TempDir()`, auto-cleaned
+
+No fakes or mocks. Integration tests use real implementations with ephemeral storage.
 
 ### API Testing
 
