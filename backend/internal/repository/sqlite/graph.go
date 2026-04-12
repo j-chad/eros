@@ -254,3 +254,16 @@ func (s *sqliteDB) UnlockNode(ctx context.Context, nodeID string) error {
 
 	return nil
 }
+
+func (s *sqliteDB) LockNode(ctx context.Context, nodeID string) error {
+	_, err := s.executor().ExecContext(ctx, `
+		UPDATE node
+		SET unlocked_at = NULL
+		WHERE id = ? AND type != 'start'
+	`, nodeID)
+	if err != nil {
+		return fmt.Errorf("failed to lock node %s: %w", nodeID, err)
+	}
+
+	return nil
+}

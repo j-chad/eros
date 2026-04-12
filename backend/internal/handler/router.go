@@ -52,6 +52,8 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	adminMux.HandleFunc("POST /api/admin/graphs", h.admin.CreateGraph)
 	adminMux.HandleFunc("GET /api/admin/graphs/{id}", h.admin.GetGraph)
 	adminMux.HandleFunc("PUT /api/admin/graphs/{id}", h.admin.UpdateGraph)
+	adminMux.HandleFunc("POST /api/admin/nodes/{node_id}/unlock", h.admin.UnlockNode)
+	adminMux.HandleFunc("DELETE /api/admin/nodes/{node_id}/unlock", h.admin.LockNode)
 	adminMux.HandleFunc("PUT /api/admin/nodes/{node_id}/files", h.admin.UploadFiles)
 	adminMux.HandleFunc("GET /api/admin/nodes/{node_id}/files", h.admin.ListFiles)
 	adminMux.HandleFunc("/", routeNotFound)

@@ -26,6 +26,8 @@
 	import ManualNode from "./nodes/ManualNode.svelte";
 	import RewardNode from "./nodes/RewardNode.svelte";
 	import EditEdgeDialog from "./EditEdgeDialog.svelte";
+	import {Eye, EyeOff} from 'lucide-svelte';
+	import {api} from '$lib/api';
 
 	let {graph = $bindable<Graph>()}: { graph: Graph } = $props()
 
@@ -41,6 +43,7 @@
 	let contextMenuPosition = $state({x: 0, y: 0});
 	let editingNode = $state<AnyNode | null>(null);
 	let editingEdge = $state<Edge | null>(null);
+	let showProgress = $state(false);
 
 	// Non-reactive state for performance
 	let nodes = $state.raw<FlowNode[]>([]);
@@ -67,16 +70,45 @@
 			data: {
 				node,
 				onEdit: handleEditNode,
-				onUpdateData: (data) => handleUpdateNodeData(node.id, data)
+				onUpdateData: (data) => handleUpdateNodeData(node.id, data),
+				showProgress,
+				onToggleUnlock: handleToggleUnlock
 			},
 			type: node.type,
 			deletable: node.type !== NodeType.START,
 		};
 	}
 
+	async function handleToggleUnlock(nodeId: string) {
+		const node = graph.nodes.find(n => n.id === nodeId);
+		if (!node) return;
+
+		try {
+			if (node.unlocked_at) {
+				await api.node.lock(nodeId);
+				node.unlocked_at = null;
+			} else {
+				await api.node.unlock(nodeId);
+				node.unlocked_at = new Date().toISOString();
+			}
+			// Trigger reactivity
+			graph = {...graph, nodes: [...graph.nodes]};
+		} catch (e) {
+			console.error('Failed to toggle node unlock:', e);
+			alert('Failed to toggle node unlock state');
+		}
+	}
+
+	// Build a lookup of unlocked node IDs for edge styling
+	let unlockedNodeIds = $derived(new Set(
+		graph?.nodes?.filter(n => n.unlocked_at).map(n => n.id) ?? []
+	));
+
 	// Sync FROM graph TO flow (when graph changes)
 	$effect(() => {
 		if (!graph || syncingFromFlow) return;
+		// track showProgress so toggling it re-syncs nodes
+		void showProgress;
 
 		syncingFromGraph = true;
 
@@ -87,7 +119,13 @@
 			source: edge.from,
 			target: edge.to,
 			label: edge.choice_label,
-			data: {edge}
+			data: {edge},
+			animated: showProgress && unlockedNodeIds.has(edge.from) && unlockedNodeIds.has(edge.to),
+			style: showProgress
+				? (unlockedNodeIds.has(edge.from) && unlockedNodeIds.has(edge.to)
+					? 'stroke: #10b981; stroke-width: 2.5px;'
+					: 'stroke: #d1d5db; stroke-width: 1.5px; opacity: 0.5;')
+				: undefined
 		})) ?? [];
 
 		queueMicrotask(() => {
@@ -263,6 +301,21 @@
 		<MiniMap/>
 		<Controls/>
 		<Background variant={BackgroundVariant.Dots}/>
+		<div class="progress-toggle">
+			<button
+				class="progress-btn"
+				class:active={showProgress}
+				onclick={() => showProgress = !showProgress}
+				title={showProgress ? 'Hide client progress' : 'Show client progress'}
+			>
+				{#if showProgress}
+					<EyeOff size={14} />
+				{:else}
+					<Eye size={14} />
+				{/if}
+				<span>Progress</span>
+			</button>
+		</div>
 		{#if contextMenu === 'pane'}
 			<PaneContextMenu x={contextMenuPosition.x} y={contextMenuPosition.y} onClose={handleCloseContextMenu}
 							 onCreateNode={handleNewNode}/>
@@ -284,5 +337,39 @@
 		height: 600px;
 		border: 2px dashed #d1d5db;
 		border-radius: 8px;
+	}
+
+	.progress-toggle {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		z-index: 5;
+	}
+
+	.progress-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.5rem 0.75rem;
+		border: 1px solid #d1d5db;
+		border-radius: 6px;
+		background: white;
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: #374151;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+	}
+
+	.progress-btn:hover {
+		background: #f9fafb;
+		border-color: #9ca3af;
+	}
+
+	.progress-btn.active {
+		background: #ecfdf5;
+		border-color: #10b981;
+		color: #065f46;
 	}
 </style>

@@ -13,6 +13,8 @@
 <BaseNode
 	{node}
 	onEdit={data.onEdit}
+	showProgress={data.showProgress}
+	onToggleUnlock={data.onToggleUnlock}
 	onmouseenter={() => isHovered = true}
 	onmouseleave={() => isHovered = false}
 	config={{

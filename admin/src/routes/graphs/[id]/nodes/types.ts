@@ -5,6 +5,8 @@ interface NodeData<N extends AnyNode = AnyNode> extends Record<string, unknown> 
 	node: N;
 	onEdit: (nodeID: string) => void;
 	onUpdateData: (data: N['data']) => void;
+	showProgress: boolean;
+	onToggleUnlock: (nodeID: string) => void;
 }
 
 export type Node<N extends AnyNode = AnyNode> = FlowNode<NodeData<N>, N["type"]>;

@@ -76,6 +76,36 @@ func (h *Handler) GetGraph(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, http.StatusOK, graph)
 }
 
+func (h *Handler) UnlockNode(w http.ResponseWriter, r *http.Request) {
+	nodeID := r.PathValue("node_id")
+	if nodeID == "" {
+		response.Error(r.Context(), w, apierror.BadRequest("Node ID is required"))
+		return
+	}
+
+	if err := h.adminService.AdminUnlockNode(r.Context(), nodeID); err != nil {
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
+		return
+	}
+
+	response.NoContent(w)
+}
+
+func (h *Handler) LockNode(w http.ResponseWriter, r *http.Request) {
+	nodeID := r.PathValue("node_id")
+	if nodeID == "" {
+		response.Error(r.Context(), w, apierror.BadRequest("Node ID is required"))
+		return
+	}
+
+	if err := h.adminService.AdminLockNode(r.Context(), nodeID); err != nil {
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
+		return
+	}
+
+	response.NoContent(w)
+}
+
 func (h *Handler) UpdateGraph(w http.ResponseWriter, r *http.Request) {
 	var graphID = r.PathValue("id")
 	if graphID == "" {

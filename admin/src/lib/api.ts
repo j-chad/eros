@@ -126,6 +126,11 @@ export const api = {
                 method: 'PUT',
                 body: JSON.stringify(graphData),
             }),
-
+    },
+    node: {
+        unlock: async (nodeId: string) =>
+            request(`/admin/nodes/${nodeId}/unlock`, {method: 'POST'}),
+        lock: async (nodeId: string) =>
+            request(`/admin/nodes/${nodeId}/unlock`, {method: 'DELETE'}),
     }
 }

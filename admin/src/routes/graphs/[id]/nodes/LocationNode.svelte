@@ -11,6 +11,8 @@
 <BaseNode
 	{node}
 	onEdit={data.onEdit}
+	showProgress={data.showProgress}
+	onToggleUnlock={data.onToggleUnlock}
 	config={{
         color: '#ec4899',
         gradient: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',

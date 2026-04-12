@@ -145,6 +145,14 @@ func (s *AdminService) UpdateGraph(ctx context.Context, graph models.Graph) erro
 	return s.repo.UpdateGraph(ctx, graph)
 }
 
+func (s *AdminService) AdminUnlockNode(ctx context.Context, nodeID string) error {
+	return s.repo.UnlockNode(ctx, nodeID)
+}
+
+func (s *AdminService) AdminLockNode(ctx context.Context, nodeID string) error {
+	return s.repo.LockNode(ctx, nodeID)
+}
+
 func (s *AdminService) UploadFile(ctx context.Context, nodeID, filename, mime string, size int64, reader io.ReadSeeker) (*models.File, error) {
 	storageKey, err := s.files.Put(ctx, filename, mime, reader)
 	if err != nil {
