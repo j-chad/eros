@@ -16,6 +16,9 @@
     async function handleCreateGraph(date: Date) {
         const title = `Unnamed Graph`;
 
+		const dateWithTime = new Date(date.getTime())
+		dateWithTime.setHours(8, 0, 0, 0)
+
         try {
             const graphId = await api.graph.create({
                 title,
@@ -26,9 +29,11 @@
                 id: graphId,
                 title,
                 description: '',
-                starting_at: date.toISOString(),
+                starting_at: dateWithTime.toISOString(),
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
+				nodes: [],
+				edges: []
             }
 
             graphs = [...graphs, newGraph];
