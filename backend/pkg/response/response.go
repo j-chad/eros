@@ -1,11 +1,11 @@
 package response
 
 import (
+	"backend/internal/logging"
 	"backend/pkg/apierror"
 	"backend/pkg/authctx"
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 )
 
@@ -15,14 +15,16 @@ func JSON(w http.ResponseWriter, status int, data any) {
 	w.WriteHeader(status)
 
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		log.Printf("error encoding JSON response: %v", err)
+		logger := logging.FromContext(context.Background())
+		logger.Error("error encoding JSON response", "error", err)
 	}
 }
 
 // Error writes an error response
 func Error(ctx context.Context, w http.ResponseWriter, err *apierror.APIError) {
 	if err.StatusCode >= 500 {
-		log.Printf("internal error: %v", err.Err)
+		logger := logging.FromContext(ctx)
+		logger.Error("internal error", "error", err.Err, "code", err.Code, "message", err.Message, "details", err.Details)
 	}
 
 	// Build error response

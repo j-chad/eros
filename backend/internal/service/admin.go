@@ -2,6 +2,7 @@ package service
 
 import (
 	"backend/internal/crypto"
+	"backend/internal/logging"
 	"backend/internal/models"
 	"backend/internal/repository"
 	"backend/internal/repository/storage"
@@ -9,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"time"
 )
 
@@ -154,6 +154,8 @@ func (s *AdminService) AdminLockNode(ctx context.Context, nodeID string) error {
 }
 
 func (s *AdminService) UploadFile(ctx context.Context, nodeID, filename, mime string, size int64, reader io.ReadSeeker) (*models.File, error) {
+	logger := logging.FromContext(ctx)
+
 	storageKey, err := s.files.Put(ctx, filename, mime, reader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file to storage: %w", err)
@@ -172,7 +174,7 @@ func (s *AdminService) UploadFile(ctx context.Context, nodeID, filename, mime st
 	if err != nil {
 		// Attempt to clean up the uploaded file if database operation fails
 		if delErr := s.files.Delete(ctx, storageKey); delErr != nil {
-			log.Printf("failed to clean up uploaded file after database error: %v", delErr)
+			logger.ErrorContext(ctx, "failed to clean up uploaded file after database error", "storageKey", storageKey, "err", delErr)
 		}
 		return nil, fmt.Errorf("failed to create file record in database: %w", err)
 	}

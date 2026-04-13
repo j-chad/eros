@@ -123,7 +123,7 @@ func validateUnlockPayload(node *models.Node, payload string) error {
 }
 
 func validateManualGateUnlock(node *models.Node) error {
-	nodeData, ok := node.Data.(models.ManualData)
+	nodeData, ok := node.Data.(*models.ManualData)
 	if !ok {
 		return fmt.Errorf("invalid node data for manual gate node %s", node.ID)
 	}
@@ -136,7 +136,7 @@ func validateManualGateUnlock(node *models.Node) error {
 }
 
 func validateCodeGatePayload(node *models.Node, payload string) error {
-	nodeData, ok := node.Data.(models.CodeData)
+	nodeData, ok := node.Data.(*models.CodeData)
 	if !ok {
 		return fmt.Errorf("invalid node data for code gate node %s", node.ID)
 	}
@@ -149,7 +149,7 @@ func validateCodeGatePayload(node *models.Node, payload string) error {
 }
 
 func validateLocationGatePayload(node *models.Node, payload string) error {
-	nodeData, ok := node.Data.(models.LocationData)
+	nodeData, ok := node.Data.(*models.LocationData)
 	if !ok {
 		return fmt.Errorf("invalid node data for location gate node %s", node.ID)
 	}
