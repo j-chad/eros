@@ -4,12 +4,24 @@
 
 ## Graph Play Experience
 
-The core gameplay loop. The client can list graphs, show a countdown to the next one, and display a calendar of unlocked graphs — but cannot navigate or play through them.
+The core gameplay loop. The client can list graphs, show a countdown to the next one, and display a calendar of unlocked graphs — but cannot navigate or play through them. See `.opencode/plans/gate-unlock-flows/spec.md` for the full spec.
 
+- [ ] Backend: unlock endpoint changes #P0
+  - [ ] return `UnlockResult` (unlocked node + newly accessible nodes/edges) instead of 204
+  - [ ] case-insensitive code matching (`strings.EqualFold`)
+  - [ ] per-node rate limiting middleware (10/min) on `POST /api/nodes/{id}/unlock`
+- [ ] Client: API + service layer #P0
+  - [ ] add `unlockNode()` to `client/src/lib/api/graph.api.ts` with `UnlockResult` type
+  - [ ] add `unlockNode()` to `client/src/lib/services/graph.ts` — call API + merge result into IndexedDB cache
+  - [ ] shared reactive online status utility (`client/src/lib/online.svelte.ts`)
 - [ ] Client: gate unlock flows #P0
-  - [ ] Location gate — geolocation proximity check + unlock
-  - [ ] Code gate — code entry form + validation
-  - [ ] Manual gate — "waiting for approval" state display
+  - [ ] Code gate — input, submit, shake + error on wrong answer, rate-limited state, offline-aware
+  - [ ] Location gate — geolocation request, permission denial handling, poor accuracy warning, offline-aware
+  - [ ] Manual gate — 30s polling (visibility-aware), approval detection, "Continue" button, offline-aware
+- [ ] Client: unlock celebration + transition #P0
+  - [ ] standard gate unlock — checkmark + pulse + auto-advance (~1.5s)
+  - [ ] reward unlock — elevated entrance (scale, shimmer, glow), longer beat (~2s)
+  - [ ] confetti/particle flourish on reward unlock (can slip to P1 if complex)
 
 ## File Management
 
@@ -45,3 +57,7 @@ Backend is fully implemented (both admin and client endpoints). Admin UI is done
 - [ ] Backend: `CleanupOrphanedFiles` commented out in `internal/service/admin.go`
 - [ ] Admin: impersonate button renders but `handleImpersonate` handler is empty (`admin/src/lib/components/Impersonate.svelte`)
 - [ ] Client: `src/lib/db/sync.ts` is empty — background sync not implemented
+- [ ] Event system (WebSocket/SSE) — replace manual gate polling with real-time approval notifications
+- [ ] Location gate: cold-warm-hot continuous proximity feedback (watch position, show distance hint)
+- [ ] Code gate: alternate accepted codes — multiple valid answers per code gate node
+- [ ] Backend: move rate limiter to Redis/shared store if backend ever runs multiple instances
