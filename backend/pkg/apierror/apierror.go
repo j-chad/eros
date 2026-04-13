@@ -86,3 +86,11 @@ func BadRequest(message string) *APIError {
 		StatusCode: http.StatusBadRequest,
 	}
 }
+
+func TooManyRequests(message string) *APIError {
+	return &APIError{
+		Code:       "RATE_LIMITED",
+		Message:    message,
+		StatusCode: http.StatusTooManyRequests,
+	}
+}
