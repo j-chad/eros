@@ -59,6 +59,9 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	adminMux.HandleFunc("/", routeNotFound)
 	mux.Handle("/api/admin/", middleware.WithAdminAuth(adminMux, *h.auth))
 
+	// Rate limiter for unlock endpoint (10 attempts per minute per node)
+	nodeRateLimiter := middleware.NewPerNodeRateLimit(10)
+
 	clientMux := http.NewServeMux()
 	clientMux.HandleFunc("GET /api/ping", ping)
 	clientMux.HandleFunc("GET /api/favours/choices", h.client.ListFavourChoices)
@@ -68,7 +71,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	clientMux.HandleFunc("DELETE /api/favours/request/{id}", h.client.DeleteFavourRequest)
 	clientMux.HandleFunc("GET /api/graphs", h.client.ListGraphs)
 	clientMux.HandleFunc("GET /api/graphs/{id}", h.client.GetGraph)
-	clientMux.HandleFunc("POST /api/nodes/{id}/unlock", h.client.UnlockNode)
+	clientMux.Handle("POST /api/nodes/{id}/unlock", nodeRateLimiter.Middleware(http.HandlerFunc(h.client.UnlockNode)))
 	mux.Handle("/api/", middleware.WithClientAuth(clientMux, *h.auth))
 
 	mux.HandleFunc("/", routeNotFound)
