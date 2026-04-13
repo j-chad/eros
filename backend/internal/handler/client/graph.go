@@ -41,7 +41,8 @@ func (h *Handler) UnlockNode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.graphService.UnlockNode(r.Context(), r.PathValue("id"), string(payload)); err != nil {
+	result, err := h.graphService.UnlockNode(r.Context(), r.PathValue("id"), string(payload))
+	if err != nil {
 		if errors.Is(err, service.NodeUnlockIncorrect) {
 			response.Error(r.Context(), w, apierror.Forbidden("incorrect unlock payload"))
 			return
@@ -51,5 +52,5 @@ func (h *Handler) UnlockNode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.NoContent(w)
+	response.JSON(w, http.StatusOK, result)
 }

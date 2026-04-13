@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -59,17 +60,53 @@ func (s *GraphService) GetGraph(ctx context.Context, graphID string) (*models.Gr
 	return graph, nil
 }
 
-func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload string) error {
+func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload string) (*models.UnlockResult, error) {
 	node, err := s.repo.GetAccessibleNode(ctx, nodeID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := validateUnlockPayload(node, payload); err != nil {
-		return err
+		return nil, err
 	}
 
-	return s.repo.UnlockNode(ctx, nodeID)
+	var result *models.UnlockResult
+
+	err = s.repo.WithTx(ctx, nil, func(repo repository.Repository) error {
+		graphBefore, err := repo.GetAccessibleGraph(ctx, node.GraphID)
+		if err != nil {
+			return fmt.Errorf("could not get accessible before unlock: %w", err)
+		}
+
+		if err := repo.UnlockNode(ctx, nodeID); err != nil {
+			return fmt.Errorf("failed to unlock node: %w", err)
+		}
+
+		graphAfter, err := repo.GetAccessibleGraph(ctx, node.GraphID)
+		if err != nil {
+			return fmt.Errorf("could not get accessible after unlock: %w", err)
+		}
+
+		// Get the unlocked node (fresh from DB with updated timestamp)
+		unlockedNode, err := repo.GetAccessibleNode(ctx, nodeID)
+		if err != nil {
+			return fmt.Errorf("failed to get unlocked node: %w", err)
+		}
+
+		// Compute diff by subtracting pre-existing nodes/edges from the new set
+		newNodes := setDifference(*graphAfter.Nodes, *graphBefore.Nodes)
+		newEdges := setDifference(*graphAfter.Edges, *graphBefore.Edges)
+
+		result = &models.UnlockResult{
+			UnlockedNode: *unlockedNode,
+			NewNodes:     newNodes,
+			NewEdges:     newEdges,
+		}
+
+		return nil
+	})
+
+	return result, err
 }
 
 func validateUnlockPayload(node *models.Node, payload string) error {
@@ -104,7 +141,7 @@ func validateCodeGatePayload(node *models.Node, payload string) error {
 		return fmt.Errorf("invalid node data for code gate node %s", node.ID)
 	}
 
-	if nodeData.Code != payload {
+	if !strings.EqualFold(nodeData.Code, payload) {
 		return NodeUnlockIncorrect
 	}
 

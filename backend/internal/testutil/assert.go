@@ -23,6 +23,31 @@ func NotEqual[T comparable](t *testing.T, got, want T) {
 	}
 }
 
+// ElementsMatch fails the test if got and want do not contain the same elements
+// (order-independent). Comparison uses the provided eq function.
+func ElementsMatch[T comparable](t *testing.T, got, want []T) {
+	t.Helper()
+	if len(got) != len(want) {
+		t.Errorf("ElementsMatch: length mismatch: got %d, want %d", len(got), len(want))
+		return
+	}
+	used := make([]bool, len(want))
+	for i, g := range got {
+		found := false
+		for j, w := range want {
+			if !used[j] && g == w {
+				used[j] = true
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("ElementsMatch: got[%d] = %v has no unused match in want", i, g)
+			return
+		}
+	}
+}
+
 // NilErr fails the test if err is not nil.
 func NilErr(t *testing.T, err error) {
 	t.Helper()

@@ -66,3 +66,44 @@ func TestHaversineDistance_Symmetry(t *testing.T) {
 	d2 := haversineDistance(48.8566, 2.3522, 51.5074, -0.1278)
 	testutil.Equal(t, d1, d2)
 }
+
+func TestSetDifference(t *testing.T) {
+	tests := []struct {
+		name string
+		setA []int
+		setB []int
+		want []int
+	}{
+		{
+			name: "disjoint sets",
+			setA: []int{1, 2, 3},
+			setB: []int{4, 5, 6},
+			want: []int{1, 2, 3},
+		},
+		{
+			name: "overlapping sets",
+			setA: []int{1, 2, 3, 4},
+			setB: []int{3, 4, 5},
+			want: []int{1, 2},
+		},
+		{
+			name: "setA is subset of setB",
+			setA: []int{1, 2},
+			setB: []int{1, 2, 3},
+			want: []int{},
+		},
+		{
+			name: "setB is subset of setA",
+			setA: []int{1, 2, 3},
+			setB: []int{1, 2},
+			want: []int{3},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := setDifference(tt.setA, tt.setB)
+			testutil.ElementsMatch(t, got, tt.want)
+		})
+	}
+}
