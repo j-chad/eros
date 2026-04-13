@@ -6,10 +6,6 @@
 
 The core gameplay loop. The client can list graphs, show a countdown to the next one, and display a calendar of unlocked graphs — but cannot navigate or play through them. See `.opencode/plans/gate-unlock-flows/spec.md` for the full spec.
 
-- [ ] Backend: unlock endpoint changes #P0
-  - [ ] return `UnlockResult` (unlocked node + newly accessible nodes/edges) instead of 204
-  - [ ] case-insensitive code matching (`strings.EqualFold`)
-  - [ ] per-node rate limiting middleware (10/min) on `POST /api/nodes/{id}/unlock`
 - [ ] Client: API + service layer #P0
   - [ ] add `unlockNode()` to `client/src/lib/api/graph.api.ts` with `UnlockResult` type
   - [ ] add `unlockNode()` to `client/src/lib/services/graph.ts` — call API + merge result into IndexedDB cache
@@ -36,7 +32,7 @@ Reward nodes can contain images, videos, and files. The backend can store them, 
   - [ ] display and manage uploaded files for reward nodes in the editor
 - [ ] Client #P0
   - [ ] image/video reward viewer
-  - [ ] other reward type displays (markdown, favour, calendar, wallet, file)
+  - [ ] other reward type displays (Markdown, favour, calendar, wallet, file)
 
 ## Favour System
 

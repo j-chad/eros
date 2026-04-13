@@ -9,7 +9,7 @@ type LocationData struct {
 }
 
 type CodeData struct {
-	Code string `json:"code"`
+	Codes []string `json:"codes"`
 }
 
 type ManualData struct {

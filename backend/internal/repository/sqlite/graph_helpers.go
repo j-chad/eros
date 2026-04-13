@@ -385,11 +385,11 @@ func (s *sqliteDB) upsertNodeData(ctx context.Context, nodeID string, nodeType m
 		_, err := s.executor().ExecContext(ctx, `
 			INSERT INTO node_code_gate (
 				node_id,
-				code
+				codes
 			) VALUES (?, ?)
 			ON CONFLICT (node_id) DO UPDATE SET
-				code = excluded.code
-		`, nodeID, codeData.Code)
+				codes = excluded.codes
+		`, nodeID, codeData.Codes)
 		return err
 	case models.RewardNode:
 		rewardData, ok := data.(models.RewardData)

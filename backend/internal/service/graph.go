@@ -141,11 +141,13 @@ func validateCodeGatePayload(node *models.Node, payload string) error {
 		return fmt.Errorf("invalid node data for code gate node %s", node.ID)
 	}
 
-	if !strings.EqualFold(nodeData.Code, payload) {
-		return NodeUnlockIncorrect
+	for _, code := range nodeData.Codes {
+		if strings.EqualFold(code, payload) {
+			return nil
+		}
 	}
 
-	return nil
+	return NodeUnlockIncorrect
 }
 
 func validateLocationGatePayload(node *models.Node, payload string) error {

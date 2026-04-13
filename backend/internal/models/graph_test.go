@@ -12,7 +12,7 @@ func TestNodeUnmarshalJSON_CodeGate(t *testing.T) {
 		"id": "n1",
 		"type": "code",
 		"title": "Enter Code",
-		"data": {"code": "SECRET"},
+		"data": {"codes": ["SECRET", "PASSWORD"]},
 		"created_at": "2024-01-01T00:00:00Z",
 		"updated_at": "2024-01-01T00:00:00Z"
 	}`
@@ -21,7 +21,7 @@ func TestNodeUnmarshalJSON_CodeGate(t *testing.T) {
 	testutil.NilErr(t, json.Unmarshal([]byte(raw), &node))
 
 	data := testutil.TypeAssert[CodeData](t, node.Data)
-	testutil.Equal(t, data.Code, "SECRET")
+	testutil.ElementsMatch(t, data.Codes, []string{"SECRET", "PASSWORD"})
 }
 
 func TestNodeUnmarshalJSON_LocationGate(t *testing.T) {

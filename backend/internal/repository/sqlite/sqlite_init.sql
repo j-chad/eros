@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS node_code_gate
 (
 	node_id TEXT PRIMARY KEY,
 
-	code    TEXT NOT NULL,
+	codes   TEXT NOT NULL CHECK ( json_valid(codes, 4) AND json_type(codes) == 'array' ),
 
 	FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE
 );
@@ -302,24 +302,24 @@ SELECT n.id,
 	   n.unlocked_at,
 
 	   CASE n.type
-		   WHEN 'location' THEN json_object(
+		   WHEN 'location' THEN jsonb_object(
 			   'latitude', nlg.latitude,
 			   'longitude', nlg.longitude,
 			   'radius_m', nlg.radius_meters
 								)
-		   WHEN 'code' THEN json_object(
-			   'code', ncg.code
+		   WHEN 'code' THEN jsonb_object(
+			   'codes', ncg.codes
 							)
-		   WHEN 'manual' THEN json_object(
+		   WHEN 'manual' THEN jsonb_object(
 			   'instructions', nmg.instructions,
 			   'unlocked_at', nmg.unlocked_at
 							  )
-		   WHEN 'reward' THEN json_object(
+		   WHEN 'reward' THEN jsonb_object(
 			   'reward_type', nr.reward_type,
 			   'payload', nr.payload,
 			   'give_favours', nr.give_favours
-		   )
-		   ELSE json('{}')
+							  )
+		   ELSE jsonb('{}')
 		   END AS data_json
 
 FROM node n
