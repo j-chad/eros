@@ -16,8 +16,8 @@ export interface GraphDetail {
 	title: string;
 	description?: string;
 	starting_at: string; // ISO 8601 date string
-	nodes?: AnyNode[];
-	edges?: Edge[];
+	nodes: AnyNode[];
+	edges: Edge[];
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string
 }

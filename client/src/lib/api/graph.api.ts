@@ -1,5 +1,11 @@
 import { request } from '$lib/api/http';
-import type { GraphDetail, GraphSummary } from '$lib/types/graph';
+import type { GraphDetail, GraphSummary, AnyNode, Edge } from '$lib/types/graph';
+
+export interface UnlockResult {
+	unlocked_node: AnyNode;
+	new_nodes: AnyNode[];
+	new_edges: Edge[];
+}
 
 type GraphSummaryResponse = Omit<GraphSummary, 'starting_at' | 'created_at' | 'updated_at'> & {
 	starting_at: string;
@@ -24,4 +30,12 @@ export async function fetchGraphs(): Promise<GraphSummary[]> {
 
 export async function fetchGraph(id: string): Promise<GraphDetail> {
 	return request<GraphDetail>(`/graphs/${id}`);
+}
+
+export async function unlockNode(nodeId: string, payload: string): Promise<UnlockResult> {
+	return request<UnlockResult>(`/nodes/${nodeId}/unlock`, {
+		method: 'POST',
+		body: payload,
+		headers: { 'Content-Type': 'text/plain' },
+	});
 }

@@ -9,9 +9,18 @@
 	import ManualGateView from '$lib/ui/nodes/ManualGate.svelte';
 	import RewardNodeView from '$lib/ui/nodes/RewardNode.svelte';
 	import type { AnyNode, GraphDetail } from '$lib/types/graph';
+	import type { UnlockResult } from '$lib/api/graph.api';
 	import { NodeType } from '$lib/types/graph';
 
 	const { data }: { data: { graph: GraphDetail } } = $props();
+
+	// Make nodes and edges reactive and mutable
+	let nodes = $state(data.graph.nodes ?? []);
+	let edges = $state(data.graph.edges ?? []);
+	
+	// Celebration state
+	let celebrationState = $state<'gate-success' | 'reward-reveal' | null>(null);
+	let celebrationNode = $state<AnyNode | null>(null);
 
 	// --- current node resolution ---
 	//
@@ -24,9 +33,6 @@
 	//   4. If there are multiple frontier nodes (branching path), show a choice screen.
 	//   5. If there are no frontier nodes, the graph is complete — show the last
 	//      unlocked node (likely a reward).
-
-	const nodes = $derived(data.graph.nodes ?? []);
-	const edges = $derived(data.graph.edges ?? []);
 
 	const unlockedNodes = $derived(
 		nodes.filter((n) => n.unlocked_at != null || n.type === NodeType.START),
@@ -99,6 +105,30 @@
 			goto('/');
 		}
 	}
+
+	function handleUnlock(result: UnlockResult) {
+		// Update the unlocked node
+		const nodeIndex = nodes.findIndex(n => n.id === result.unlocked_node.id);
+		if (nodeIndex >= 0) {
+			nodes[nodeIndex] = result.unlocked_node;
+		}
+		
+		// Add new nodes and edges
+		nodes.push(...result.new_nodes);
+		edges.push(...result.new_edges);
+		
+		// Determine celebration type
+		const hasRewardInNew = result.new_nodes.some(n => n.type === NodeType.REWARD);
+		celebrationState = hasRewardInNew ? 'reward-reveal' : 'gate-success';
+		celebrationNode = result.unlocked_node;
+		
+		// Auto-advance after celebration
+		const delay = hasRewardInNew ? 2000 : 1500;
+		setTimeout(() => {
+			celebrationState = null;
+			celebrationNode = null;
+		}, delay);
+	}
 </script>
 
 <svelte:head>
@@ -166,14 +196,31 @@
 			<!-- Single node view -->
 			<Card>
 				<div class="py-4 px-2">
-					{#if displayNode.type === NodeType.START}
+					{#if celebrationState}
+						<!-- Celebration overlay -->
+						<div class="flex flex-col items-center gap-6 text-center animate-popIn">
+							<div class="w-20 h-20 rounded-full bg-success/15 flex items-center justify-center shadow-lg" 
+								 class:animate-pulse={celebrationState === 'reward-reveal'}>
+								<div class="text-success text-3xl">✓</div>
+							</div>
+							<div class="flex flex-col gap-2">
+								<p class="text-xs font-semibold opacity-60 uppercase tracking-wide">Unlocked!</p>
+								<h1 class="text-2xl font-extrabold">{celebrationNode?.title ?? 'Success'}</h1>
+							</div>
+							{#if celebrationState === 'reward-reveal'}
+								<div class="w-full bg-gradient-to-r from-pink-100 to-rose-100 rounded-2xl px-5 py-4 border-2 border-pink-200/50">
+									<p class="text-sm font-semibold text-pink-700">✨ Something special awaits! ✨</p>
+								</div>
+							{/if}
+						</div>
+					{:else if displayNode.type === NodeType.START}
 						<StartNodeView node={displayNode} />
 					{:else if displayNode.type === NodeType.CODE}
-						<CodeGateView node={displayNode} />
+						<CodeGateView node={displayNode} graphId={data.graph.id} onUnlock={handleUnlock} />
 					{:else if displayNode.type === NodeType.LOCATION}
-						<LocationGateView node={displayNode} />
+						<LocationGateView node={displayNode} graphId={data.graph.id} onUnlock={handleUnlock} />
 					{:else if displayNode.type === NodeType.MANUAL}
-						<ManualGateView node={displayNode} />
+						<ManualGateView node={displayNode} graphId={data.graph.id} onUnlock={handleUnlock} />
 					{:else if displayNode.type === NodeType.REWARD}
 						<RewardNodeView node={displayNode} />
 					{/if}
