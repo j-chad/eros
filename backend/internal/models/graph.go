@@ -133,3 +133,9 @@ type Graph struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+type UnlockResult struct {
+	UnlockedNode Node   `json:"unlocked_node"`
+	NewNodes     []Node `json:"new_nodes"`
+	NewEdges     []Edge `json:"new_edges"`
+}
