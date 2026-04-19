@@ -364,6 +364,20 @@ func (s *sqliteDB) upsertNodeData(ctx context.Context, nodeID string, nodeType m
 	}
 
 	switch nodeType {
+	case models.ManualNode:
+		manualData, ok := data.(models.ManualData)
+		if !ok {
+			return fmt.Errorf("invalid data")
+		}
+		_, err := s.executor().ExecContext(ctx, `
+			INSERT INTO node_manual_gate (
+			    node_id, instructions, unlocked_at
+			) VALUES (?, ?, ?)
+			ON CONFLICT (node_id) DO UPDATE SET
+				instructions = excluded.instructions,
+				unlocked_at = excluded.unlocked_at
+		`, nodeID, manualData.Instructions, manualData.UnlockedAt)
+		return err
 	case models.LocationGateNode:
 		locationData, ok := data.(models.LocationData)
 		if !ok {

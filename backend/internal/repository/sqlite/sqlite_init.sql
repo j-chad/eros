@@ -321,7 +321,7 @@ SELECT n.id,
 							)
 		   WHEN 'manual' THEN json_object(
 			   'instructions', nmg.instructions,
-			   'unlocked_at', nmg.unlocked_at
+			   'unlocked_at', strftime('%Y-%m-%dT%H:%M:%SZ', nmg.unlocked_at)
 							  )
 		   WHEN 'time' THEN json_object(
 			   'unlock_at', strftime('%Y-%m-%dT%H:%M:%SZ', ntg.unlock_at)

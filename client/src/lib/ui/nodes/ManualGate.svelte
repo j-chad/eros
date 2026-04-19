@@ -5,15 +5,15 @@
 	import { useOnlineStatus } from '$lib/online.svelte';
 	import { onMount, onDestroy } from 'svelte';
 
-	const { node, graphId, onUnlock }: { 
-		node: ManualNode; 
-		graphId: string; 
-		onUnlock: (result: UnlockResult) => void 
+	const { node, graphId, onUnlock }: {
+		node: ManualNode;
+		graphId: string;
+		onUnlock: (result: UnlockResult) => void
 	} = $props();
 
 	const isOnline = $derived(useOnlineStatus());
 	const isApproved = $derived(!!node.unlocked_at || !!node.data?.unlocked_at);
-	
+
 	let isSubmitting = $state(false);
 	let errorMessage = $state<string | null>(null);
 	let pollInterval: number | null = null;
@@ -45,7 +45,7 @@
 
 	async function handleRefresh() {
 		if (!isOnline) return;
-		
+
 		try {
 			const { getGraph } = await import('$lib/services/graph');
 			await getGraph(graphId); // Re-fetch graph which updates the cached data
@@ -57,7 +57,7 @@
 
 	function startPolling() {
 		if (pollInterval || isApproved || !isOnline) return;
-		
+
 		pollInterval = window.setInterval(() => {
 			if (document.visibilityState === 'visible' && isOnline) {
 				handleRefresh();
@@ -138,10 +138,10 @@
 
 	{#if isApproved}
 		<div class="w-full flex flex-col gap-3">
-			<div class="badge badge-success badge-outline rounded-2xl px-4 py-3 text-xs font-semibold">
-				Approved
+			<div class="alert rounded-2xl text-sm">
+				The content is now unlocked. Click continue to proceed.
 			</div>
-			<button 
+			<button
 				onclick={handleContinue}
 				disabled={isSubmitting || !isOnline}
 				class="btn btn-primary rounded-2xl w-full"
@@ -166,7 +166,7 @@
 					{/if}
 				</p>
 			</div>
-			<button 
+			<button
 				onclick={handleRefresh}
 				disabled={!isOnline}
 				class="btn btn-ghost rounded-2xl w-full btn-sm"
