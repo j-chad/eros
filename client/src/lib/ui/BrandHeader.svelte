@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type {Snippet} from "svelte";
-	import { browser } from '$app/environment';
+	import { useOnlineStatus } from '$lib/online.svelte';
 
 	const {
 		title = 'Eros',
@@ -14,18 +14,7 @@
 		compact?: boolean;
 	} = $props();
 
-	let online = $state(navigator.onLine);
-
-	$effect(() => {
-		const setOnline = () => { online = true; };
-		const setOffline = () => { online = false; };
-		window.addEventListener('online', setOnline);
-		window.addEventListener('offline', setOffline);
-		return () => {
-			window.removeEventListener('online', setOnline);
-			window.removeEventListener('offline', setOffline);
-		};
-	});
+	const online = $derived(useOnlineStatus());
 </script>
 
 {#if compact}
