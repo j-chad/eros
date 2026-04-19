@@ -17,7 +17,7 @@ The core gameplay loop. The client can list graphs, show a countdown to the next
 - [ ] Client: unlock celebration + transition #P0
   - [ ] standard gate unlock — checkmark + pulse + auto-advance (~1.5s)
   - [ ] reward unlock — elevated entrance (scale, shimmer, glow), longer beat (~2s)
-  - [ ] confetti/particle flourish on reward unlock (can slip to P1 if complex)
+  - [x] confetti/particle flourish on reward unlock
 
 ## File Management
 

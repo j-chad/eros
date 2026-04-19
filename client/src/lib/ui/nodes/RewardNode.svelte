@@ -31,7 +31,7 @@
 	);
 </script>
 
-<div class="flex flex-col items-center gap-6 text-center animate-popIn">
+<div class="flex flex-col items-center gap-6 text-center animate-rewardReveal">
 	<div class="w-20 h-20 rounded-full bg-primary/15 flex items-center justify-center shadow-lg shadow-pink-200/60">
 		<Icon size={32} class="text-primary" />
 	</div>

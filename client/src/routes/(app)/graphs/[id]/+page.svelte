@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { ChevronLeft } from 'lucide-svelte';
+	import { ChevronLeft, Heart, Check } from 'lucide-svelte';
 	import BrandHeader from '$lib/ui/BrandHeader.svelte';
 	import Card from '$lib/ui/base/Card.svelte';
 	import StartNodeView from '$lib/ui/nodes/StartNode.svelte';
@@ -12,6 +12,7 @@
 	import type { AnyNode, GraphDetail } from '$lib/types/graph';
 	import type { UnlockResult } from '$lib/api/graph.api';
 	import { NodeType } from '$lib/types/graph';
+	import Confetti from '$lib/ui/Confetti.svelte';
 
 	const { data }: { data: { graph: GraphDetail } } = $props();
 
@@ -124,7 +125,7 @@
 		celebrationNode = result.unlocked_node;
 
 		// Auto-advance after celebration
-		const delay = hasRewardInNew ? 2000 : 1500;
+		const delay = hasRewardInNew ? 3500 : 1500;
 		setTimeout(() => {
 			celebrationState = null;
 			celebrationNode = null;
@@ -196,16 +197,32 @@
 		{:else if displayNode}
 			<!-- Single node view -->
 			<Card>
-				<div class="py-4 px-2">
+				<div
+					class="relative py-4 px-2"
+					class:animate-celebrateShake={celebrationState === 'reward-reveal'}
+				>
+					{#if celebrationState === 'reward-reveal'}
+						<Confetti duration={3500} />
+					{/if}
 					{#if celebrationState}
 						<!-- Celebration overlay -->
-						<div class="flex flex-col items-center gap-6 text-center animate-popIn">
-							<div class="w-20 h-20 rounded-full bg-success/15 flex items-center justify-center shadow-lg"
-								 class:animate-pulse={celebrationState === 'reward-reveal'}>
-								<div class="text-success text-3xl">✓</div>
+						<div class="flex flex-col items-center gap-6 text-center"
+							 class:animate-rewardReveal={celebrationState === 'reward-reveal'}
+							 class:animate-popIn={celebrationState === 'gate-success'}
+						>
+							<div
+								class="w-20 h-20 rounded-full flex items-center justify-center shadow-lg {celebrationState === 'reward-reveal' ? 'bg-primary/15 shadow-pink-200/60 animate-glowPulse' : 'bg-success/15'}"
+							>
+								{#if celebrationState === 'reward-reveal'}
+									<Heart size={32} class="text-primary" />
+								{:else}
+									<Check size={32} class="text-success" />
+								{/if}
 							</div>
 							<div class="flex flex-col gap-2">
-								<p class="text-xs font-semibold opacity-60 uppercase tracking-wide">Unlocked!</p>
+								<p class="text-xs font-semibold opacity-60 uppercase tracking-wide">
+									{celebrationState === 'reward-reveal' ? 'You unlocked something special' : 'Unlocked!'}
+								</p>
 								<h1 class="text-2xl font-extrabold">{celebrationNode?.title ?? 'Success'}</h1>
 							</div>
 						</div>
