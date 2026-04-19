@@ -115,9 +115,9 @@ func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload st
 			return fmt.Errorf("failed to get unlocked node: %w", err)
 		}
 
-		// Compute diff by subtracting pre-existing nodes/edges from the new set
-		newNodes := setDifference(*graphAfter.Nodes, *graphBefore.Nodes)
-		newEdges := setDifference(*graphAfter.Edges, *graphBefore.Edges)
+		// Compute diff by subtracting pre-existing nodes/edges by ID
+		newNodes := setDifferenceBy(*graphAfter.Nodes, *graphBefore.Nodes, func(n models.Node) string { return n.ID })
+		newEdges := setDifferenceBy(*graphAfter.Edges, *graphBefore.Edges, func(e models.Edge) string { return e.ID })
 
 		result = &models.UnlockResult{
 			UnlockedNode: *unlockedNode,

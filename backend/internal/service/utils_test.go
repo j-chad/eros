@@ -102,7 +102,7 @@ func TestSetDifference(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := setDifference(tt.setA, tt.setB)
+			got := setDifferenceBy(tt.setA, tt.setB, func(v int) int { return v })
 			testutil.ElementsMatch(t, got, tt.want)
 		})
 	}
