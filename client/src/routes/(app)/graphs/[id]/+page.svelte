@@ -200,7 +200,7 @@
 					{#if celebrationState}
 						<!-- Celebration overlay -->
 						<div class="flex flex-col items-center gap-6 text-center animate-popIn">
-							<div class="w-20 h-20 rounded-full bg-success/15 flex items-center justify-center shadow-lg" 
+							<div class="w-20 h-20 rounded-full bg-success/15 flex items-center justify-center shadow-lg"
 								 class:animate-pulse={celebrationState === 'reward-reveal'}>
 								<div class="text-success text-3xl">✓</div>
 							</div>
@@ -208,11 +208,6 @@
 								<p class="text-xs font-semibold opacity-60 uppercase tracking-wide">Unlocked!</p>
 								<h1 class="text-2xl font-extrabold">{celebrationNode?.title ?? 'Success'}</h1>
 							</div>
-							{#if celebrationState === 'reward-reveal'}
-								<div class="w-full bg-gradient-to-r from-pink-100 to-rose-100 rounded-2xl px-5 py-4 border-2 border-pink-200/50">
-									<p class="text-sm font-semibold text-pink-700">✨ Something special awaits! ✨</p>
-								</div>
-							{/if}
 						</div>
 					{:else if displayNode.type === NodeType.START}
 						<StartNodeView node={displayNode} />
