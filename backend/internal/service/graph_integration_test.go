@@ -189,3 +189,90 @@ func TestUnlockNode_NoReward_NoAutoUnlock(t *testing.T) {
 	testutil.NotNil(t, gate2)
 	testutil.Nil(t, gate2.UnlockedAt)
 }
+
+func TestUnlockNode_GrantsFavourPoints(t *testing.T) {
+	repo := testdb.New(t)
+	svc := NewGraphService(repo)
+	ctx := context.Background()
+
+	// Graph: Start → Gate → Reward (give_favours: 3)
+	buildGraph(t, repo,
+		[]models.Node{
+			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate", Data: models.LocationData{Latitude: 0, Longitude: 0, RadiusM: 1000000}},
+			{ID: "reward1", Type: models.RewardNode, Title: "Reward", Data: models.RewardData{RewardType: "favour", GiveFavours: 3}},
+		},
+		[]models.Edge{
+			{ID: "e1", From: "start", To: "gate1"},
+			{ID: "e2", From: "gate1", To: "reward1"},
+		},
+	)
+
+	// Verify starting balance is 0.
+	countBefore, err := repo.GetFavourCount(ctx)
+	testutil.NilErr(t, err)
+	testutil.Equal(t, countBefore.Total, 0)
+
+	_, err = svc.UnlockNode(ctx, "gate1", "0,0")
+	testutil.NilErr(t, err)
+
+	// Balance should now be 3.
+	countAfter, err := repo.GetFavourCount(ctx)
+	testutil.NilErr(t, err)
+	testutil.Equal(t, countAfter.Total, 3)
+	testutil.Equal(t, countAfter.Remaining, 3)
+}
+
+func TestUnlockNode_GrantsFavoursFromChainedRewards(t *testing.T) {
+	repo := testdb.New(t)
+	svc := NewGraphService(repo)
+	ctx := context.Background()
+
+	// Graph: Start → Gate → Reward1 (2pts) → Reward2 (5pts)
+	buildGraph(t, repo,
+		[]models.Node{
+			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate", Data: models.LocationData{Latitude: 0, Longitude: 0, RadiusM: 1000000}},
+			{ID: "reward1", Type: models.RewardNode, Title: "Reward 1", Data: models.RewardData{RewardType: "image", Payload: "a.jpg", GiveFavours: 2}},
+			{ID: "reward2", Type: models.RewardNode, Title: "Reward 2", Data: models.RewardData{RewardType: "favour", GiveFavours: 5}},
+		},
+		[]models.Edge{
+			{ID: "e1", From: "start", To: "gate1"},
+			{ID: "e2", From: "gate1", To: "reward1"},
+			{ID: "e3", From: "reward1", To: "reward2"},
+		},
+	)
+
+	_, err := svc.UnlockNode(ctx, "gate1", "0,0")
+	testutil.NilErr(t, err)
+
+	// Should be 2 + 5 = 7.
+	count, err := repo.GetFavourCount(ctx)
+	testutil.NilErr(t, err)
+	testutil.Equal(t, count.Total, 7)
+	testutil.Equal(t, count.Remaining, 7)
+}
+
+func TestUnlockNode_NoFavoursWhenGiveFavoursZero(t *testing.T) {
+	repo := testdb.New(t)
+	svc := NewGraphService(repo)
+	ctx := context.Background()
+
+	// Graph: Start → Gate → Reward (give_favours: 0)
+	buildGraph(t, repo,
+		[]models.Node{
+			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate", Data: models.LocationData{Latitude: 0, Longitude: 0, RadiusM: 1000000}},
+			{ID: "reward1", Type: models.RewardNode, Title: "Reward", Data: models.RewardData{RewardType: "image", Payload: "a.jpg", GiveFavours: 0}},
+		},
+		[]models.Edge{
+			{ID: "e1", From: "start", To: "gate1"},
+			{ID: "e2", From: "gate1", To: "reward1"},
+		},
+	)
+
+	_, err := svc.UnlockNode(ctx, "gate1", "0,0")
+	testutil.NilErr(t, err)
+
+	// Balance should remain 0.
+	count, err := repo.GetFavourCount(ctx)
+	testutil.NilErr(t, err)
+	testutil.Equal(t, count.Total, 0)
+}
