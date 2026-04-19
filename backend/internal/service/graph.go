@@ -82,9 +82,31 @@ func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload st
 			return fmt.Errorf("failed to unlock node: %w", err)
 		}
 
-		graphAfter, err := repo.GetAccessibleGraph(ctx, node.GraphID)
-		if err != nil {
-			return fmt.Errorf("could not get accessible after unlock: %w", err)
+		// Auto-unlock any reward nodes that became accessible. Reward nodes
+		// have no gate mechanism so they should unlock automatically. Loop
+		// because unlocking a reward may reveal further nodes one hop away.
+		// The final iteration (where nothing was unlocked) gives us graphAfter.
+		var graphAfter *models.Graph
+		for {
+			graph, err := repo.GetAccessibleGraph(ctx, node.GraphID)
+			if err != nil {
+				return fmt.Errorf("could not get accessible graph during reward auto-unlock: %w", err)
+			}
+
+			unlocked := false
+			for _, n := range *graph.Nodes {
+				if n.Type == models.RewardNode && n.UnlockedAt == nil {
+					if err := repo.UnlockNode(ctx, n.ID); err != nil {
+						return fmt.Errorf("failed to auto-unlock reward node %s: %w", n.ID, err)
+					}
+					unlocked = true
+				}
+			}
+
+			if !unlocked {
+				graphAfter = graph
+				break
+			}
 		}
 
 		// Get the unlocked node (fresh from DB with updated timestamp)
