@@ -36,16 +36,20 @@ Reward nodes can contain images, videos, and files. The backend can store them, 
 
 ## Favour System
 
-Backend is fully implemented (both admin and client endpoints). Admin UI is done. Client has nothing.
+Backend fully implemented. Admin UI done. Client favour system implemented (FAB, browsing, request flow, history).
 
-- [ ] Client: data layer #P1
-  - [ ] Create `client/src/lib/api/favour.api.ts`
-  - [ ] Create favour DB store in `client/src/lib/db/stores/`
-  - [ ] Create favour service in `client/src/lib/services/`
-- [ ] Client: UI #P1
-  - [ ] Favour browsing page — view available choices and remaining favour count
-  - [ ] Favour request flow — select a favour and submit a request
-  - [ ] Request history / status page — view pending, approved, and rejected requests
+- [x] Backend: auto-unlock reward nodes when they become accessible (chained rewards fix)
+- [x] Backend: auto-grant favour points from `give_favours` on reward node unlock
+- [x] Backend: fix `setDifference` to compare nodes/edges by ID (not full struct)
+- [x] Client: data layer #P1
+  - [x] Create `client/src/lib/api/favour.api.ts`
+  - [x] Create favour DB store in `client/src/lib/db/stores/`
+  - [x] Create favour service in `client/src/lib/services/`
+- [x] Client: UI #P1
+  - [x] FAB on home screen (hidden until user earns points or has requests)
+  - [x] Compact panel with balance + link to full page
+  - [x] `/favours` page with Spend tab — choice cards, inline expand request flow
+  - [x] Requests tab — pending/fulfilled history with muted fulfilled cards
 
 
 ## Tech Debt and Nice-to-Haves (P2)

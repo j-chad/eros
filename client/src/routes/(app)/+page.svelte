@@ -3,10 +3,18 @@
 	import Card from '$lib/ui/base/Card.svelte';
 	import Calendar from '$lib/ui/Calendar.svelte';
 	import Countdown from '$lib/ui/Countdown.svelte';
+	import FavourFab from '$lib/ui/FavourFab.svelte';
 	import type { GraphSummary } from '$lib/types/graph';
+	import type { FavourCount, FavourRequest } from '$lib/types/favour';
 	import {goto} from "$app/navigation";
 
-	const { data }: { data: { graphs: GraphSummary[] } } = $props();
+	const { data }: { data: { graphs: GraphSummary[]; favourCount: FavourCount; favourRequests: FavourRequest[] } } = $props();
+
+	// FAB is visible once the user is "in the favour system":
+	// they have remaining balance, or they've made at least one request.
+	const showFavourFab = $derived(
+		data.favourCount.remaining > 0 || data.favourRequests.length > 0
+	);
 
 	// --- determine which view to show ---
 
@@ -88,3 +96,7 @@
 
 	<div class="text-center text-xs opacity-40">Eros</div>
 </div>
+
+{#if showFavourFab}
+	<FavourFab count={data.favourCount} requests={data.favourRequests} />
+{/if}
