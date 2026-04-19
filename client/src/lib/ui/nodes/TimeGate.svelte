@@ -63,9 +63,10 @@
 	{#if countdownDone}
 		<!-- Time has passed, show Continue -->
 		<div class="w-full flex flex-col gap-3">
-			<div class="badge badge-success badge-outline rounded-2xl px-4 py-3 text-xs font-semibold">
-				Ready
+			<div class="alert rounded-2xl text-sm">
+				The content is now unlocked. Click continue to proceed.
 			</div>
+
 			<button
 				onclick={handleContinue}
 				disabled={isSubmitting || !isOnline}

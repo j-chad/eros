@@ -4,16 +4,17 @@
 	import { MapPin } from 'lucide-svelte';
 	import { useOnlineStatus } from '$lib/online.svelte';
 
-	const { node, graphId, onUnlock }: { 
-		node: LocationNode; 
-		graphId: string; 
-		onUnlock: (result: UnlockResult) => void 
+	const { node, graphId, onUnlock }: {
+		node: LocationNode;
+		graphId: string;
+		onUnlock: (result: UnlockResult) => void
 	} = $props();
 
 	const isOnline = $derived(useOnlineStatus());
-	
+
 	let isChecking = $state(false);
 	let errorMessage = $state<string | null>(null);
+	let accuracyWarning = $state<string | null>(null);
 	let isPermissionDenied = $state(false);
 
 	async function handleCheckLocation() {
@@ -21,6 +22,7 @@
 
 		isChecking = true;
 		errorMessage = null;
+		accuracyWarning = null;
 		isPermissionDenied = false;
 
 		try {
@@ -30,8 +32,7 @@
 
 			// Warn about poor accuracy
 			if (accuracy > radius * 2) {
-				errorMessage = `Your location accuracy is low (${Math.round(accuracy)}m). Try moving to an open area.`;
-				// Still allow the user to proceed
+				accuracyWarning = `Your location accuracy is low (${Math.round(accuracy)}m). Try moving to an open area.`;
 			}
 
 			const payload = `${position.coords.latitude},${position.coords.longitude}`;
@@ -102,30 +103,35 @@
 				You need to be within {node.data?.radius_m ?? 10}&nbsp;metres of the destination.
 			</p>
 		</div>
-		
+
+		{#if accuracyWarning}
+			<div class="alert alert-warning rounded-2xl text-sm">
+				{accuracyWarning}
+			</div>
+		{/if}
+
 		{#if errorMessage}
-			<div class="alert rounded-2xl text-sm" class:alert-error={!errorMessage.includes('accuracy')} class:alert-warning={errorMessage.includes('accuracy')}>
+			<div class="alert alert-error rounded-2xl text-sm">
 				{errorMessage}
 				{#if isPermissionDenied}
 					<button onclick={handleCheckLocation} class="btn btn-sm btn-outline">Try again</button>
 				{/if}
 			</div>
 		{/if}
-		
-		<button 
+
+		<button
 			onclick={handleCheckLocation}
 			disabled={isChecking || !isOnline}
 			class="btn btn-primary rounded-2xl w-full"
-			class:loading={isChecking}
 		>
 			{#if isChecking}
-				<span class="loading loading-spinner loading-sm"></span>
+				<span class="loading loading-spinner"></span>
 				Getting your location...
 			{:else}
 				Check location
 			{/if}
 		</button>
-		
+
 		{#if !isOnline}
 			<p class="text-xs opacity-50 text-center">You're offline. Connect to check your location.</p>
 		{/if}
