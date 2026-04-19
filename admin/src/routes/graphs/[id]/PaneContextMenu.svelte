@@ -1,5 +1,5 @@
 <script lang="ts">
-	import {Gift, HandMetal, Key, MapPin, Play} from 'lucide-svelte';
+	import {Clock, Gift, HandMetal, Key, MapPin, Play} from 'lucide-svelte';
 	import {type AnyNode, type NodeByType, type NodeDataByType, NodeType} from "$lib/types";
 	import {useSvelteFlow} from "@xyflow/svelte";
 
@@ -54,6 +54,16 @@
 			icon: HandMetal,
 			color: "#10b981",
 			description: "Human confirmation",
+		},
+		[NodeType.TIME]: {
+			type: NodeType.TIME,
+			label: "Time",
+			icon: Clock,
+			color: "#f59e0b",
+			description: "Unlocks at a specific time",
+			defaultData: {
+				unlock_at: new Date().toISOString(),
+			}
 		},
 		[NodeType.REWARD]: {
 			type: NodeType.REWARD,

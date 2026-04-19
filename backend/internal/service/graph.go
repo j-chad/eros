@@ -117,6 +117,8 @@ func validateUnlockPayload(node *models.Node, payload string) error {
 		return validateLocationGatePayload(node, payload)
 	case models.ManualNode:
 		return validateManualGateUnlock(node)
+	case models.TimeGateNode:
+		return validateTimeGateUnlock(node)
 	default:
 		return fmt.Errorf("unsupported node type %s for unlocking", node.Type)
 	}
@@ -129,6 +131,19 @@ func validateManualGateUnlock(node *models.Node) error {
 	}
 
 	if nodeData.UnlockedAt == nil {
+		return NodeUnlockIncorrect
+	}
+
+	return nil
+}
+
+func validateTimeGateUnlock(node *models.Node) error {
+	nodeData, ok := node.Data.(*models.TimeData)
+	if !ok {
+		return fmt.Errorf("invalid node data for time gate node %s", node.ID)
+	}
+
+	if time.Now().UTC().Before(nodeData.UnlockAt) {
 		return NodeUnlockIncorrect
 	}
 

@@ -5,6 +5,7 @@
 	import EditLocationDialog from "./EditLocationDialog.svelte";
 	import EditCodeDialog from "./EditCodeDialog.svelte";
 	import EditRewardDialog from "./EditRewardDialog.svelte";
+	import EditTimeDialog from "./EditTimeDialog.svelte";
 	import DefaultEditDialog from "./DefaultEditDialog.svelte";
 
 	type ComponentMap = { [K in NodeType]?: NodeFormComponent<Extract<AnyNode, { type: K }>> | NodeFormComponent<Node>; };
@@ -30,6 +31,7 @@
 		[NodeType.LOCATION]: EditLocationDialog,
 		[NodeType.CODE]: EditCodeDialog,
 		[NodeType.MANUAL]: DefaultEditDialog,
+		[NodeType.TIME]: EditTimeDialog,
 		[NodeType.REWARD]: EditRewardDialog,
 	};
 	const BodyComponent = $derived(node ? componentMap[node.type] : undefined) as NodeFormComponent<AnyNode>;

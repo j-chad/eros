@@ -15,6 +15,7 @@ const (
 	ManualNode       NodeType = "manual"
 	CodeGateNode     NodeType = "code"
 	LocationGateNode NodeType = "location"
+	TimeGateNode     NodeType = "time"
 	RewardNode       NodeType = "reward"
 )
 
@@ -22,6 +23,7 @@ var nodeDataDecoders = map[NodeType]func(json.RawMessage) (any, error){
 	LocationGateNode: internal.DecodeInto[LocationData],
 	CodeGateNode:     internal.DecodeInto[CodeData],
 	ManualNode:       internal.DecodeInto[ManualData],
+	TimeGateNode:     internal.DecodeInto[TimeData],
 	RewardNode:       internal.DecodeInto[RewardData],
 }
 

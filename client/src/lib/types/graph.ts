@@ -27,6 +27,7 @@ export enum NodeType {
 	LOCATION = 'location',
 	CODE = 'code',
 	MANUAL = 'manual',
+	TIME = 'time',
 	REWARD = 'reward',
 }
 
@@ -68,13 +69,16 @@ export type ManualNode = Node<NodeType.MANUAL, {
 	instructions: string;
 	unlocked_at?: string | null; // ISO 8601 date string
 }>;
+export type TimeNode = Node<NodeType.TIME, {
+	unlock_at: string; // ISO 8601 date string (UTC)
+}>;
 export type RewardNode = Node<NodeType.REWARD, {
 	reward_type: RewardType;
 	payload: string;
 	give_favours: number;
 }>;
 
-export type AnyNode = StartNode | LocationNode | CodeNode | ManualNode | RewardNode;
+export type AnyNode = StartNode | LocationNode | CodeNode | ManualNode | TimeNode | RewardNode;
 
 export interface Edge {
 	id: string;

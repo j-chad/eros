@@ -125,6 +125,15 @@ CREATE TABLE IF NOT EXISTS node_code_gate
 	FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS node_time_gate
+(
+	node_id   TEXT PRIMARY KEY,
+
+	unlock_at DATETIME NOT NULL,
+
+	FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS node_reward
 (
 	node_id      TEXT PRIMARY KEY,
@@ -302,28 +311,32 @@ SELECT n.id,
 	   n.unlocked_at,
 
 	   CASE n.type
-		   WHEN 'location' THEN jsonb_object(
+		   WHEN 'location' THEN json_object(
 			   'latitude', nlg.latitude,
 			   'longitude', nlg.longitude,
 			   'radius_m', nlg.radius_meters
 								)
-		   WHEN 'code' THEN jsonb_object(
-			   'codes', ncg.codes
+		   WHEN 'code' THEN json_object(
+			   'codes', json(ncg.codes)
 							)
-		   WHEN 'manual' THEN jsonb_object(
+		   WHEN 'manual' THEN json_object(
 			   'instructions', nmg.instructions,
 			   'unlocked_at', nmg.unlocked_at
 							  )
-		   WHEN 'reward' THEN jsonb_object(
+		   WHEN 'time' THEN json_object(
+			   'unlock_at', strftime('%Y-%m-%dT%H:%M:%SZ', ntg.unlock_at)
+							)
+		   WHEN 'reward' THEN json_object(
 			   'reward_type', nr.reward_type,
 			   'payload', nr.payload,
 			   'give_favours', nr.give_favours
 							  )
-		   ELSE jsonb('{}')
+		   ELSE json('{}')
 		   END AS data_json
 
 FROM node n
 		 LEFT JOIN node_location_gate nlg ON n.id = nlg.node_id
 		 LEFT JOIN node_code_gate ncg ON n.id = ncg.node_id
 		 LEFT JOIN node_reward nr ON n.id = nr.node_id
-		 LEFT JOIN node_manual_gate nmg ON n.id = nmg.node_id;
+		 LEFT JOIN node_manual_gate nmg ON n.id = nmg.node_id
+		 LEFT JOIN node_time_gate ntg ON n.id = ntg.node_id;

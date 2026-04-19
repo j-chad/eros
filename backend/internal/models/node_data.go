@@ -17,6 +17,10 @@ type ManualData struct {
 	UnlockedAt   *time.Time `json:"unlocked_at"`
 }
 
+type TimeData struct {
+	UnlockAt time.Time `json:"unlock_at"`
+}
+
 type RewardData struct {
 	RewardType  string `json:"reward_type"`
 	Payload     string `json:"payload"`

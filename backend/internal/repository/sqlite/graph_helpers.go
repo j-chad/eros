@@ -142,6 +142,11 @@ func (s *sqliteDB) scanNodeFull(scanner interface {
 		if err := json.Unmarshal(dataJSON, &node.Data); err != nil {
 			return node, fmt.Errorf("failed to unmarshal manual data: %w", err)
 		}
+	case models.TimeGateNode:
+		node.Data = &models.TimeData{}
+		if err := json.Unmarshal(dataJSON, &node.Data); err != nil {
+			return node, fmt.Errorf("failed to unmarshal time data: %w", err)
+		}
 	case models.StartNode:
 		// No additional data for these types
 	default:
@@ -390,6 +395,20 @@ func (s *sqliteDB) upsertNodeData(ctx context.Context, nodeID string, nodeType m
 			ON CONFLICT (node_id) DO UPDATE SET
 				codes = excluded.codes
 		`, nodeID, codeData.Codes)
+		return err
+	case models.TimeGateNode:
+		timeData, ok := data.(models.TimeData)
+		if !ok {
+			return fmt.Errorf("invalid data type for time node")
+		}
+		_, err := s.executor().ExecContext(ctx, `
+			INSERT INTO node_time_gate (
+				node_id,
+				unlock_at
+			) VALUES (?, ?)
+			ON CONFLICT (node_id) DO UPDATE SET
+				unlock_at = excluded.unlock_at
+		`, nodeID, timeData.UnlockAt)
 		return err
 	case models.RewardNode:
 		rewardData, ok := data.(models.RewardData)

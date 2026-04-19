@@ -55,6 +55,7 @@ export enum NodeType {
     LOCATION = 'location',
     CODE = 'code',
     MANUAL = 'manual',
+    TIME = 'time',
     REWARD = 'reward',
 }
 
@@ -121,6 +122,9 @@ export type ManualNode = Node<NodeType.MANUAL, {
 	instructions: string;
 	unlocked_at?: string | null; // ISO 8601 date string
 }>;
+export type TimeNode = Node<NodeType.TIME, {
+	unlock_at: string; // ISO 8601 date string (UTC)
+}>;
 
 export enum RewardType {
 	IMAGE = 'image',
@@ -138,7 +142,7 @@ export type RewardNode = Node<NodeType.REWARD, {
     give_favours: number;
 }>;
 
-export type AnyNode = StartNode | LocationNode | CodeNode | ManualNode | RewardNode;
+export type AnyNode = StartNode | LocationNode | CodeNode | ManualNode | TimeNode | RewardNode;
 export type NodeByType<T extends NodeType> = Extract<AnyNode, { type: T }>;
 export type NodeDataByType<T extends NodeType> = NodeByType<T>['data'];
 

@@ -24,6 +24,7 @@
 	import EditNodeDialog from "./edit-node-dialog/EditNodeDialog.svelte";
 	import CodeNode from "./nodes/CodeNode.svelte";
 	import ManualNode from "./nodes/ManualNode.svelte";
+	import TimeNode from "./nodes/TimeNode.svelte";
 	import RewardNode from "./nodes/RewardNode.svelte";
 	import EditEdgeDialog from "./EditEdgeDialog.svelte";
 	import {Eye, EyeOff} from 'lucide-svelte';
@@ -36,6 +37,7 @@
 		[NodeType.MANUAL]: ManualNode,
 		[NodeType.CODE]: CodeNode,
 		[NodeType.LOCATION]: LocationNode,
+		[NodeType.TIME]: TimeNode,
 		[NodeType.START]: StartNode
 	};
 

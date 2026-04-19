@@ -7,6 +7,7 @@
 	import CodeGateView from '$lib/ui/nodes/CodeGate.svelte';
 	import LocationGateView from '$lib/ui/nodes/LocationGate.svelte';
 	import ManualGateView from '$lib/ui/nodes/ManualGate.svelte';
+	import TimeGateView from '$lib/ui/nodes/TimeGate.svelte';
 	import RewardNodeView from '$lib/ui/nodes/RewardNode.svelte';
 	import type { AnyNode, GraphDetail } from '$lib/types/graph';
 	import type { UnlockResult } from '$lib/api/graph.api';
@@ -17,7 +18,7 @@
 	// Make nodes and edges reactive and mutable
 	let nodes = $state(data.graph.nodes ?? []);
 	let edges = $state(data.graph.edges ?? []);
-	
+
 	// Celebration state
 	let celebrationState = $state<'gate-success' | 'reward-reveal' | null>(null);
 	let celebrationNode = $state<AnyNode | null>(null);
@@ -112,16 +113,16 @@
 		if (nodeIndex >= 0) {
 			nodes[nodeIndex] = result.unlocked_node;
 		}
-		
+
 		// Add new nodes and edges
 		nodes.push(...result.new_nodes);
 		edges.push(...result.new_edges);
-		
+
 		// Determine celebration type
 		const hasRewardInNew = result.new_nodes.some(n => n.type === NodeType.REWARD);
 		celebrationState = hasRewardInNew ? 'reward-reveal' : 'gate-success';
 		celebrationNode = result.unlocked_node;
-		
+
 		// Auto-advance after celebration
 		const delay = hasRewardInNew ? 2000 : 1500;
 		setTimeout(() => {
@@ -221,6 +222,8 @@
 						<LocationGateView node={displayNode} graphId={data.graph.id} onUnlock={handleUnlock} />
 					{:else if displayNode.type === NodeType.MANUAL}
 						<ManualGateView node={displayNode} graphId={data.graph.id} onUnlock={handleUnlock} />
+					{:else if displayNode.type === NodeType.TIME}
+						<TimeGateView node={displayNode} graphId={data.graph.id} onUnlock={handleUnlock} />
 					{:else if displayNode.type === NodeType.REWARD}
 						<RewardNodeView node={displayNode} />
 					{/if}
