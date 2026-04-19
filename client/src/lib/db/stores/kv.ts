@@ -1,13 +1,16 @@
 import {db, promisifyRequest} from '../db';
+import type { FavourCount } from '$lib/types/favour';
 
 export enum KVKey {
 	AuthSession = 'auth:session',
 	CalendarTipSeen = 'tutorial:calendar-tip',
+	FavourCount = 'favour:count',
 }
 
 interface KVValue {
 	[KVKey.AuthSession]: string;
 	[KVKey.CalendarTipSeen]: boolean;
+	[KVKey.FavourCount]: FavourCount;
 }
 
 export type KVSchema = {

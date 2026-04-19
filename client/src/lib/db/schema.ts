@@ -1,7 +1,8 @@
 import type { GraphDetail, GraphSummary } from '$lib/types/graph';
+import type { FavourChoice, FavourRequest } from '$lib/types/favour';
 
 export const DB_NAME = 'eros';
-export const DB_VERSION = 4;
+export const DB_VERSION = 5;
 
 export interface DBSchema {
 	kv: {
@@ -15,6 +16,14 @@ export interface DBSchema {
 	graphDetails: {
 		key: string;
 		value: GraphDetail;
+	};
+	favourChoices: {
+		key: string;
+		value: FavourChoice;
+	};
+	favourRequests: {
+		key: string;
+		value: FavourRequest;
 	};
 }
 
@@ -37,6 +46,12 @@ const STORES: Record<keyof DBSchema, StoreParameters> = {
 		],
 	},
 	graphDetails: {
+		keyPath: 'id',
+	},
+	favourChoices: {
+		keyPath: 'id',
+	},
+	favourRequests: {
 		keyPath: 'id',
 	},
 }
