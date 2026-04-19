@@ -2,6 +2,7 @@
   <configuration default="false" name="Recreate DB" type="DatabaseScript">
     <script-file value="$PROJECT_DIR$/backend/internal/repository/sqlite/sqlite_teardown.sql" />
     <script-file value="$PROJECT_DIR$/backend/internal/repository/sqlite/sqlite_init.sql" />
+    <script-file value="$PROJECT_DIR$/backend/internal/repository/sqlite/data_init.sql" />
     <script-mode>FILE</script-mode>
     <data-source id="c0cf4d4b-28f8-465a-9ff7-180f88c58312" />
     <method v="2" />

@@ -161,6 +161,10 @@
 	<!-- Spend tab -->
 	{#if activeTab === 'spend'}
 		<div class="flex flex-col gap-4 animate-popIn">
+			<p class="text-sm opacity-60 text-center">
+				Pick from the menu, or propose your own — the worst that can happen is a no.
+			</p>
+
 			{#if sortedChoices.length === 0}
 				<Card>
 					<p class="text-center text-sm opacity-70">
