@@ -29,7 +29,7 @@
         {#if graphs.length > 0}
             <div class="graphs">
                 {#each graphs as graph}
-                    <div class="graph-item">
+                    <div class="graph-item" title={graph.description ? `${graph.title} — ${graph.description}` : graph.title}>
                         <div class="graph-content">
                             <div class="graph-title">{graph.title}</div>
                             {#if graph.description}
@@ -71,10 +71,12 @@
     .calendar-day {
         background: white;
         min-height: 120px;
+        min-width: 0;
         padding: 0.5rem;
         position: relative;
         display: flex;
         flex-direction: column;
+        overflow: hidden;
     }
 
     .calendar-day.other-month {

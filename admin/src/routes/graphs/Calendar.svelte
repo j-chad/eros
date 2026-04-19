@@ -179,7 +179,7 @@
 
     .calendar {
         display: grid;
-        grid-template-columns: repeat(7, 1fr);
+        grid-template-columns: repeat(7, minmax(0, 1fr));
         gap: 1px;
         background: #e5e7eb;
         border: 1px solid #e5e7eb;
