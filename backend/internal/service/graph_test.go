@@ -47,7 +47,7 @@ func TestValidateUnlockPayload_LocationGate_WithinRadius(t *testing.T) {
 	node := &models.Node{
 		ID:   "n2",
 		Type: models.LocationGateNode,
-		Data: &models.LocationData{Latitude: -36.8485, Longitude: 174.7633, RadiusM: 100},
+		Data: &models.LocationData{LocationArea: models.LocationArea{Latitude: -36.8485, Longitude: 174.7633, RadiusM: 100}},
 	}
 	testutil.NilErr(t, validateUnlockPayload(node, "-36.8484,174.7633"))
 }
@@ -56,7 +56,7 @@ func TestValidateUnlockPayload_LocationGate_OutsideRadius(t *testing.T) {
 	node := &models.Node{
 		ID:   "n2",
 		Type: models.LocationGateNode,
-		Data: &models.LocationData{Latitude: -36.8485, Longitude: 174.7633, RadiusM: 10},
+		Data: &models.LocationData{LocationArea: models.LocationArea{Latitude: -36.8485, Longitude: 174.7633, RadiusM: 10}},
 	}
 	testutil.ErrorIs(t, validateUnlockPayload(node, "-36.8400,174.7633"), NodeUnlockIncorrect)
 }
@@ -65,7 +65,7 @@ func TestValidateUnlockPayload_LocationGate_DefaultRadius(t *testing.T) {
 	node := &models.Node{
 		ID:   "n2",
 		Type: models.LocationGateNode,
-		Data: &models.LocationData{Latitude: -36.8485, Longitude: 174.7633, RadiusM: 0},
+		Data: &models.LocationData{LocationArea: models.LocationArea{Latitude: -36.8485, Longitude: 174.7633, RadiusM: 0}},
 	}
 	// ~5m away — within default 10m
 	testutil.NilErr(t, validateUnlockPayload(node, "-36.84846,174.7633"))
@@ -75,7 +75,7 @@ func TestValidateUnlockPayload_LocationGate_InvalidPayload(t *testing.T) {
 	node := &models.Node{
 		ID:   "n2",
 		Type: models.LocationGateNode,
-		Data: &models.LocationData{Latitude: 0, Longitude: 0, RadiusM: 10},
+		Data: &models.LocationData{LocationArea: models.LocationArea{Latitude: 0, Longitude: 0, RadiusM: 10}},
 	}
 
 	tests := []struct {
@@ -147,7 +147,7 @@ func TestValidateUnlockPayload_WrongDataType(t *testing.T) {
 	node := &models.Node{
 		ID:   "n6",
 		Type: models.CodeGateNode,
-		Data: &models.LocationData{Latitude: 0, Longitude: 0},
+		Data: &models.LocationData{LocationArea: models.LocationArea{Latitude: 0, Longitude: 0}},
 	}
 	testutil.NotNilErr(t, validateUnlockPayload(node, "anything"))
 }

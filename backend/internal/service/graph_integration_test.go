@@ -80,7 +80,7 @@ func TestUnlockNode_AutoUnlocksRewardNode(t *testing.T) {
 	// Graph: Start → LocationGate → Reward
 	buildGraph(t, repo,
 		[]models.Node{
-			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate", Data: models.LocationData{Latitude: 0, Longitude: 0, RadiusM: 1000000}},
+			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate", Data: models.LocationData{LocationArea: models.LocationArea{Latitude: 0, Longitude: 0, RadiusM: 1000000}}},
 			{ID: "reward1", Type: models.RewardNode, Title: "Reward", Data: models.RewardData{RewardType: "image", Payload: "photo.jpg"}},
 		},
 		[]models.Edge{
@@ -106,7 +106,7 @@ func TestUnlockNode_AutoUnlocksChainedRewards(t *testing.T) {
 	// Graph: Start → LocationGate → Reward1 → Reward2 → Reward3
 	buildGraph(t, repo,
 		[]models.Node{
-			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate", Data: models.LocationData{Latitude: 0, Longitude: 0, RadiusM: 1000000}},
+			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate", Data: models.LocationData{LocationArea: models.LocationArea{Latitude: 0, Longitude: 0, RadiusM: 1000000}}},
 			{ID: "reward1", Type: models.RewardNode, Title: "Reward 1", Data: models.RewardData{RewardType: "image", Payload: "a.jpg"}},
 			{ID: "reward2", Type: models.RewardNode, Title: "Reward 2", Data: models.RewardData{RewardType: "markdown", Payload: "hello"}},
 			{ID: "reward3", Type: models.RewardNode, Title: "Reward 3", Data: models.RewardData{RewardType: "favour", Payload: ""}},
@@ -139,9 +139,9 @@ func TestUnlockNode_ChainedRewardThenGate(t *testing.T) {
 	// The reward should auto-unlock, but LocationGate2 should NOT.
 	buildGraph(t, repo,
 		[]models.Node{
-			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate 1", Data: models.LocationData{Latitude: 0, Longitude: 0, RadiusM: 1000000}},
+			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate 1", Data: models.LocationData{LocationArea: models.LocationArea{Latitude: 0, Longitude: 0, RadiusM: 1000000}}},
 			{ID: "reward1", Type: models.RewardNode, Title: "Reward", Data: models.RewardData{RewardType: "image", Payload: "a.jpg"}},
-			{ID: "gate2", Type: models.LocationGateNode, Title: "Gate 2", Data: models.LocationData{Latitude: 10, Longitude: 10, RadiusM: 100}},
+			{ID: "gate2", Type: models.LocationGateNode, Title: "Gate 2", Data: models.LocationData{LocationArea: models.LocationArea{Latitude: 10, Longitude: 10, RadiusM: 100}}},
 		},
 		[]models.Edge{
 			{ID: "e1", From: "start", To: "gate1"},
@@ -173,8 +173,8 @@ func TestUnlockNode_NoReward_NoAutoUnlock(t *testing.T) {
 	// No rewards — gate2 should be accessible but not unlocked.
 	buildGraph(t, repo,
 		[]models.Node{
-			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate 1", Data: models.LocationData{Latitude: 0, Longitude: 0, RadiusM: 1000000}},
-			{ID: "gate2", Type: models.LocationGateNode, Title: "Gate 2", Data: models.LocationData{Latitude: 10, Longitude: 10, RadiusM: 100}},
+			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate 1", Data: models.LocationData{LocationArea: models.LocationArea{Latitude: 0, Longitude: 0, RadiusM: 1000000}}},
+			{ID: "gate2", Type: models.LocationGateNode, Title: "Gate 2", Data: models.LocationData{LocationArea: models.LocationArea{Latitude: 10, Longitude: 10, RadiusM: 100}}},
 		},
 		[]models.Edge{
 			{ID: "e1", From: "start", To: "gate1"},
@@ -198,7 +198,7 @@ func TestUnlockNode_GrantsFavourPoints(t *testing.T) {
 	// Graph: Start → Gate → Reward (give_favours: 3)
 	buildGraph(t, repo,
 		[]models.Node{
-			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate", Data: models.LocationData{Latitude: 0, Longitude: 0, RadiusM: 1000000}},
+			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate", Data: models.LocationData{LocationArea: models.LocationArea{Latitude: 0, Longitude: 0, RadiusM: 1000000}}},
 			{ID: "reward1", Type: models.RewardNode, Title: "Reward", Data: models.RewardData{RewardType: "favour", GiveFavours: 3}},
 		},
 		[]models.Edge{
@@ -230,7 +230,7 @@ func TestUnlockNode_GrantsFavoursFromChainedRewards(t *testing.T) {
 	// Graph: Start → Gate → Reward1 (2pts) → Reward2 (5pts)
 	buildGraph(t, repo,
 		[]models.Node{
-			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate", Data: models.LocationData{Latitude: 0, Longitude: 0, RadiusM: 1000000}},
+			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate", Data: models.LocationData{LocationArea: models.LocationArea{Latitude: 0, Longitude: 0, RadiusM: 1000000}}},
 			{ID: "reward1", Type: models.RewardNode, Title: "Reward 1", Data: models.RewardData{RewardType: "image", Payload: "a.jpg", GiveFavours: 2}},
 			{ID: "reward2", Type: models.RewardNode, Title: "Reward 2", Data: models.RewardData{RewardType: "favour", GiveFavours: 5}},
 		},
@@ -259,7 +259,7 @@ func TestUnlockNode_NoFavoursWhenGiveFavoursZero(t *testing.T) {
 	// Graph: Start → Gate → Reward (give_favours: 0)
 	buildGraph(t, repo,
 		[]models.Node{
-			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate", Data: models.LocationData{Latitude: 0, Longitude: 0, RadiusM: 1000000}},
+			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate", Data: models.LocationData{LocationArea: models.LocationArea{Latitude: 0, Longitude: 0, RadiusM: 1000000}}},
 			{ID: "reward1", Type: models.RewardNode, Title: "Reward", Data: models.RewardData{RewardType: "image", Payload: "a.jpg", GiveFavours: 0}},
 		},
 		[]models.Edge{
