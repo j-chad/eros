@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { X, Plus } from 'lucide-svelte';
 	import type { CodeNode } from '$lib/types';
 
 	let {
@@ -14,19 +15,28 @@
 	let editForm = $state({
 		title: node.title,
 		description: node.description ?? '',
-		code: node.data?.code ?? ''
+		codes: node.data?.codes?.length ? [...node.data.codes] : ['']
 	});
+
+	function addCode() {
+		editForm.codes = [...editForm.codes, ''];
+	}
+
+	function removeCode(index: number) {
+		editForm.codes = editForm.codes.filter((_, i) => i !== index);
+	}
 
 	function handleSubmit(event: Event) {
 		event.preventDefault();
+
+		const codes = editForm.codes.map((c) => c.trim()).filter(Boolean);
+		if (codes.length === 0) return;
 
 		const updatedNode: CodeNode = {
 			...node,
 			title: editForm.title,
 			description: editForm.description,
-			data: {
-				code: editForm.code
-			}
+			data: { codes }
 		};
 
 		onSave(updatedNode);
@@ -58,21 +68,38 @@
 	</div>
 
 	<div class="form-group">
-		<label for="code">Code</label>
-		<input
-			id="code"
-			type="text"
-			bind:value={editForm.code}
-			required
-			placeholder="e.g., 1234, ABC123, ****"
-			class="code-input"
-		/>
+		<div class="codes-header">
+			<label>Codes</label>
+			<button type="button" class="btn-add" onclick={addCode}>
+				<Plus size={14} />
+				Add code
+			</button>
+		</div>
+		<div class="codes-list">
+			{#each editForm.codes as code, i}
+				<div class="code-row">
+					<input
+						type="text"
+						bind:value={editForm.codes[i]}
+						required={i === 0}
+						placeholder="e.g., 1234, ABC123"
+						class="code-input"
+					/>
+					{#if editForm.codes.length > 1}
+						<button
+							type="button"
+							class="btn-remove"
+							onclick={() => removeCode(i)}
+							aria-label="Remove code"
+						>
+							<X size={14} />
+						</button>
+					{/if}
+				</div>
+			{/each}
+		</div>
 		<span class="help-text">
-			{#if editForm.code}
-				Code: {editForm.code}
-			{:else}
-				Enter the code value
-			{/if}
+			Any one of these codes will unlock the gate (case-insensitive).
 		</span>
 	</div>
 
@@ -121,12 +148,6 @@
 		transition: all 0.2s;
 	}
 
-	.code-input {
-		font-family: 'Courier New', monospace;
-		letter-spacing: 0.15em;
-		font-weight: 600;
-	}
-
 	input::placeholder, textarea::placeholder {
 		color: #9ca3af;
 	}
@@ -135,6 +156,76 @@
 		outline: none;
 		border-color: #8b5cf6;
 		box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+	}
+
+	.codes-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.codes-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.code-row {
+		display: flex;
+		gap: 0.5rem;
+		align-items: center;
+	}
+
+	.code-row input {
+		flex: 1;
+	}
+
+	.code-input {
+		font-family: 'Courier New', monospace;
+		letter-spacing: 0.15em;
+		font-weight: 600;
+	}
+
+	.btn-add {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.25rem 0.625rem;
+		border: 1px solid #d1d5db;
+		border-radius: 6px;
+		background: white;
+		font-size: 0.75rem;
+		font-weight: 500;
+		color: #374151;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.btn-add:hover {
+		background: #f9fafb;
+		border-color: #8b5cf6;
+		color: #8b5cf6;
+	}
+
+	.btn-remove {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.75rem;
+		height: 1.75rem;
+		border: 1px solid #e5e7eb;
+		border-radius: 6px;
+		background: white;
+		color: #9ca3af;
+		cursor: pointer;
+		transition: all 0.2s;
+		flex-shrink: 0;
+	}
+
+	.btn-remove:hover {
+		background: #fef2f2;
+		border-color: #fca5a5;
+		color: #ef4444;
 	}
 
 	.help-text {

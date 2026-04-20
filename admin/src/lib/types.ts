@@ -116,7 +116,7 @@ export type LocationNode = Node<NodeType.LOCATION, {
     radius_m: number;
 }>;
 export type CodeNode = Node<NodeType.CODE, {
-    code: string;
+    codes: string[];
 }>;
 export type ManualNode = Node<NodeType.MANUAL, {
 	instructions: string;

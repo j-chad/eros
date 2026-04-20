@@ -7,7 +7,8 @@
 	let { data }: NodeProps<CodeNode> = $props();
 	let node = $derived(data.node);
 	let isHovered = $state(false);
-	let codeSet = $derived(!!node.data?.code);
+	let codes = $derived(node.data?.codes ?? []);
+	let codeSet = $derived(codes.length > 0);
 </script>
 
 <BaseNode
@@ -30,12 +31,14 @@
 			class="config"
 		>
 			<div class="config-item">
-				<span class="key">🔑 Code:</span>
+				<span class="key">🔑 Code{codes.length > 1 ? 's' : ''}:</span>
 				<span class="value" class:revealed={isHovered}>
-                    {#if isHovered || !codeSet}
-                        {node.data?.code ?? 'N/A'}
+                    {#if !codeSet}
+                        N/A
+                    {:else if isHovered}
+                        {codes[0]}{#if codes.length > 1}<span class="badge">+{codes.length - 1}</span>{/if}
                     {:else}
-                        {'•'.repeat(node.data?.code?.length ?? 8)}
+                        ••••••••
                     {/if}
                 </span>
 			</div>
@@ -79,6 +82,20 @@
 
 	.value:not(.revealed) {
 		color: #9ca3af;
+	}
+
+	.badge {
+		display: inline-block;
+		margin-left: 0.375rem;
+		padding: 0 0.35rem;
+		background: #ede9fe;
+		color: #7c3aed;
+		border-radius: 4px;
+		font-size: 0.7rem;
+		font-family: inherit;
+		letter-spacing: 0;
+		font-weight: 700;
+		vertical-align: middle;
 	}
 
 	/* Custom scrollbar styling */
