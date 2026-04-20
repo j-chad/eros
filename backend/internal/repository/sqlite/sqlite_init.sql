@@ -103,6 +103,11 @@ CREATE TABLE IF NOT EXISTS node_location_gate
 	longitude     REAL    NOT NULL,
 	radius_meters INTEGER NOT NULL,
 
+	show_hint          BOOLEAN NOT NULL DEFAULT FALSE,
+	hint_latitude      REAL,
+	hint_longitude     REAL,
+	hint_radius_meters INTEGER,
+
 	FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE
 );
 
@@ -314,7 +319,13 @@ SELECT n.id,
 		   WHEN 'location' THEN json_object(
 			   'latitude', nlg.latitude,
 			   'longitude', nlg.longitude,
-			   'radius_m', nlg.radius_meters
+			   'radius_m', nlg.radius_meters,
+			   'show_hint', IIF(nlg.show_hint, json('true'), json('false')),
+			   'hint', CASE WHEN nlg.show_hint = 1 AND nlg.hint_latitude IS NOT NULL THEN json_object(
+				   'latitude', nlg.hint_latitude,
+				   'longitude', nlg.hint_longitude,
+				   'radius_m', nlg.hint_radius_meters
+			   ) ELSE NULL END
 								)
 		   WHEN 'code' THEN json_object(
 			   'codes', json(ncg.codes)

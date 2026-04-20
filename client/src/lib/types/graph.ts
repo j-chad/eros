@@ -57,10 +57,15 @@ export interface Node<Type extends NodeType = NodeType, Data = undefined> {
 }
 
 export type StartNode = Node<NodeType.START>;
-export type LocationNode = Node<NodeType.LOCATION, {
+export interface LocationHint {
 	latitude: number;
 	longitude: number;
 	radius_m: number;
+}
+
+export type LocationNode = Node<NodeType.LOCATION, {
+	radius_m: number;
+	hint?: LocationHint | null;
 }>;
 export type CodeNode = Node<NodeType.CODE, {
 	code: string;

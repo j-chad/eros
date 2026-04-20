@@ -56,8 +56,21 @@ func (s *GraphService) GetGraph(ctx context.Context, graphID string) (*models.Gr
 	}
 
 	graph.Viewport = nil
+	sanitizeLocationData(graph)
 
 	return graph, nil
+}
+
+// sanitizeLocationData strips exact coordinates from location gate nodes
+// so the client never learns the real lat/lng. Only the hint (if enabled)
+// and unlock radius are sent.
+func sanitizeLocationData(graph *models.Graph) {
+	if graph.Nodes == nil {
+		return
+	}
+	for i := range *graph.Nodes {
+		sanitizeNodeLocationData(&(*graph.Nodes)[i])
+	}
 }
 
 func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload string) (*models.UnlockResult, error) {
@@ -147,7 +160,28 @@ func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload st
 		return nil
 	})
 
+	if err == nil && result != nil {
+		sanitizeNodeLocationData(&result.UnlockedNode)
+		for i := range result.NewNodes {
+			sanitizeNodeLocationData(&result.NewNodes[i])
+		}
+	}
+
 	return result, err
+}
+
+func sanitizeNodeLocationData(node *models.Node) {
+	if node.Type != models.LocationGateNode {
+		return
+	}
+	locData, ok := node.Data.(*models.LocationData)
+	if !ok || locData == nil {
+		return
+	}
+	node.Data = &models.ClientLocationData{
+		RadiusM: locData.RadiusM,
+		Hint:    locData.Hint,
+	}
 }
 
 func validateUnlockPayload(node *models.Node, payload string) error {

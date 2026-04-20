@@ -383,18 +383,34 @@ func (s *sqliteDB) upsertNodeData(ctx context.Context, nodeID string, nodeType m
 		if !ok {
 			return fmt.Errorf("invalid data type for location node")
 		}
+		var hintLat, hintLng *float64
+		var hintRadius *int
+		if locationData.Hint != nil {
+			hintLat = &locationData.Hint.Latitude
+			hintLng = &locationData.Hint.Longitude
+			hintRadius = &locationData.Hint.RadiusM
+		}
 		_, err := s.executor().ExecContext(ctx, `
 			INSERT INTO node_location_gate (
 				node_id,
 				latitude,
 				longitude,
-				radius_meters
-			) VALUES (?, ?, ?, ?)
+				radius_meters,
+				show_hint,
+				hint_latitude,
+				hint_longitude,
+				hint_radius_meters
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT (node_id) DO UPDATE SET
 				latitude = excluded.latitude,
 				longitude = excluded.longitude,
-				radius_meters = excluded.radius_meters
-		`, nodeID, locationData.Latitude, locationData.Longitude, locationData.RadiusM)
+				radius_meters = excluded.radius_meters,
+				show_hint = excluded.show_hint,
+				hint_latitude = excluded.hint_latitude,
+				hint_longitude = excluded.hint_longitude,
+				hint_radius_meters = excluded.hint_radius_meters
+		`, nodeID, locationData.Latitude, locationData.Longitude, locationData.RadiusM,
+			locationData.ShowHint, hintLat, hintLng, hintRadius)
 		return err
 	case models.CodeGateNode:
 		codeData, ok := data.(models.CodeData)
