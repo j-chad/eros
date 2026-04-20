@@ -401,14 +401,22 @@ func (s *sqliteDB) upsertNodeData(ctx context.Context, nodeID string, nodeType m
 		if !ok {
 			return fmt.Errorf("invalid data type for code node")
 		}
-		_, err := s.executor().ExecContext(ctx, `
+		codes := codeData.Codes
+		if codes == nil {
+			codes = []string{}
+		}
+		codesJSON, err := json.Marshal(codes)
+		if err != nil {
+			return fmt.Errorf("failed to marshal codes: %w", err)
+		}
+		_, err = s.executor().ExecContext(ctx, `
 			INSERT INTO node_code_gate (
 				node_id,
 				codes
 			) VALUES (?, ?)
 			ON CONFLICT (node_id) DO UPDATE SET
 				codes = excluded.codes
-		`, nodeID, codeData.Codes)
+		`, nodeID, string(codesJSON))
 		return err
 	case models.TimeGateNode:
 		timeData, ok := data.(models.TimeData)

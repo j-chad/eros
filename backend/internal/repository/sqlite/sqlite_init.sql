@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS node_code_gate
 (
 	node_id TEXT PRIMARY KEY,
 
-	codes   TEXT NOT NULL CHECK ( json_valid(codes, 4) AND json_type(codes) == 'array' ),
+	codes   TEXT NOT NULL CHECK ( json_valid(codes) AND json_type(codes) == 'array' ),
 
 	FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE
 );
