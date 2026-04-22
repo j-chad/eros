@@ -96,6 +96,7 @@
 	}
 
 	.hint-map-container {
+		position: relative;
 		width: 100%;
 		height: 100%;
 		opacity: 0;
@@ -108,7 +109,17 @@
 
 	/* Pink-tinted map tiles */
 	:global(.hint-map-tiles) {
-		filter: saturate(0.3) hue-rotate(320deg);
+		filter: saturate(0.5) hue-rotate(330deg) sepia(0.1);
+	}
+
+	/* Transparent pink overlay */
+	.hint-map-container.loaded::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: oklch(0.65 0.2 350 / 0.12);
+		pointer-events: none;
+		z-index: 401; /* above tiles, below controls (1000) */
 	}
 
 	/* Custom marker pin */
