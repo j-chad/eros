@@ -180,11 +180,14 @@
 					<input
 						id="hint-radius"
 						type="number"
-						min="1"
+						min="0"
 						step="1"
 						bind:value={editForm.hint_radius_m}
 						required
 					/>
+					<span class="help-text">
+						Set to 0 to show an exact marker instead of a circle.
+					</span>
 				</div>
 			</div>
 		</div>
