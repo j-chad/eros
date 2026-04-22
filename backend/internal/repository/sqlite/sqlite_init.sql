@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS node_reward
 CREATE TABLE IF NOT EXISTS reward_file
 (
 	id          INTEGER PRIMARY KEY AUTOINCREMENT,
-	node_id     TEXT     NOT NULL,
+	node_id     TEXT     NOT NULL UNIQUE,
 
 	filename    TEXT     NOT NULL,
 	mime_type   TEXT     NOT NULL,
@@ -172,8 +172,6 @@ CREATE TABLE IF NOT EXISTS reward_file
 
 	FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE
 );
-
-CREATE INDEX IF NOT EXISTS idx_reward_file_node_id ON reward_file (node_id);
 
 -- -----------------------------------------------------------------------------
 -- FAVOURS
