@@ -3,6 +3,7 @@
 	import type { UnlockResult } from '$lib/api/graph.api';
 	import { MapPin } from 'lucide-svelte';
 	import { useOnlineStatus } from '$lib/online.svelte';
+	import HintMap from './HintMap.svelte';
 
 	const { node, graphId, onUnlock }: {
 		node: LocationNode;
@@ -95,6 +96,10 @@
 			<p class="text-sm opacity-70 leading-relaxed">{node.description}</p>
 		{/if}
 	</div>
+
+	{#if node.data?.hint && isOnline}
+		<HintMap hint={node.data.hint} />
+	{/if}
 
 	<div class="w-full flex flex-col gap-3">
 		<div class="bg-base-200 rounded-2xl px-5 py-4 flex flex-col gap-1">
