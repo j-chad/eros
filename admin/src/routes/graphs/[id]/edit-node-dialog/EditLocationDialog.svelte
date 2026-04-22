@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { LocationNode } from '$lib/types';
+	import MapPicker from '$lib/components/MapPicker.svelte';
 
 	let {
 		node,
@@ -21,6 +22,23 @@
 		hint_latitude: node.data?.hint?.latitude ?? 0,
 		hint_longitude: node.data?.hint?.longitude ?? 0,
 		hint_radius_m: node.data?.hint?.radius_m ?? 500
+	});
+
+	// When hint is enabled and hint coords are still at default (0,0),
+	// initialize them near the target location with a small offset.
+	let hintInitialized = node.data?.show_hint ?? false;
+	$effect(() => {
+		if (editForm.show_hint && !hintInitialized) {
+			hintInitialized = true;
+			if (editForm.hint_latitude === 0 && editForm.hint_longitude === 0
+				&& (editForm.latitude !== 0 || editForm.longitude !== 0)) {
+				// Offset by ~radius (min 10m) in latitude (~1 degree ≈ 111km)
+				const offsetM = Math.max(editForm.radius_m, 10);
+				const offsetDeg = offsetM / 111_000;
+				editForm.hint_latitude = Math.round((editForm.latitude + offsetDeg) * 1e6) / 1e6;
+				editForm.hint_longitude = editForm.longitude;
+			}
+		}
 	});
 
 	function handleSubmit(event: Event) {
@@ -74,6 +92,20 @@
 		/>
 	</div>
 
+	<div class="form-group">
+		<label>Location</label>
+		<span class="help-text">Click the map to set the target location. Drag the pin to reposition.</span>
+		<MapPicker
+			bind:latitude={editForm.latitude}
+			bind:longitude={editForm.longitude}
+			bind:radiusM={editForm.radius_m}
+			showHint={editForm.show_hint}
+			bind:hintLatitude={editForm.hint_latitude}
+			bind:hintLongitude={editForm.hint_longitude}
+			bind:hintRadiusM={editForm.hint_radius_m}
+		/>
+	</div>
+
 	<div class="form-row">
 		<div class="form-group">
 			<label for="latitude">Latitude</label>
@@ -83,10 +115,8 @@
 				step="0.000001"
 				bind:value={editForm.latitude}
 				required
-				placeholder="e.g., -36.848461"
 			/>
 		</div>
-
 		<div class="form-group">
 			<label for="longitude">Longitude</label>
 			<input
@@ -95,29 +125,19 @@
 				step="0.000001"
 				bind:value={editForm.longitude}
 				required
-				placeholder="e.g., 174.763336"
 			/>
 		</div>
-	</div>
-
-	<div class="form-group">
-		<label for="radius">Radius (meters)</label>
-		<input
-			id="radius"
-			type="number"
-			min="0"
-			step="1"
-			bind:value={editForm.radius_m}
-			required
-			placeholder="e.g., 100"
-		/>
-		<span class="help-text">
-			{#if editForm.radius_m > 0}
-				Triggers when within {editForm.radius_m}m of the location
-			{:else}
-				Enter a radius in meters
-			{/if}
-		</span>
+		<div class="form-group">
+			<label for="radius">Radius (m)</label>
+			<input
+				id="radius"
+				type="number"
+				min="0"
+				step="1"
+				bind:value={editForm.radius_m}
+				required
+			/>
+		</div>
 	</div>
 
 	<div class="form-group">
@@ -133,6 +153,7 @@
 	{#if editForm.show_hint}
 		<div class="hint-section">
 			<h3>Hint Configuration</h3>
+			<span class="help-text">Drag the purple pin to offset the hint center from the real location.</span>
 			<div class="form-row">
 				<div class="form-group">
 					<label for="hint-latitude">Hint Latitude</label>
@@ -142,7 +163,6 @@
 						step="0.000001"
 						bind:value={editForm.hint_latitude}
 						required
-						placeholder="e.g., -36.85"
 					/>
 				</div>
 				<div class="form-group">
@@ -153,24 +173,19 @@
 						step="0.000001"
 						bind:value={editForm.hint_longitude}
 						required
-						placeholder="e.g., 174.77"
 					/>
 				</div>
-			</div>
-			<div class="form-group">
-				<label for="hint-radius">Hint Radius (meters)</label>
-				<input
-					id="hint-radius"
-					type="number"
-					min="1"
-					step="1"
-					bind:value={editForm.hint_radius_m}
-					required
-					placeholder="e.g., 500"
-				/>
-				<span class="help-text">
-					The circle shown to the user will have this radius.
-				</span>
+				<div class="form-group">
+					<label for="hint-radius">Hint Radius (m)</label>
+					<input
+						id="hint-radius"
+						type="number"
+						min="1"
+						step="1"
+						bind:value={editForm.hint_radius_m}
+						required
+					/>
+				</div>
 			</div>
 		</div>
 	{/if}
@@ -207,7 +222,7 @@
 
 	.form-row {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: 1fr 1fr 1fr;
 		gap: 1rem;
 		margin-bottom: 1rem;
 	}

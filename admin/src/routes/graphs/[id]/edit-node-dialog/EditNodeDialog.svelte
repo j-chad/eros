@@ -36,8 +36,8 @@
 	};
 	const BodyComponent = $derived(node ? componentMap[node.type] : undefined) as NodeFormComponent<AnyNode>;
 
-	// Make dialog larger for reward nodes
-	const isRewardNode = $derived(node?.type === NodeType.REWARD);
+	// Make dialog larger for nodes that need more space
+	const isLargeDialog = $derived(node?.type === NodeType.REWARD || node?.type === NodeType.LOCATION);
 
 	$effect(() => {
 		if (node) {
@@ -58,7 +58,7 @@
 </script>
 
 {#if node}
-	<dialog bind:this={dialog} class="edit-dialog" class:large={isRewardNode} onclose={handleCancel} closedby="any">
+	<dialog bind:this={dialog} class="edit-dialog" class:large={isLargeDialog} onclose={handleCancel} closedby="any">
 		<div class="dialog-content">
 			{#if BodyComponent}
 				<BodyComponent node={node} onSave={handleSave} onCancel={handleCancel}></BodyComponent>
