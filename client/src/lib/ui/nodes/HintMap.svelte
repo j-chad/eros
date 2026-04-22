@@ -36,6 +36,10 @@
 				className: 'hint-map-tiles'
 			}).addTo(map);
 
+			// Read primary colour from DaisyUI theme
+			const styles = getComputedStyle(mapContainer);
+			const primaryColor = styles.getPropertyValue('--color-primary');
+
 			if (isMarkerMode) {
 				const icon = L.divIcon({
 					className: 'hint-map-marker-icon',
@@ -47,8 +51,8 @@
 			} else {
 				const circle = L.circle(center, {
 					radius: hint.radius_m,
-					color: '#e8457a',
-					fillColor: '#e8457a',
+					color: primaryColor,
+					fillColor: primaryColor,
 					fillOpacity: 0.15,
 					weight: 2
 				}).addTo(map);
@@ -91,7 +95,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: oklch(var(--b2));
+		background: var(--color-base-200);
 		border-radius: 1rem;
 	}
 
@@ -117,7 +121,7 @@
 		content: '';
 		position: absolute;
 		inset: 0;
-		background: oklch(0.65 0.2 350 / 0.12);
+		background: color-mix(in oklch, var(--color-primary) 12%, transparent);
 		pointer-events: none;
 		z-index: 401; /* above tiles, below controls (1000) */
 	}
@@ -132,8 +136,8 @@
 		width: 16px;
 		height: 16px;
 		border-radius: 50%;
-		background: #e8457a;
-		border: 2.5px solid white;
+		background: var(--color-primary);
+		border: 2.5px solid var(--color-base-100);
 		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 	}
 
@@ -146,9 +150,9 @@
 	}
 
 	:global(.hint-map-wrapper .leaflet-control-zoom a) {
-		background: oklch(var(--b1)) !important;
-		color: oklch(var(--bc)) !important;
-		border-bottom-color: oklch(var(--b2)) !important;
+		background: var(--color-base-100) !important;
+		color: var(--color-base-content) !important;
+		border-bottom-color: var(--color-base-200) !important;
 		width: 32px !important;
 		height: 32px !important;
 		line-height: 32px !important;
@@ -156,19 +160,19 @@
 	}
 
 	:global(.hint-map-wrapper .leaflet-control-zoom a:hover) {
-		background: oklch(var(--b2)) !important;
+		background: var(--color-base-200) !important;
 	}
 
 	/* Attribution styling */
 	:global(.hint-map-wrapper .leaflet-control-attribution) {
-		background: oklch(var(--b1) / 0.7) !important;
-		color: oklch(var(--bc) / 0.5) !important;
+		background: color-mix(in oklch, var(--color-base-100) 70%, transparent) !important;
+		color: color-mix(in oklch, var(--color-base-content) 50%, transparent) !important;
 		font-size: 0.6rem !important;
 		border-radius: 0.5rem 0 0 0 !important;
 		padding: 2px 6px !important;
 	}
 
 	:global(.hint-map-wrapper .leaflet-control-attribution a) {
-		color: oklch(var(--p)) !important;
+		color: var(--color-primary) !important;
 	}
 </style>
