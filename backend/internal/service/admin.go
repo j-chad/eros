@@ -20,12 +20,13 @@ var (
 )
 
 type AdminService struct {
-	repo  repository.Repository
-	files storage.FileStore
+	repo    repository.Repository
+	files   storage.FileStore
+	fileSvc *FileService
 }
 
-func NewAdminService(repo repository.Repository, fileStore storage.FileStore) *AdminService {
-	return &AdminService{repo: repo, files: fileStore}
+func NewAdminService(repo repository.Repository, fileStore storage.FileStore, fileSvc *FileService) *AdminService {
+	return &AdminService{repo: repo, files: fileStore, fileSvc: fileSvc}
 }
 
 func (s *AdminService) CreateRegistrationCode(ctx context.Context) (models.RegistrationCode, error) {
@@ -109,6 +110,12 @@ func (s *AdminService) GetGraph(ctx context.Context, graphID string) (*models.Gr
 	graph, err := s.repo.GetGraph(ctx, graphID)
 	if err != nil {
 		return nil, err
+	}
+
+	if s.fileSvc != nil && graph.Nodes != nil {
+		if err := s.fileSvc.AttachFileMetadataToNodes(ctx, *graph.Nodes); err != nil {
+			return nil, fmt.Errorf("failed to attach file metadata: %w", err)
+		}
 	}
 
 	return graph, nil

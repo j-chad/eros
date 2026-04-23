@@ -178,8 +178,10 @@ func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload st
 
 		// Attach file metadata to any reward nodes in the result.
 		allNodes := append(result.NewNodes, result.UnlockedNode)
-		if err := s.attachFileMetadataToNodes(ctx, allNodes); err != nil {
-			return nil, fmt.Errorf("failed to attach file metadata: %w", err)
+		if s.files != nil {
+			if err := s.files.AttachFileMetadataToNodes(ctx, allNodes); err != nil {
+				return nil, fmt.Errorf("failed to attach file metadata: %w", err)
+			}
 		}
 		// Copy back — UnlockedNode is the last element.
 		result.UnlockedNode = allNodes[len(allNodes)-1]
@@ -194,50 +196,7 @@ func (s *GraphService) attachFileMetadata(ctx context.Context, graph *models.Gra
 	if s.files == nil || graph == nil || graph.Nodes == nil {
 		return nil
 	}
-	return s.attachFileMetadataToNodes(ctx, *graph.Nodes)
-}
-
-// attachFileMetadataToNodes batch-fetches files for reward nodes and attaches FileInfo.
-func (s *GraphService) attachFileMetadataToNodes(ctx context.Context, nodes []models.Node) error {
-	if s.files == nil {
-		return nil
-	}
-	// Collect reward node IDs.
-	var rewardNodeIDs []string
-	for _, n := range nodes {
-		if n.Type == models.RewardNode {
-			rewardNodeIDs = append(rewardNodeIDs, n.ID)
-		}
-	}
-	if len(rewardNodeIDs) == 0 {
-		return nil
-	}
-
-	fileMap, err := s.files.GetFilesByNodeIDs(ctx, rewardNodeIDs)
-	if err != nil {
-		return err
-	}
-
-	for i := range nodes {
-		if nodes[i].Type != models.RewardNode {
-			continue
-		}
-		file, ok := fileMap[nodes[i].ID]
-		if !ok {
-			continue
-		}
-		rd, ok := nodes[i].Data.(*models.RewardData)
-		if !ok {
-			continue
-		}
-		info, err := s.files.BuildFileInfo(ctx, &file)
-		if err != nil {
-			return fmt.Errorf("failed to build file info for node %s: %w", nodes[i].ID, err)
-		}
-		rd.File = info
-	}
-
-	return nil
+	return s.files.AttachFileMetadataToNodes(ctx, *graph.Nodes)
 }
 
 func sanitizeNodeLocationData(node *models.Node) {

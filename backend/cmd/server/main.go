@@ -35,9 +35,9 @@ func main() {
 	}
 
 	authService := service.NewAuthService(conf.Auth, database)
-	adminService := service.NewAdminService(database, fileStore)
 	favourService := service.NewFavourService(database)
 	fileService := service.NewFileService(database, fileStore)
+	adminService := service.NewAdminService(database, fileStore, fileService)
 	graphService := service.NewGraphService(database, fileService)
 
 	h := handler.NewHandler(authService, adminService, favourService, graphService, fileService)

@@ -89,6 +89,46 @@ func (s *FileService) IsPresignCapable() bool {
 	return ok
 }
 
+// AttachFileMetadataToNodes batch-fetches files for reward nodes and attaches FileInfo.
+func (s *FileService) AttachFileMetadataToNodes(ctx context.Context, nodes []models.Node) error {
+	// Collect reward node IDs.
+	var rewardNodeIDs []string
+	for _, n := range nodes {
+		if n.Type == models.RewardNode {
+			rewardNodeIDs = append(rewardNodeIDs, n.ID)
+		}
+	}
+	if len(rewardNodeIDs) == 0 {
+		return nil
+	}
+
+	fileMap, err := s.GetFilesByNodeIDs(ctx, rewardNodeIDs)
+	if err != nil {
+		return err
+	}
+
+	for i := range nodes {
+		if nodes[i].Type != models.RewardNode {
+			continue
+		}
+		file, ok := fileMap[nodes[i].ID]
+		if !ok {
+			continue
+		}
+		rd, ok := nodes[i].Data.(*models.RewardData)
+		if !ok {
+			continue
+		}
+		info, err := s.BuildFileInfo(ctx, &file)
+		if err != nil {
+			return fmt.Errorf("failed to build file info for node %s: %w", nodes[i].ID, err)
+		}
+		rd.File = info
+	}
+
+	return nil
+}
+
 // PresignURL returns a presigned URL for the given file. Only valid if IsPresignCapable is true.
 func (s *FileService) PresignURL(ctx context.Context, storageKey string) (string, error) {
 	ps, ok := s.files.(storage.PresignCapable)

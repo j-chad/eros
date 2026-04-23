@@ -15,7 +15,7 @@ import (
 func TestUploadFile_ReplacesExisting(t *testing.T) {
 	repo := testdb.New(t)
 	store := testdb.NewFileStore(t)
-	svc := NewAdminService(repo, store)
+	svc := NewAdminService(repo, store, nil)
 	ctx := context.Background()
 
 	graphID, _ := repo.CreateGraph(ctx, models.NewGraphRequest{
@@ -57,7 +57,7 @@ func TestUploadFile_ReplacesExisting(t *testing.T) {
 func TestGetFile_ByID(t *testing.T) {
 	repo := testdb.New(t)
 	store := testdb.NewFileStore(t)
-	svc := NewAdminService(repo, store)
+	svc := NewAdminService(repo, store, nil)
 	ctx := context.Background()
 
 	graphID, _ := repo.CreateGraph(ctx, models.NewGraphRequest{
@@ -99,7 +99,7 @@ func TestGetFile_ByID(t *testing.T) {
 func TestGetGraph_IncludesFileMetadata(t *testing.T) {
 	repo := testdb.New(t)
 	store := testdb.NewFileStore(t)
-	adminSvc := NewAdminService(repo, store)
+	adminSvc := NewAdminService(repo, store, nil)
 	fileSvc := NewFileService(repo, store)
 	graphSvc := NewGraphService(repo, fileSvc)
 	ctx := context.Background()
@@ -152,7 +152,7 @@ func TestGetGraph_IncludesFileMetadata(t *testing.T) {
 func TestDeleteFilesByNodeID(t *testing.T) {
 	repo := testdb.New(t)
 	store := testdb.NewFileStore(t)
-	svc := NewAdminService(repo, store)
+	svc := NewAdminService(repo, store, nil)
 	ctx := context.Background()
 
 	graphID, _ := repo.CreateGraph(ctx, models.NewGraphRequest{
@@ -187,7 +187,7 @@ func TestDeleteFilesByNodeID(t *testing.T) {
 func TestGetFilesByNodeIDs(t *testing.T) {
 	repo := testdb.New(t)
 	store := testdb.NewFileStore(t)
-	svc := NewAdminService(repo, store)
+	svc := NewAdminService(repo, store, nil)
 	ctx := context.Background()
 
 	graphID, _ := repo.CreateGraph(ctx, models.NewGraphRequest{

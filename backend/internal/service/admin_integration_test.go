@@ -12,7 +12,7 @@ import (
 
 func TestUpdateGraph_HappyPath(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewAdminService(repo, nil)
+	svc := NewAdminService(repo, nil, nil)
 	ctx := context.Background()
 
 	graphID, err := repo.CreateGraph(ctx, models.NewGraphRequest{
@@ -49,7 +49,7 @@ func TestUpdateGraph_HappyPath(t *testing.T) {
 func TestUploadFile_HappyPath(t *testing.T) {
 	repo := testdb.New(t)
 	store := testdb.NewFileStore(t)
-	svc := NewAdminService(repo, store)
+	svc := NewAdminService(repo, store, nil)
 	ctx := context.Background()
 
 	graphID, _ := repo.CreateGraph(ctx, models.NewGraphRequest{
