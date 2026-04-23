@@ -40,18 +40,27 @@ func (s *SigV4Signer) PresignRequest(req *http.Request, expires time.Duration) {
 	t := time.Now().UTC()
 	credentialScope := fmt.Sprintf("%s/%s/%s/%s", t.Format(dateFormat), s.region, service, aws4Request)
 
+	// For presigned URLs the auth parameters go in the query string and must be
+	// part of the canonical request *before* signing.
+	query := req.URL.Query()
+	query.Set("X-Amz-Algorithm", signingAlgo)
+	query.Set("X-Amz-Credential", fmt.Sprintf("%s/%s", s.accessKey, credentialScope))
+	query.Set("X-Amz-Date", t.Format(timeFormat))
+	query.Set("X-Amz-Expires", fmt.Sprintf("%d", int(expires.Seconds())))
+	query.Set("X-Amz-SignedHeaders", "host")
+	req.URL.RawQuery = query.Encode()
+
+	// Ensure Host header is present for signing.
+	if req.Header.Get("Host") == "" {
+		req.Header.Set("Host", req.URL.Host)
+	}
+
 	signedHeaders, canonicalHeaders := s.buildCanonicalHeaders(req)
 	canonicalReq := s.buildCanonicalRequest(req, unsignedPayload, signedHeaders, canonicalHeaders)
 	stringToSign := s.buildStringToSign(canonicalReq, credentialScope, t)
 	signingKey := s.deriveSigningKey(t)
 	signature := fmt.Sprintf("%x", hmacSHA256(signingKey, stringToSign))
 
-	query := req.URL.Query()
-	query.Set("X-Amz-Algorithm", signingAlgo)
-	query.Set("X-Amz-Credential", fmt.Sprintf("%s/%s", s.accessKey, credentialScope))
-	query.Set("X-Amz-Date", t.Format(timeFormat))
-	query.Set("X-Amz-Expires", fmt.Sprintf("%d", int(expires.Seconds())))
-	query.Set("X-Amz-SignedHeaders", signedHeaders)
 	query.Set("X-Amz-Signature", signature)
 	req.URL.RawQuery = query.Encode()
 }
