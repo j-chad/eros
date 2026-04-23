@@ -16,9 +16,9 @@ Reward nodes can contain images, videos, and files. The backend can store them, 
   - [x] bump upload size limit to 50 MB
   - [x] fix storage key regex to allow digits in file extensions
 - [ ] Admin #P1
-  - [ ] add file-related methods to `admin/src/lib/api.ts` (upload, list, delete)
-  - [ ] build file upload component in the reward node edit dialog (`admin/src/routes/graphs/[id]/edit-node-dialog/`)
-  - [ ] display and manage uploaded files for reward nodes in the editor
+  - [x] add file-related methods to `admin/src/lib/api.ts` (upload, list)
+  - [x] build file upload component in the reward node edit dialog (`admin/src/routes/graphs/[id]/edit-node-dialog/`)
+  - [x] display and manage uploaded files for reward nodes in the editor
 - [ ] Client #P0
   - [ ] image/video reward viewer
   - [ ] other reward type displays (Markdown, favour, calendar, wallet, file)

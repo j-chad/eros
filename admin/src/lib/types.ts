@@ -144,10 +144,29 @@ export enum RewardType {
 	MARKDOWN = 'markdown',
 }
 
+export interface RewardFile {
+	id: string;
+	node_id: string;
+	filename: string;
+	mime_type: string;
+	size_bytes: number;
+	created_at: string;
+}
+
+export interface FileInfo {
+	id: string;
+	filename: string;
+	mime_type: string;
+	size_bytes: number;
+	url: string;
+	url_expires_at?: string;
+}
+
 export type RewardNode = Node<NodeType.REWARD, {
     reward_type: RewardType;
     payload: string;
     give_favours: number;
+    file?: FileInfo;
 }>;
 
 export type AnyNode = StartNode | LocationNode | CodeNode | ManualNode | TimeNode | RewardNode;

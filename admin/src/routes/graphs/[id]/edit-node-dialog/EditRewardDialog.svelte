@@ -1,6 +1,15 @@
 <script lang="ts">
-	import {type RewardNode, RewardType} from '$lib/types';
-	import {Calendar, Gift, Image, NotebookPen, Sparkles, Star, Video} from 'lucide-svelte';
+	import {type FileInfo, type RewardNode, RewardType} from '$lib/types';
+	import {api} from '$lib/api';
+	import {Calendar, File as FileIcon, Gift, Image, NotebookPen, Sparkles, Star, Upload, Video} from 'lucide-svelte';
+
+	const FILE_BACKED_TYPES = new Set([
+		RewardType.IMAGE,
+		RewardType.VIDEO,
+		RewardType.FILE,
+		RewardType.CALENDAR,
+		RewardType.WALLET
+	]);
 
 	let {
 		node,
@@ -22,65 +31,56 @@
 		give_favours: node.data?.give_favours ?? 0
 	});
 
-	// Parse payload based on type for easier editing
-	let payloadForm = $derived.by(() => {
+	let fileInfo: FileInfo | undefined = $state(node.data?.file ?? undefined);
+	let uploading = $state(false);
+	let uploadError = $state('');
+	let dragOver = $state(false);
+
+	let isFileBacked = $derived(FILE_BACKED_TYPES.has(editForm.reward_type));
+
+	async function handleFileUpload(file: globalThis.File) {
+		uploading = true;
+		uploadError = '';
 		try {
-			const parsed = editForm.payload ? JSON.parse(editForm.payload) : {};
-			return {
-				url: parsed.url ?? '',
-				coupon_data: parsed.coupon_data ?? {},
-				event_title: parsed.event_title ?? '',
-				event_start: parsed.event_start ?? '',
-				event_end: parsed.event_end ?? '',
-				event_location: parsed.event_location ?? '',
-				event_notes: parsed.event_notes ?? '',
-				filename: parsed.filename ?? '',
-				file_url: parsed.file_url ?? ''
+			const result = await api.files.upload(node.id, file);
+			fileInfo = {
+				id: String(result.id),
+				filename: result.filename,
+				mime_type: result.mime_type,
+				size_bytes: result.size_bytes,
+				url: `/api/files/${result.id}`
 			};
-		} catch {
-			return {
-				url: '',
-				coupon_data: {},
-				event_title: '',
-				event_start: '',
-				event_end: '',
-				event_location: '',
-				event_notes: '',
-				filename: '',
-				file_url: ''
-			};
+		} catch (err: unknown) {
+			uploadError = (err as { body?: { message?: string } })?.body?.message ?? 'Upload failed';
+			console.error('File upload failed:', err);
+		} finally {
+			uploading = false;
 		}
-	});
+	}
 
-	function updatePayload(updates: Partial<typeof payloadForm>) {
-		const updated = { ...payloadForm, ...updates };
+	function handleFileInput(event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		if (file) handleFileUpload(file);
+		input.value = '';
+	}
 
-		// Create clean payload based on type
-		let payload: any = {};
-		if (editForm.reward_type === RewardType.VIDEO || editForm.reward_type === RewardType.IMAGE) {
-			payload = { url: updated.url };
-		} else if (editForm.reward_type === RewardType.WALLET) {
-			payload = {
-				url: updated.url,
-				coupon_data: updated.coupon_data
-			};
-		} else if (editForm.reward_type === RewardType.CALENDAR) {
-			payload = {
-				event_title: updated.event_title,
-				event_start: updated.event_start,
-				event_end: updated.event_end,
-				event_location: updated.event_location,
-				event_notes: updated.event_notes
-			};
-		} else if (editForm.reward_type === RewardType.FILE) {
-			payload = {
-				filename: updated.filename,
-				file_url: updated.file_url
-			};
-		}
-		// favour type has no payload, just give_favours
+	function handleDrop(event: DragEvent) {
+		event.preventDefault();
+		dragOver = false;
+		const file = event.dataTransfer?.files?.[0];
+		if (file) handleFileUpload(file);
+	}
 
-		editForm.payload = JSON.stringify(payload);
+	function handleDragOver(event: DragEvent) {
+		event.preventDefault();
+		dragOver = true;
+	}
+
+	function formatFileSize(bytes: number): string {
+		if (bytes < 1024) return `${bytes} B`;
+		if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 	}
 
 	function handleSubmit(event: SubmitEvent) {
@@ -94,7 +94,8 @@
 			data: {
 				reward_type: editForm.reward_type,
 				payload: editForm.payload,
-				give_favours: editForm.give_favours
+				give_favours: editForm.give_favours,
+				file: fileInfo
 			}
 		};
 
@@ -108,11 +109,18 @@
 		{ value: RewardType.CALENDAR, label: 'Calendar Event', icon: Calendar, description: 'Add event to calendar' },
 		{ value: RewardType.WALLET, label: 'Coupon', icon: Gift, description: 'Apple Wallet coupon' },
 		{ value: RewardType.MARKDOWN, label: 'Markdown', icon: NotebookPen, description: 'Custom message with markdown formatting' },
-		{ value: RewardType.FILE, label: 'File', icon: Image, description: 'Provide a downloadable file' }
+		{ value: RewardType.FILE, label: 'File', icon: FileIcon, description: 'Provide a downloadable file' }
 	];
+
+	const fileTypeAccept: Record<string, string> = {
+		[RewardType.IMAGE]: 'image/*',
+		[RewardType.VIDEO]: 'video/*',
+		[RewardType.CALENDAR]: '.ics',
+		[RewardType.WALLET]: '.pkpass',
+	};
 </script>
 
-<h2>🎁 Edit Reward Node</h2>
+<h2>Edit Reward Node</h2>
 
 <form bind:this={formElement} onsubmit={handleSubmit}>
 	<div class="form-layout">
@@ -149,14 +157,14 @@
 					placeholder="0"
 				/>
 				<span class="help-text">
-					💰 Optional: Award favour points with any reward type
+					Optional: Award favour points with any reward type
 				</span>
 			</div>
 
 			<div class="form-group">
 				<label>Reward Type</label>
 				<div class="reward-type-grid">
-					{#each rewardTypes as type}
+					{#each rewardTypes as type (type.value)}
 						<button
 							type="button"
 							class="reward-type-card"
@@ -181,9 +189,9 @@
 				<span>Reward Configuration</span>
 			</div>
 
-			{#if editForm.reward_type === 'favour'}
+			{#if editForm.reward_type === RewardType.FAVOUR}
 				<div class="info-box">
-					<strong>💰 Favour Points Only</strong>
+					<strong>Favour Points Only</strong>
 					<p>This reward will award favour points to the user. Configure the amount in the "Favour Points" field on the left.</p>
 				</div>
 
@@ -197,186 +205,82 @@
 					</div>
 				{/if}
 
-			{:else if editForm.reward_type === 'image'}
-				<div class="form-group">
-					<label for="image_url">Image URL</label>
-					<input
-						id="image_url"
-						type="url"
-						value={payloadForm.url}
-						oninput={(e) => updatePayload({ url: e.currentTarget.value })}
-						required
-						placeholder="https://example.com/celebration.gif"
-					/>
-					<span class="help-text">
-						🖼️ URL to the reward image (GIF, PNG, JPG)
-					</span>
-				</div>
-
-				{#if editForm.give_favours > 0}
-					<div class="favour-badge">
-						<Star size={16} />
-						<span>+{editForm.give_favours} Favours</span>
-					</div>
-				{/if}
-
-				<div class="preview-box">
-					{#if payloadForm.url}
-						<img src={payloadForm.url} alt="Reward preview" class="preview-media" />
-					{:else}
-						<div class="empty-preview">
-							<Image size={48} />
-							<p>Enter an image URL to preview</p>
-						</div>
-					{/if}
-				</div>
-
-			{:else if editForm.reward_type === 'video'}
-				<div class="form-group">
-					<label for="video_url">Video URL</label>
-					<input
-						id="video_url"
-						type="url"
-						value={payloadForm.url}
-						oninput={(e) => updatePayload({ url: e.currentTarget.value })}
-						required
-						placeholder="https://example.com/victory.mp4"
-					/>
-					<span class="help-text">
-						🎬 URL to the reward video (MP4, WebM)
-					</span>
-				</div>
-
-				{#if editForm.give_favours > 0}
-					<div class="favour-badge">
-						<Star size={16} />
-						<span>+{editForm.give_favours} Favours</span>
-					</div>
-				{/if}
-
-				<div class="preview-box">
-					{#if payloadForm.url}
-						<video src={payloadForm.url} controls class="preview-media">
-							<track kind="captions" />
-						</video>
-					{:else}
-						<div class="empty-preview">
-							<Video size={48} />
-							<p>Enter a video URL to preview</p>
-						</div>
-					{/if}
-				</div>
-
-			{:else if editForm.reward_type === 'calendar'}
-				<div class="form-group">
-					<label for="event_title">Event Title</label>
-					<input
-						id="event_title"
-						type="text"
-						value={payloadForm.event_title}
-						oninput={(e) => updatePayload({ event_title: e.currentTarget.value })}
-						required
-						placeholder="Team Meeting"
-					/>
-				</div>
-
-				<div class="form-row">
-					<div class="form-group">
-						<label for="event_start">Start Date & Time</label>
-						<input
-							id="event_start"
-							type="datetime-local"
-							value={payloadForm.event_start}
-							oninput={(e) => updatePayload({ event_start: e.currentTarget.value })}
-							required
-						/>
-					</div>
-
-					<div class="form-group">
-						<label for="event_end">End Date & Time</label>
-						<input
-							id="event_end"
-							type="datetime-local"
-							value={payloadForm.event_end}
-							oninput={(e) => updatePayload({ event_end: e.currentTarget.value })}
-							required
-						/>
-					</div>
-				</div>
-
-				<div class="form-group">
-					<label for="event_location">Location (Optional)</label>
-					<input
-						id="event_location"
-						type="text"
-						value={payloadForm.event_location}
-						oninput={(e) => updatePayload({ event_location: e.currentTarget.value })}
-						placeholder="Conference Room A"
-					/>
-				</div>
-
-				<div class="form-group">
-					<label for="event_notes">Notes (Optional)</label>
-					<textarea
-						id="event_notes"
-						oninput={(e) => updatePayload({ event_notes: e.currentTarget.value })}
-						rows="3"
-						placeholder="Bring your laptop"
-					>{payloadForm.event_notes}</textarea>
-				</div>
-
-				{#if editForm.give_favours > 0}
-					<div class="favour-badge">
-						<Star size={16} />
-						<span>+{editForm.give_favours} Favours</span>
-					</div>
-				{/if}
-
-				<div class="info-box">
-					<strong>📅 Calendar Integration</strong>
-					<p>Users will be prompted to add this event to their device calendar.</p>
-				</div>
-
-			{:else if editForm.reward_type === RewardType.WALLET}
-				<div class="form-group">
-					<label for="coupon_url">Coupon Pass URL</label>
-					<input
-						id="coupon_url"
-						type="url"
-						value={payloadForm.url}
-						oninput={(e) => updatePayload({ url: e.currentTarget.value })}
-						required
-						placeholder="https://example.com/pass.pkpass"
-					/>
-					<span class="help-text">
-						🎫 URL to Apple Wallet .pkpass file
-					</span>
-				</div>
-
-				{#if editForm.give_favours > 0}
-					<div class="favour-badge">
-						<Star size={16} />
-						<span>+{editForm.give_favours} Favours</span>
-					</div>
-				{/if}
-
-				<div class="info-box">
-					<strong>📱 Apple Wallet Integration</strong>
-					<p>Users will be able to add this coupon directly to their Apple Wallet. Make sure your .pkpass file is properly signed and hosted with HTTPS.</p>
-					<a href="https://developer.apple.com/wallet/" target="_blank" rel="noopener">
-						Learn more about Wallet passes →
-					</a>
-				</div>
-			{:else if editForm.reward_type === 'markdown'}
+			{:else if editForm.reward_type === RewardType.MARKDOWN}
 				<div class="form-group">
 					<label for="markdown_content">Markdown Content</label>
 					<textarea
 						id="markdown_content"
-						oninput={(e) => updatePayload({ url: e.currentTarget.value })}
-						rows="6"
+						bind:value={editForm.payload}
+						rows="8"
 						placeholder="Enter custom message with **markdown** formatting"
-					>{payloadForm.url}</textarea>
+					></textarea>
 				</div>
+
+				{#if editForm.give_favours > 0}
+					<div class="favour-badge">
+						<Star size={16} />
+						<span>+{editForm.give_favours} Favours</span>
+					</div>
+				{/if}
+
+			{:else if isFileBacked}
+				<!-- File upload UI for IMAGE, VIDEO, FILE, CALENDAR, WALLET -->
+
+				{#if fileInfo}
+					<div class="file-info">
+						<div class="file-details">
+							<div class="file-name">{fileInfo.filename}</div>
+							<div class="file-meta">
+								{fileInfo.mime_type} &middot; {formatFileSize(fileInfo.size_bytes)}
+							</div>
+						</div>
+					</div>
+
+					{#if editForm.reward_type === RewardType.IMAGE && fileInfo.url}
+						<div class="preview-box">
+							<img src={fileInfo.url} alt="Reward preview" class="preview-media" />
+						</div>
+					{:else if editForm.reward_type === RewardType.VIDEO && fileInfo.url}
+						<div class="preview-box">
+							<video src={fileInfo.url} controls class="preview-media">
+								<track kind="captions" />
+							</video>
+						</div>
+					{/if}
+				{/if}
+
+				<label
+					class="drop-zone"
+					class:drag-over={dragOver}
+					class:uploading
+					ondrop={handleDrop}
+					ondragover={handleDragOver}
+					ondragleave={() => dragOver = false}
+				>
+					<input
+						type="file"
+						accept={fileTypeAccept[editForm.reward_type] ?? '*/*'}
+						onchange={handleFileInput}
+						disabled={uploading}
+						hidden
+					/>
+					{#if uploading}
+						<div class="drop-zone-content">
+							<Upload size={32} />
+							<p>Uploading...</p>
+						</div>
+					{:else}
+						<div class="drop-zone-content">
+							<Upload size={32} />
+							<p>{fileInfo ? 'Drop a file to replace, or click to browse' : 'Drop a file here, or click to browse'}</p>
+							<span class="help-text">Max 50 MB</span>
+						</div>
+					{/if}
+				</label>
+
+				{#if uploadError}
+					<div class="error-text">{uploadError}</div>
+				{/if}
 
 				{#if editForm.give_favours > 0}
 					<div class="favour-badge">
@@ -447,12 +351,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
-	}
-
-	.form-row {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.75rem;
 	}
 
 	label {
@@ -594,15 +492,6 @@
 		border-radius: 6px;
 	}
 
-	.empty-preview {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.75rem;
-		color: #9ca3af;
-		text-align: center;
-	}
-
 	.info-box {
 		padding: 1rem;
 		background: #eff6ff;
@@ -623,14 +512,80 @@
 		line-height: 1.5;
 	}
 
-	.info-box a {
-		color: #2563eb;
-		text-decoration: none;
-		font-weight: 500;
+	/* File upload styles */
+	.file-info {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.75rem 1rem;
+		background: white;
+		border: 1px solid #d1d5db;
+		border-radius: 6px;
 	}
 
-	.info-box a:hover {
-		text-decoration: underline;
+	.file-details {
+		min-width: 0;
+	}
+
+	.file-name {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: #1f2937;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.file-meta {
+		font-size: 0.75rem;
+		color: #6b7280;
+		margin-top: 0.125rem;
+	}
+
+	.drop-zone {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 1.5rem;
+		border: 2px dashed #d1d5db;
+		border-radius: 8px;
+		background: white;
+		cursor: pointer;
+		transition: all 0.2s;
+		text-align: center;
+	}
+
+	.drop-zone:hover {
+		border-color: #10b981;
+		background: #ecfdf5;
+	}
+
+	.drop-zone.drag-over {
+		border-color: #10b981;
+		background: #d1fae5;
+	}
+
+	.drop-zone.uploading {
+		opacity: 0.6;
+		cursor: wait;
+	}
+
+	.drop-zone-content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+		color: #6b7280;
+	}
+
+	.drop-zone-content p {
+		margin: 0;
+		font-size: 0.875rem;
+	}
+
+	.error-text {
+		font-size: 0.8125rem;
+		color: #dc2626;
 	}
 
 	.dialog-actions {

@@ -5,7 +5,8 @@ import type {
     Favour,
     FavourChoice,
     FavourCount, Graph, NewGraph,
-    RegistrationToken
+    RegistrationToken,
+    RewardFile
 } from "$lib/types";
 import {auth} from "$lib/auth.svelte";
 import { error } from "@sveltejs/kit";
@@ -24,10 +25,15 @@ async function request<T = void>(endpoint: string, options: RequestInit = {}): P
     }
 
     const headers: HeadersInit = {
-        'Content-Type': 'application/json',
         'Authorization': `Admin ${auth.apiKey}`,
         ...options.headers,
     };
+
+    // Let the browser set Content-Type for FormData (includes boundary);
+    // default to JSON for everything else.
+    if (!(options.body instanceof FormData) && !('Content-Type' in headers)) {
+        (headers as Record<string, string>)['Content-Type'] = 'application/json';
+    }
 
     let response: Response;
     try {
@@ -132,5 +138,17 @@ export const api = {
             request(`/admin/nodes/${nodeId}/unlock`, {method: 'POST'}),
         lock: async (nodeId: string) =>
             request(`/admin/nodes/${nodeId}/unlock`, {method: 'DELETE'}),
+    },
+    files: {
+        upload: async (nodeId: string, file: File): Promise<RewardFile> => {
+            const formData = new FormData();
+            formData.append('file', file);
+            return request<RewardFile>(`/admin/nodes/${nodeId}/files`, {
+                method: 'PUT',
+                body: formData,
+            });
+        },
+        list: async (nodeId: string) =>
+            request<RewardFile[]>(`/admin/nodes/${nodeId}/files`, {method: 'GET'}),
     }
 }
