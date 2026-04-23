@@ -69,6 +69,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	clientMux.HandleFunc("POST /api/favours/request", h.client.RequestFavour)
 	clientMux.HandleFunc("GET /api/favours/requests", h.client.ListFavourRequests)
 	clientMux.HandleFunc("DELETE /api/favours/request/{id}", h.client.DeleteFavourRequest)
+	clientMux.HandleFunc("GET /api/files/{fileID}", h.client.GetFile)
 	clientMux.HandleFunc("GET /api/graphs", h.client.ListGraphs)
 	clientMux.HandleFunc("GET /api/graphs/{id}", h.client.GetGraph)
 	clientMux.Handle("POST /api/nodes/{id}/unlock", nodeRateLimiter.Middleware(http.HandlerFunc(h.client.UnlockNode)))
