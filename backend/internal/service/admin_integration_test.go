@@ -89,7 +89,7 @@ func TestUploadFile_HappyPath(t *testing.T) {
 
 func TestListGraphs_Sanitization(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo)
+	svc := NewGraphService(repo, nil)
 	ctx := context.Background()
 
 	repo.CreateGraph(ctx, models.NewGraphRequest{
@@ -121,7 +121,7 @@ func TestListGraphs_Sanitization(t *testing.T) {
 
 func TestGetGraph_StripsViewport(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo)
+	svc := NewGraphService(repo, nil)
 	ctx := context.Background()
 
 	graphID, _ := repo.CreateGraph(ctx, models.NewGraphRequest{

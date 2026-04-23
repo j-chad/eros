@@ -7,8 +7,14 @@
 Reward nodes can contain images, videos, and files. The backend can store them, but can't serve them to the client, and the admin has no upload UI.
 
 - [ ] Backend #P0
-  - [ ] implement `FileService` methods in `internal/service/files.go` — struct and constructor exist but zero methods
-  - [ ] add client-facing file download/streaming endpoint
+  - [x] implement `FileService` methods in `internal/service/files.go`
+  - [x] add client-facing file download/streaming endpoint (`GET /api/files/{fileID}`)
+  - [x] file metadata embedded in graph/unlock responses (post-processing in GraphService)
+  - [x] replace semantics on upload (re-upload replaces previous file)
+  - [x] UNIQUE constraint on `reward_file.node_id`
+  - [x] repository additions: `GetFile`, `GetFileByNodeID`, `GetFilesByNodeIDs`, `DeleteFilesByNodeID`
+  - [x] bump upload size limit to 50 MB
+  - [x] fix storage key regex to allow digits in file extensions
 - [ ] Admin #P1
   - [ ] add file-related methods to `admin/src/lib/api.ts` (upload, list, delete)
   - [ ] build file upload component in the reward node edit dialog (`admin/src/routes/graphs/[id]/edit-node-dialog/`)

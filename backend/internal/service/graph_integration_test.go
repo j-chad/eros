@@ -74,7 +74,7 @@ func nodeIDs(nodes []models.Node) []string {
 
 func TestUnlockNode_AutoUnlocksRewardNode(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo)
+	svc := NewGraphService(repo, nil)
 	ctx := context.Background()
 
 	// Graph: Start → LocationGate → Reward
@@ -100,7 +100,7 @@ func TestUnlockNode_AutoUnlocksRewardNode(t *testing.T) {
 
 func TestUnlockNode_AutoUnlocksChainedRewards(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo)
+	svc := NewGraphService(repo, nil)
 	ctx := context.Background()
 
 	// Graph: Start → LocationGate → Reward1 → Reward2 → Reward3
@@ -132,7 +132,7 @@ func TestUnlockNode_AutoUnlocksChainedRewards(t *testing.T) {
 
 func TestUnlockNode_ChainedRewardThenGate(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo)
+	svc := NewGraphService(repo, nil)
 	ctx := context.Background()
 
 	// Graph: Start → LocationGate1 → Reward → LocationGate2
@@ -166,7 +166,7 @@ func TestUnlockNode_ChainedRewardThenGate(t *testing.T) {
 
 func TestUnlockNode_NoReward_NoAutoUnlock(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo)
+	svc := NewGraphService(repo, nil)
 	ctx := context.Background()
 
 	// Graph: Start → LocationGate1 → LocationGate2
@@ -192,7 +192,7 @@ func TestUnlockNode_NoReward_NoAutoUnlock(t *testing.T) {
 
 func TestUnlockNode_GrantsFavourPoints(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo)
+	svc := NewGraphService(repo, nil)
 	ctx := context.Background()
 
 	// Graph: Start → Gate → Reward (give_favours: 3)
@@ -224,7 +224,7 @@ func TestUnlockNode_GrantsFavourPoints(t *testing.T) {
 
 func TestUnlockNode_GrantsFavoursFromChainedRewards(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo)
+	svc := NewGraphService(repo, nil)
 	ctx := context.Background()
 
 	// Graph: Start → Gate → Reward1 (2pts) → Reward2 (5pts)
@@ -253,7 +253,7 @@ func TestUnlockNode_GrantsFavoursFromChainedRewards(t *testing.T) {
 
 func TestUnlockNode_NoFavoursWhenGiveFavoursZero(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo)
+	svc := NewGraphService(repo, nil)
 	ctx := context.Background()
 
 	// Graph: Start → Gate → Reward (give_favours: 0)
