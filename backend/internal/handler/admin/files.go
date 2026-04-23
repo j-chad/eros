@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 )
 
-const FileSizeLimit = 10 * 1024 * 1024 // 10 MB
+const FileSizeLimit = 50 * 1024 * 1024 // 50 MB
 
 func (h *Handler) UploadFiles(w http.ResponseWriter, r *http.Request) {
 	nodeID := r.PathValue("node_id")
@@ -30,7 +30,7 @@ func (h *Handler) UploadFiles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if header.Size > FileSizeLimit {
-		response.Error(r.Context(), w, apierror.BadRequest("file size exceeds 10 MB limit"))
+		response.Error(r.Context(), w, apierror.BadRequest("file size exceeds 50 MB limit"))
 		return
 	}
 
