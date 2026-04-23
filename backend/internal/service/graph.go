@@ -178,10 +178,8 @@ func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload st
 
 		// Attach file metadata to any reward nodes in the result.
 		allNodes := append(result.NewNodes, result.UnlockedNode)
-		if s.files != nil {
-			if err := s.files.AttachFileMetadataToNodes(ctx, allNodes); err != nil {
-				return nil, fmt.Errorf("failed to attach file metadata: %w", err)
-			}
+		if err := s.files.AttachFileMetadataToNodes(ctx, allNodes); err != nil {
+			return nil, fmt.Errorf("failed to attach file metadata: %w", err)
 		}
 		// Copy back — UnlockedNode is the last element.
 		result.UnlockedNode = allNodes[len(allNodes)-1]
@@ -193,7 +191,7 @@ func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload st
 
 // attachFileMetadata enriches reward nodes in a graph with file info.
 func (s *GraphService) attachFileMetadata(ctx context.Context, graph *models.Graph) error {
-	if s.files == nil || graph == nil || graph.Nodes == nil {
+	if graph == nil || graph.Nodes == nil {
 		return nil
 	}
 	return s.files.AttachFileMetadataToNodes(ctx, *graph.Nodes)

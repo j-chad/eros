@@ -12,7 +12,8 @@ import (
 
 func TestUpdateGraph_HappyPath(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewAdminService(repo, nil, nil)
+	store := testdb.NewFileStore(t)
+	svc := NewAdminService(repo, store, NewFileService(repo, store))
 	ctx := context.Background()
 
 	graphID, err := repo.CreateGraph(ctx, models.NewGraphRequest{
@@ -49,7 +50,7 @@ func TestUpdateGraph_HappyPath(t *testing.T) {
 func TestUploadFile_HappyPath(t *testing.T) {
 	repo := testdb.New(t)
 	store := testdb.NewFileStore(t)
-	svc := NewAdminService(repo, store, nil)
+	svc := NewAdminService(repo, store, NewFileService(repo, store))
 	ctx := context.Background()
 
 	graphID, _ := repo.CreateGraph(ctx, models.NewGraphRequest{
@@ -89,7 +90,7 @@ func TestUploadFile_HappyPath(t *testing.T) {
 
 func TestListGraphs_Sanitization(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo, nil)
+	svc := NewGraphService(repo, NewFileService(repo, testdb.NewFileStore(t)))
 	ctx := context.Background()
 
 	repo.CreateGraph(ctx, models.NewGraphRequest{
@@ -121,7 +122,7 @@ func TestListGraphs_Sanitization(t *testing.T) {
 
 func TestGetGraph_StripsViewport(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo, nil)
+	svc := NewGraphService(repo, NewFileService(repo, testdb.NewFileStore(t)))
 	ctx := context.Background()
 
 	graphID, _ := repo.CreateGraph(ctx, models.NewGraphRequest{

@@ -112,7 +112,7 @@ func (s *AdminService) GetGraph(ctx context.Context, graphID string) (*models.Gr
 		return nil, err
 	}
 
-	if s.fileSvc != nil && graph.Nodes != nil {
+	if graph.Nodes != nil {
 		if err := s.fileSvc.AttachFileMetadataToNodes(ctx, *graph.Nodes); err != nil {
 			return nil, fmt.Errorf("failed to attach file metadata: %w", err)
 		}
