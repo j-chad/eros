@@ -35,7 +35,19 @@ type TimeData struct {
 }
 
 type RewardData struct {
-	RewardType  string `json:"reward_type"`
-	Payload     string `json:"payload"`
-	GiveFavours int    `json:"give_favours"`
+	RewardType  string    `json:"reward_type"`
+	Payload     string    `json:"payload"`
+	GiveFavours int       `json:"give_favours"`
+	File        *FileInfo `json:"file,omitempty"`
+}
+
+// FileInfo is the client-safe file metadata embedded in reward node responses.
+// It deliberately excludes StorageKey.
+type FileInfo struct {
+	ID         string     `json:"id"`
+	Filename   string     `json:"filename"`
+	MimeType   string     `json:"mime_type"`
+	SizeBytes  int64      `json:"size_bytes"`
+	URL        string     `json:"url"`
+	URLExpires *time.Time `json:"url_expires_at,omitempty"`
 }
