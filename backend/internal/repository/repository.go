@@ -63,4 +63,8 @@ type GraphRepository interface {
 type FileRepository interface {
 	CreateFile(ctx context.Context, file *models.File) error // The ID of the newly created file is set in the provided file object.
 	ListFiles(ctx context.Context, nodeID string) ([]models.File, error)
+	GetFile(ctx context.Context, fileID string) (*models.File, error)
+	GetFileByNodeID(ctx context.Context, nodeID string) (*models.File, error)
+	GetFilesByNodeIDs(ctx context.Context, nodeIDs []string) (map[string]models.File, error)
+	DeleteFilesByNodeID(ctx context.Context, nodeID string) ([]string, error) // Returns storage keys for cleanup.
 }
