@@ -12,7 +12,7 @@ import (
 	"slices"
 )
 
-var ALLOWED_KEY_REGEX = regexp.MustCompile(fmt.Sprintf("^%s(\\.[a-zA-Z]{1,3})?$", crypto.UUIDV4Regex.String()))
+var ALLOWED_KEY_REGEX = regexp.MustCompile(fmt.Sprintf("^%s(\\.[a-zA-Z0-9]{1,6})?$", crypto.UUIDV4Regex.String()))
 
 type LocalFileStore struct {
 	root string
