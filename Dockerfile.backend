@@ -1,0 +1,31 @@
+# Stage 1: Build the Go binary
+FROM golang:1.26 AS builder
+
+WORKDIR /build
+
+COPY backend/go.mod backend/go.sum ./
+RUN go mod download
+
+COPY backend/ .
+
+# CGO required for go-sqlite3
+ENV CGO_ENABLED=1
+RUN go build -o /eros-backend ./cmd/server
+
+# Stage 2: Runtime
+FROM debian:bookworm-slim
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libsqlite3-0 curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /eros-backend /usr/local/bin/eros-backend
+
+# Create data directories
+RUN mkdir -p /data/db /data/files
+
+ENV APP_ENV=production
+
+EXPOSE 8080
+
+CMD ["eros-backend"]

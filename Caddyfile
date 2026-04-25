@@ -1,0 +1,27 @@
+eros.jacksonc.dev {
+	handle /api/* {
+		reverse_proxy backend:8080
+	}
+
+	handle {
+		root * /srv/client
+		try_files {path} /200.html
+		file_server
+	}
+
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+	}
+}
+
+admin.eros.jacksonc.dev {
+	handle {
+		root * /srv/admin
+		try_files {path} /index.html
+		file_server
+	}
+
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+	}
+}

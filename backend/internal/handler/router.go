@@ -32,6 +32,7 @@ func NewHandler(
 }
 
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("GET /api/health", health)
 	mux.HandleFunc("POST /api/device", h.client.RegisterDevice)
 
 	adminMux := http.NewServeMux()
@@ -86,4 +87,8 @@ func routeNotFound(w http.ResponseWriter, r *http.Request) {
 
 func ping(w http.ResponseWriter, _ *http.Request) {
 	response.NoContent(w)
+}
+
+func health(w http.ResponseWriter, _ *http.Request) {
+	response.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
