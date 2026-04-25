@@ -1,3 +1,7 @@
+# This file runs on the NAS (~/eros/), not in the repo.
+# All host paths are relative to that directory.
+# deploy.sh copies this file, frontend builds, and Docker images to the NAS.
+
 services:
   caddy:
     image: eros-caddy:latest
@@ -8,10 +12,10 @@ services:
     env_file: .env
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
-      - ./admin-build:/srv/admin
-      - ./client-build:/srv/client
-      - ./data/caddy:/data
-      - ./data/caddy-config:/config
+      - ./admin-build:/srv/admin       # SPA static files, copied by deploy.sh
+      - ./client-build:/srv/client     # PWA static files, copied by deploy.sh
+      - ./data/caddy:/data             # TLS certs (Let's Encrypt)
+      - ./data/caddy-config:/config    # Caddy runtime config
     depends_on:
       backend:
         condition: service_healthy
