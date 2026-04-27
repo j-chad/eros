@@ -1,10 +1,10 @@
 package client
 
 import (
+	"backend/internal/handler/utils"
 	"backend/internal/models"
 	"backend/pkg/apierror"
 	"backend/pkg/response"
-	"encoding/json"
 	"net/http"
 )
 
@@ -31,7 +31,7 @@ func (h *Handler) GetFavourCount(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) RequestFavour(w http.ResponseWriter, r *http.Request) {
 	var favour models.FavourRequest
 
-	if err := utils.SafeJSONDecode(r.Body, &favour) err != nil {
+	if err := utils.SafeJSONDecode(r.Body, &favour); err != nil {
 		response.Error(r.Context(), w, apierror.BadRequest("invalid request body"))
 		return
 	}

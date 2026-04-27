@@ -1,11 +1,11 @@
 package client
 
 import (
+	"backend/internal/handler/utils"
 	"backend/internal/models"
 	"backend/internal/service"
 	"backend/pkg/apierror"
 	"backend/pkg/response"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -13,7 +13,7 @@ import (
 
 func (h *Handler) RegisterDevice(w http.ResponseWriter, r *http.Request) {
 	var req models.RegisterDeviceRequest
-	if err := utils.SafeJSONDecode(r.Body, &req) err != nil {
+	if err := utils.SafeJSONDecode(r.Body, &req); err != nil {
 		response.Error(r.Context(), w, apierror.BadRequest("invalid request body"))
 		return
 	}
