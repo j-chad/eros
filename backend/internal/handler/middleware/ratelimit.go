@@ -3,6 +3,7 @@ package middleware
 import (
 	"backend/pkg/apierror"
 	"backend/pkg/response"
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -32,6 +33,48 @@ func (b *tokenBucket) allow() bool {
 	}
 
 	return false
+}
+
+// IPRateLimit is a per-IP rate limiter using token buckets.
+type IPRateLimit struct {
+	buckets  map[string]*tokenBucket
+	capacity int
+	mu       sync.RWMutex
+}
+
+func NewIPRateLimit(capacity int) *IPRateLimit {
+	return &IPRateLimit{
+		buckets:  make(map[string]*tokenBucket),
+		capacity: capacity,
+	}
+}
+
+func (r *IPRateLimit) Middleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		ip, _, _ := net.SplitHostPort(req.RemoteAddr)
+		if ip == "" {
+			ip = req.RemoteAddr
+		}
+
+		r.mu.Lock()
+		bucket, exists := r.buckets[ip]
+		if !exists {
+			bucket = &tokenBucket{
+				tokens:   r.capacity,
+				capacity: r.capacity,
+				refillAt: time.Now().Add(time.Minute),
+			}
+			r.buckets[ip] = bucket
+		}
+		r.mu.Unlock()
+
+		if !bucket.allow() {
+			response.Error(req.Context(), w, apierror.TooManyRequests("Too many requests. Try again shortly."))
+			return
+		}
+
+		next.ServeHTTP(w, req)
+	})
 }
 
 type PerNodeRateLimit struct {

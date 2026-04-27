@@ -42,16 +42,6 @@ The raw API key persists in localStorage indefinitely. Any XSS reads `localStora
 
 ## Medium
 
-### 16. No Rate Limiting on Registration Endpoint
-
-**File:** `backend/internal/handler/router.go:35`
-
-`POST /api/device` is unauthenticated with no rate limiting. Even with code validation restored, brute force against registration codes is feasible at high request rates.
-
-**Fix:** Add IP-based rate limiting middleware with exponential backoff.
-
----
-
 ### 21. No File Type Allowlist on Upload
 
 **File:** `backend/internal/handler/admin/files.go:42-49`
@@ -102,22 +92,3 @@ The `Err` field is tagged `json:"err,omitempty"` instead of `json:"-"`. If any c
 
 **Fix:** Change tag to `json:"-"`.
 
----
-
-### 37. `skipWaiting()` Called Unconditionally
-
-**File:** `client/src/service-worker.ts:39`
-
-Forces new service worker to activate immediately. A compromised update takes effect instantly rather than waiting for all tabs to close.
-
-**Fix:** Prompt the user to reload rather than force-activating.
-
----
-
-### 38. Credentials Header Sent When No Origin Matched
-
-**File:** `backend/internal/handler/middleware/cors.go:15`
-
-`Access-Control-Allow-Credentials: true` is set unconditionally, even when no origin is matched (production config has empty origins).
-
-**Fix:** Only set the credentials header when an origin is actually matched.

@@ -33,7 +33,10 @@ func NewHandler(
 
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/health", health)
-	mux.HandleFunc("POST /api/device", h.client.RegisterDevice)
+
+	// Rate limiter for registration endpoint (5 attempts per minute per IP)
+	registrationLimiter := middleware.NewIPRateLimit(5)
+	mux.Handle("POST /api/device", registrationLimiter.Middleware(http.HandlerFunc(h.client.RegisterDevice)))
 
 	adminMux := http.NewServeMux()
 	adminMux.HandleFunc("GET /api/admin/ping", ping)
