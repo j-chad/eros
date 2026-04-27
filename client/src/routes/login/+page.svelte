@@ -7,6 +7,7 @@
 	import Card from "$lib/ui/base/Card.svelte";
 	import {goto} from "$app/navigation";
 	import {login} from "$lib/services/auth";
+	import {safeReturnTo} from "$lib/utils/url";
 
 	type Mode = 'scan' | 'manual';
 	let mode = $state<Mode>('scan');
@@ -209,7 +210,7 @@
 		busy = true;
 		try {
 			await login(regCode, deviceName);
-			await goto(new URLSearchParams(window.location.search).get('returnTo') ?? '/', { invalidateAll: true });
+			await goto(safeReturnTo(new URLSearchParams(window.location.search).get('returnTo')), { invalidateAll: true });
 		} catch (err) {
 			console.error('Login failed', err);
 			error = 'Unable to log in. Please try again.';

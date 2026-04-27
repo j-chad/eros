@@ -39,6 +39,7 @@ func (h *Handler) CreateGraph(w http.ResponseWriter, r *http.Request) {
 	var newGraphRequest models.NewGraphRequest
 	if err := json.NewDecoder(r.Body).Decode(&newGraphRequest); err != nil {
 		response.Error(r.Context(), w, apierror.BadRequest("invalid request body"))
+		return
 	}
 
 	if newGraphRequest.Title == "" {

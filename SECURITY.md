@@ -1,73 +1,12 @@
 # Security Audit Report
 
-**Date:** 2026-04-04  
-**Scope:** Full monorepo — Go backend, admin frontend, client frontend  
+**Date:** 2026-04-04
+**Scope:** Full monorepo — Go backend, admin frontend, client frontend
 **Findings:** 6 Critical, 9 High, 14 Medium, 9 Low
 
 ---
 
 ## Critical
-
-### 1. Registration Code Validation Bypassed
-
-**File:** `backend/internal/service/auth.go:62-69`
-
-The entire registration code check is commented out. Any string registers a device and receives a valid bearer token. `POST /api/device` with any body grants authenticated access.
-
-**Fix:** Uncomment lines 62-69 to restore registration code validation.
-
----
-
-### 2. Secrets Embedded Into Binary via `go:embed`
-
-**File:** `backend/internal/config/loaders.go:8`
-
-The `go:embed config.*.json` directive matches `config.private.json`, which contains S3 credentials and the admin API key. Every compiled binary contains these secrets in plaintext, extractable with `strings`.
-
-**Fix:** Change the embed glob to exclude private config, or move `config.private.json` outside the embed directory and load it at runtime.
-
----
-
-### 3. Admin API Key is `admin123`
-
-**File:** `backend/internal/config/config.private.json:3`
-
-The admin API key is a trivial dictionary word. Any brute force attempt finds it immediately. Full admin access: delete graphs, revoke devices, read all data.
-
-**Fix:** Generate a cryptographically random key (minimum 32 bytes, base64-encoded). Load from environment variable only.
-
----
-
-### 4. S3 Credentials Hardcoded in Config
-
-**File:** `backend/internal/config/config.private.json:11-12`
-
-Backblaze B2 access and secret keys are in the private config, which gets embedded into the binary (see #2). Anyone with the binary can access the entire file storage bucket.
-
-**Fix:** Rotate credentials immediately. Move to environment variables. Remove from embedded config.
-
----
-
-### 5. Open Redirect via `returnTo` Parameter
-
-**Files:** `client/src/routes/login/+page.ts:6-7`, `client/src/routes/login/+page.svelte:212`
-
-The `returnTo` query parameter is used as a redirect target with zero validation, in two separate code paths with two separate extraction methods. An attacker crafts `/login?returnTo=https://evil.com` and the user lands on a phishing site after login.
-
-**Fix:** Validate that `returnTo` is a relative path, does not start with `//`, and contains no protocol:
-
-```typescript
-function sanitizeReturnTo(value: string | null): string {
-    if (!value) return '/';
-    if (!value.startsWith('/') || value.startsWith('//')) return '/';
-    if (/^[^/]*:/.test(value)) return '/';
-    return value;
-}
-```
-
-Centralise into a single utility used by both code paths.
-
----
 
 ### 6. Auth Token Stored in Plaintext IndexedDB
 
@@ -81,16 +20,6 @@ The bearer token sits in IndexedDB unencrypted. Any XSS — from a dependency, e
 
 ## High
 
-### 7. Missing `return` After JSON Decode Error
-
-**File:** `backend/internal/handler/admin/graphs.go:40-42`
-
-When JSON decoding fails, `response.Error()` is called but execution continues (no `return`). The handler proceeds with zero-value fields, causing a double write and potential data corruption.
-
-**Fix:** Add `return` after the error response on line 42.
-
----
-
 ### 8. Device Tokens Stored in Plaintext in Database
 
 **Files:** `backend/internal/repository/sqlite/device.go`, `backend/internal/repository/sqlite/sqlite_init.sql:24`
@@ -98,16 +27,6 @@ When JSON decoding fails, `response.Error()` is called but execution continues (
 Tokens are stored and compared as plaintext. Database compromise exposes all active tokens.
 
 **Fix:** Store `SHA-256(token)` in the database. Hash the incoming token before comparison.
-
----
-
-### 9. Non-Constant-Time Code Gate Comparison
-
-**File:** `backend/internal/service/graph.go:107`
-
-Uses `!=` instead of `crypto/subtle.ConstantTimeCompare`. Timing attack leaks the code character by character.
-
-**Fix:** Replace with `subtle.ConstantTimeCompare([]byte(nodeData.Code), []byte(payload)) != 1`.
 
 ---
 

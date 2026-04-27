@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-//go:embed config.*.json
+//go:embed config.default.json config.develop.json config.production.json
 var configFiles embed.FS
 
 const defaultConfigFile = "config.default.json"
@@ -27,8 +27,9 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("load environment config: %w", err)
 	}
 
-	// Layer 2: embedded private config (config.private.json)
-	if err := mergeFromEmbed(cfg, privateConfigFile, false); err != nil {
+	// Layer 2: private config loaded from disk (never embedded in binary)
+	privatePath := getEnv("CONFIG_PRIVATE_PATH", privateConfigFile)
+	if err := mergeFromFile(cfg, privatePath, false); err != nil {
 		return nil, fmt.Errorf("load private config: %w", err)
 	}
 

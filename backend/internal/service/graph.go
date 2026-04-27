@@ -4,6 +4,7 @@ import (
 	"backend/internal/models"
 	"backend/internal/repository"
 	"context"
+	"crypto/subtle"
 	"errors"
 	"fmt"
 	"strings"
@@ -266,12 +267,18 @@ func validateCodeGatePayload(node *models.Node, payload string) error {
 		return fmt.Errorf("invalid node data for code gate node %s", node.ID)
 	}
 
+	lowerPayload := strings.ToLower(payload)
+	match := 0
 	for _, code := range nodeData.Codes {
-		if strings.EqualFold(code, payload) {
-			return nil
+		lowerCode := strings.ToLower(code)
+		if len(lowerCode) == len(lowerPayload) {
+			match |= subtle.ConstantTimeCompare([]byte(lowerCode), []byte(lowerPayload))
 		}
 	}
 
+	if match == 1 {
+		return nil
+	}
 	return NodeUnlockIncorrect
 }
 

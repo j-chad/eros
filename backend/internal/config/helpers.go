@@ -35,6 +35,21 @@ func mergeFromEmbed(cfg *Config, configFile string, required bool) error {
 	return nil
 }
 
+func mergeFromFile(cfg *Config, path string, required bool) error {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) && !required {
+			return nil
+		}
+		return fmt.Errorf("read config file %s: %w", path, err)
+	}
+
+	if err := mergeFromJSON(cfg, data); err != nil {
+		return fmt.Errorf("merge config from %s: %w", path, err)
+	}
+	return nil
+}
+
 func mergeFromJSON(dst *Config, data []byte) error {
 	// Decode into generic map so strings stay as strings
 	// (avoids encoding/json trying to put "10s" into time.Duration)
