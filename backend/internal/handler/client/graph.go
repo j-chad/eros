@@ -43,7 +43,7 @@ func (h *Handler) UnlockNode(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.graphService.UnlockNode(r.Context(), r.PathValue("id"), string(payload))
 	if err != nil {
-		if errors.Is(err, service.NodeUnlockIncorrect) {
+		if errors.Is(err, service.ErrNodeUnlockIncorrect) {
 			response.Error(r.Context(), w, apierror.Forbidden("incorrect unlock payload"))
 			return
 		}

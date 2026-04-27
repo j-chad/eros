@@ -22,7 +22,7 @@ func TestValidateUnlockPayload_CodeGate_Wrong(t *testing.T) {
 		Type: models.CodeGateNode,
 		Data: &models.CodeData{Codes: []string{"SECRET"}},
 	}
-	testutil.ErrorIs(t, validateUnlockPayload(node, "WRONG"), NodeUnlockIncorrect)
+	testutil.ErrorIs(t, validateUnlockPayload(node, "WRONG"), ErrNodeUnlockIncorrect)
 }
 
 func TestValidateUnlockPayload_CodeGate_Empty(t *testing.T) {
@@ -31,7 +31,7 @@ func TestValidateUnlockPayload_CodeGate_Empty(t *testing.T) {
 		Type: models.CodeGateNode,
 		Data: &models.CodeData{Codes: []string{"SECRET"}},
 	}
-	testutil.ErrorIs(t, validateUnlockPayload(node, ""), NodeUnlockIncorrect)
+	testutil.ErrorIs(t, validateUnlockPayload(node, ""), ErrNodeUnlockIncorrect)
 }
 
 func TestValidateUnlockPayload_CodeGate_CaseInsensitive(t *testing.T) {
@@ -58,7 +58,7 @@ func TestValidateUnlockPayload_LocationGate_OutsideRadius(t *testing.T) {
 		Type: models.LocationGateNode,
 		Data: &models.LocationData{LocationArea: models.LocationArea{Latitude: -36.8485, Longitude: 174.7633, RadiusM: 10}},
 	}
-	testutil.ErrorIs(t, validateUnlockPayload(node, "-36.8400,174.7633"), NodeUnlockIncorrect)
+	testutil.ErrorIs(t, validateUnlockPayload(node, "-36.8400,174.7633"), ErrNodeUnlockIncorrect)
 }
 
 func TestValidateUnlockPayload_LocationGate_DefaultRadius(t *testing.T) {
@@ -91,7 +91,7 @@ func TestValidateUnlockPayload_LocationGate_InvalidPayload(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validateUnlockPayload(node, tt.payload)
 			testutil.NotNilErr(t, err)
-			testutil.ErrorIsNot(t, err, NodeUnlockIncorrect)
+			testutil.ErrorIsNot(t, err, ErrNodeUnlockIncorrect)
 		})
 	}
 }
@@ -112,7 +112,7 @@ func TestValidateUnlockPayload_ManualGate_NotUnlocked(t *testing.T) {
 		Type: models.ManualNode,
 		Data: &models.ManualData{Instructions: "do the thing", UnlockedAt: nil},
 	}
-	testutil.ErrorIs(t, validateUnlockPayload(node, ""), NodeUnlockIncorrect)
+	testutil.ErrorIs(t, validateUnlockPayload(node, ""), ErrNodeUnlockIncorrect)
 }
 
 func TestValidateUnlockPayload_TimeGate_Past(t *testing.T) {
@@ -130,7 +130,7 @@ func TestValidateUnlockPayload_TimeGate_Future(t *testing.T) {
 		Type: models.TimeGateNode,
 		Data: &models.TimeData{UnlockAt: time.Now().Add(1 * time.Hour)},
 	}
-	testutil.ErrorIs(t, validateUnlockPayload(node, ""), NodeUnlockIncorrect)
+	testutil.ErrorIs(t, validateUnlockPayload(node, ""), ErrNodeUnlockIncorrect)
 }
 
 func TestValidateUnlockPayload_UnsupportedType(t *testing.T) {

@@ -16,7 +16,7 @@ type GraphService struct {
 	files *FileService
 }
 
-var NodeUnlockIncorrect = errors.New("node unlock incorrect")
+var ErrNodeUnlockIncorrect = errors.New("node unlock incorrect")
 
 func NewGraphService(repo repository.Repository, files *FileService) *GraphService {
 	return &GraphService{repo: repo, files: files}
@@ -242,7 +242,7 @@ func validateManualGateUnlock(node *models.Node) error {
 	}
 
 	if nodeData.UnlockedAt == nil {
-		return NodeUnlockIncorrect
+		return ErrNodeUnlockIncorrect
 	}
 
 	return nil
@@ -255,7 +255,7 @@ func validateTimeGateUnlock(node *models.Node) error {
 	}
 
 	if time.Now().UTC().Before(nodeData.UnlockAt) {
-		return NodeUnlockIncorrect
+		return ErrNodeUnlockIncorrect
 	}
 
 	return nil
@@ -279,7 +279,7 @@ func validateCodeGatePayload(node *models.Node, payload string) error {
 	if match == 1 {
 		return nil
 	}
-	return NodeUnlockIncorrect
+	return ErrNodeUnlockIncorrect
 }
 
 func validateLocationGatePayload(node *models.Node, payload string) error {
@@ -301,7 +301,7 @@ func validateLocationGatePayload(node *models.Node, payload string) error {
 
 	distance := haversineDistance(lat, lng, nodeData.Latitude, nodeData.Longitude)
 	if distance > float64(radius) {
-		return NodeUnlockIncorrect
+		return ErrNodeUnlockIncorrect
 	}
 
 	return nil
