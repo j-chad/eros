@@ -77,10 +77,20 @@ export type ManualNode = Node<NodeType.MANUAL, {
 export type TimeNode = Node<NodeType.TIME, {
 	unlock_at: string; // ISO 8601 date string (UTC)
 }>;
+export interface FileInfo {
+	id: string;
+	filename: string;
+	mime_type: string;
+	size_bytes: number;
+	url: string;
+	url_expires_at?: string;
+}
+
 export type RewardNode = Node<NodeType.REWARD, {
 	reward_type: RewardType;
 	payload: string;
 	give_favours: number;
+	file?: FileInfo;
 }>;
 
 export type AnyNode = StartNode | LocationNode | CodeNode | ManualNode | TimeNode | RewardNode;
