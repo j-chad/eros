@@ -50,7 +50,7 @@
 <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
 	<!-- Compact panel -->
 	{#if panelOpen}
-		<div class="card rounded-3xl bg-base-100 shadow-xl shadow-pink-200/40 w-56 animate-popIn">
+		<div class="card rounded-3xl bg-base-300 shadow-xl shadow-pink-200/40 w-56 animate-popIn">
 			<div class="card-body gap-3 p-5">
 				<p class="text-sm font-semibold opacity-70">
 					{count.remaining} {count.remaining === 1 ? 'favour' : 'favours'} remaining
