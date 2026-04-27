@@ -3,16 +3,26 @@ package middleware
 import "net/http"
 
 func WithCORS(next http.Handler, allowedOrigins []string) http.Handler {
+	wildcard := false
+	for _, o := range allowedOrigins {
+		if o == "*" {
+			wildcard = true
+			break
+		}
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
 
-		// Check if origin is allowed
-		if isOriginAllowed(origin, allowedOrigins) {
+		if wildcard {
+			// Wildcard mode: allow all origins but never send credentials.
+			// Browsers refuse Access-Control-Allow-Credentials with a wildcard origin.
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		} else if isOriginAllowed(origin, allowedOrigins) {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Add("Vary", "Origin")
 		}
-
-		// Allow credentials (cookies, authorization headers)
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		// Allowed methods
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
@@ -33,10 +43,10 @@ func WithCORS(next http.Handler, allowedOrigins []string) http.Handler {
 	})
 }
 
-// isOriginAllowed checks if an origin is in the allowed list
+// isOriginAllowed checks if an origin is in the allowed list.
 func isOriginAllowed(origin string, allowed []string) bool {
 	for _, allowedOrigin := range allowed {
-		if allowedOrigin == "*" || allowedOrigin == origin {
+		if allowedOrigin == origin {
 			return true
 		}
 	}

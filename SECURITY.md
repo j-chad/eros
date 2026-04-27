@@ -20,26 +20,6 @@ The bearer token sits in IndexedDB unencrypted. Any XSS — from a dependency, e
 
 ## High
 
-### 10. CORS Wildcard With Credentials
-
-**Files:** `backend/internal/config/config.develop.json:5`, `backend/internal/handler/middleware/cors.go:15,39`
-
-Dev config allows `*` origin with `Access-Control-Allow-Credentials: true`. Any website can make authenticated cross-origin requests when running in development mode.
-
-**Fix:** Never allow wildcard origins when credentials are enabled. Use explicit allowed origins in all environments.
-
----
-
-### 11. Race Condition in Favour Request (Transaction Bypass)
-
-**File:** `backend/internal/service/favour.go:50`
-
-Uses `s.repo.CreateFavourRequest` instead of `txRepo.CreateFavourRequest` — the insert bypasses the transaction entirely. Concurrent requests can overspend favours.
-
-**Fix:** Change line 50 to `txRepo.CreateFavourRequest(ctx, request)`.
-
----
-
 ### 12. Offline Auth Guard Bypass
 
 **File:** `client/src/lib/services/auth.ts:14-16`
@@ -47,33 +27,6 @@ Uses `s.repo.CreateFavourRequest` instead of `txRepo.CreateFavourRequest` — th
 When offline, any token is accepted — even expired or revoked. Spoofing `navigator.onLine` keeps a stolen token working indefinitely.
 
 **Fix:** Store token expiry alongside the token. Validate expiry even when offline.
-
----
-
-### 13. Sensitive Game Data Cached Unencrypted
-
-**Files:** `client/src/lib/db/stores/graph.ts`, `client/src/lib/db/schema.ts`
-
-Gate codes, GPS coordinates, reward payloads — the entire treasure hunt — stored in plaintext IndexedDB. Anyone with DevTools can read all secrets.
-
-**Fix:** The backend should strip sensitive fields from locked nodes in API responses. Never send data the client should not see.
-
----
-
-### 14. No Content-Security-Policy (Both Frontends)
-
-**Files:** `admin/src/app.html`, `client/src/app.html`
-
-No CSP headers or meta tags anywhere. Zero defence-in-depth against XSS. Combined with token storage in IndexedDB/localStorage, one XSS equals full compromise.
-
-**Fix:** Add CSP meta tags or configure CSP headers on the serving infrastructure:
-
-```html
-<meta http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';
-             connect-src 'self' https://your-api-domain.com; img-src 'self' data: https:;
-             frame-ancestors 'none';">
-```
 
 ---
 
@@ -156,36 +109,6 @@ No validation against an allowlist of expected MIME types. An admin could upload
 JSON request bodies are decoded without size limits. Large payloads consume excessive memory.
 
 **Fix:** Wrap `r.Body` with `http.MaxBytesReader(w, r.Body, 1<<20)` (1MB) before decoding.
-
----
-
-### 23. No TLS Configuration
-
-**File:** `backend/cmd/server/main.go:58`
-
-Server listens on plain HTTP (port 80 in production). Auth tokens and admin API keys transmitted in cleartext.
-
-**Fix:** Use `ListenAndServeTLS()` or deploy behind a TLS-terminating reverse proxy and document this requirement.
-
----
-
-### 24. Error Page Leaks API Internals (Client)
-
-**File:** `client/src/routes/+error.svelte:49-50`
-
-The error page renders the full `page.error` object as JSON, including API base URL, endpoint paths, and potentially internal error strings from the backend.
-
-**Fix:** Strip `base`, `endpoint`, and `body` fields from errors shown to users. Log them to the console only.
-
----
-
-### 25. Error Page Leaks API Details (Admin)
-
-**File:** `admin/src/lib/api.ts:39-45`
-
-`App.Error` includes `base`, `endpoint`, `method`, and `body` (the full backend error response). Internal implementation details are exposed.
-
-**Fix:** Sanitise error objects before storing in SvelteKit error state.
 
 ---
 
