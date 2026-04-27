@@ -54,15 +54,12 @@
 	onDestroy(() => stopScan());
 
 	function formatRegCode(value: string): string {
-		return value
-			.toUpperCase()
-			.replace(/[^A-Z0-9]/g, '')
-			.slice(0, 8)
-			.replace(/(.{4})/, '$1-');
+		const raw = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+		return raw.replace(/(.{4})(?=.)/g, '$1-');
 	}
 
 	function isValidRegCode(value: string) {
-		return /^[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(value);
+		return /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(value);
 	}
 
 	function parseRegisterUrlToCode(raw: string): string | null {
@@ -82,13 +79,13 @@
 		const codeParam = url.searchParams.get('code') ?? '';
 		if (!codeParam) return null;
 
-		// Convert code param into our expected XXXX-XXXX (accept 8 raw alphanum or dashed)
+		// Convert code param into our expected XXXX-XXXX-XXXX (accept 12 raw alphanum or dashed)
 		const upper = codeParam.toUpperCase();
-		const dashed = upper.match(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/)?.[0];
+		const dashed = upper.match(/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/)?.[0];
 		if (dashed) return dashed;
 
-		const raw8 = upper.replace(/[^A-Z0-9]/g, '').match(/^[A-Z0-9]{8}$/)?.[0];
-		if (raw8) return `${raw8.slice(0, 4)}-${raw8.slice(4)}`;
+		const raw12 = upper.replace(/[^A-Z0-9]/g, '').match(/^[A-Z0-9]{12}$/)?.[0];
+		if (raw12) return `${raw12.slice(0, 4)}-${raw12.slice(4, 8)}-${raw12.slice(8)}`;
 
 		return null;
 	}
@@ -294,7 +291,7 @@
 							class="input input-bordered input-secondary w-full rounded-2xl text-lg tracking-widest"
 							inputmode="text"
 							autocomplete="one-time-code"
-							placeholder="ABCD-1234"
+							placeholder="ABCD-1234-WXYZ"
 							value={regCodeRaw}
 							oninput={(e) => regCodeRaw = e.currentTarget.value}
 							onkeydown={(e) => e.key === 'Enter' && goNext()}
