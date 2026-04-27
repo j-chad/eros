@@ -4,12 +4,14 @@ import type { FavourCount } from '$lib/types/favour';
 export enum KVKey {
 	AuthSession = 'auth:session',
 	CalendarTipSeen = 'tutorial:calendar-tip',
+	FavourTipSeen = 'tutorial:favour-tip',
 	FavourCount = 'favour:count',
 }
 
 interface KVValue {
 	[KVKey.AuthSession]: string;
 	[KVKey.CalendarTipSeen]: boolean;
+	[KVKey.FavourTipSeen]: boolean;
 	[KVKey.FavourCount]: FavourCount;
 }
 

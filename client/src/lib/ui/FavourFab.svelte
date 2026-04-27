@@ -1,6 +1,8 @@
 <script lang="ts">
-	import { Heart } from 'lucide-svelte';
+	import { Heart, Pointer } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
+	import { KVStore, KVKey } from '$lib/db/stores/kv';
 	import type { FavourCount, FavourRequest } from '$lib/types/favour';
 
 	const { count, requests }: { count: FavourCount; requests: FavourRequest[] } = $props();
@@ -9,7 +11,19 @@
 
 	let panelOpen = $state(false);
 
+	// Tutorial hint — null suppresses render until we know the DB state
+	let showCursor: boolean | null = $state(null);
+
+	onMount(async () => {
+		const seen = await KVStore.get(KVKey.FavourTipSeen);
+		showCursor = !seen;
+	});
+
 	function togglePanel() {
+		if (showCursor) {
+			showCursor = false;
+			KVStore.set(KVKey.FavourTipSeen, true);
+		}
 		panelOpen = !panelOpen;
 	}
 
@@ -59,9 +73,16 @@
 		</div>
 	{/if}
 
+	<!-- Tutorial pointer hint -->
+	{#if showCursor === true}
+		<div class="absolute -left-8 bottom-10 animate-cursorTap pointer-events-none">
+			<Pointer size={28} style="transform: rotate(130deg)" />
+		</div>
+	{/if}
+
 	<!-- FAB -->
 	<button
-		class="btn btn-primary btn-circle shadow-lg shadow-pink-200/60 text-lg"
+		class="btn btn-xl btn-primary btn-circle shadow-lg shadow-pink-200/60 text-lg"
 		onclick={togglePanel}
 		aria-label="Favour menu"
 	>
