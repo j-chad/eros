@@ -1,10 +1,10 @@
 package admin
 
 import (
+	"backend/internal/handler/utils"
 	"backend/internal/models"
 	"backend/pkg/apierror"
 	"backend/pkg/response"
-	"encoding/json"
 	"net/http"
 	"time"
 )
@@ -12,7 +12,7 @@ import (
 func (h *Handler) CreateFavourChoice(w http.ResponseWriter, r *http.Request) {
 	var choice models.FavourChoice
 
-	if err := json.NewDecoder(r.Body).Decode(&choice); err != nil {
+	if err := utils.SafeJSONDecode(r.Body, &choice); err != nil {
 		response.Error(r.Context(), w, apierror.BadRequest("invalid request body"))
 		return
 	}
@@ -45,7 +45,7 @@ func (h *Handler) UpdateFavourChoice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var choice models.FavourChoice
-	if err := json.NewDecoder(r.Body).Decode(&choice); err != nil {
+	if err := utils.SafeJSONDecode(r.Body, &choice); err != nil {
 		response.Error(r.Context(), w, apierror.BadRequest("invalid request body"))
 		return
 	}
@@ -87,7 +87,7 @@ func (h *Handler) DeleteFavourChoice(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) UpdateFavourCount(w http.ResponseWriter, r *http.Request) {
 	var count int
-	if err := json.NewDecoder(r.Body).Decode(&count); err != nil {
+	if err := utils.SafeJSONDecode(r.Body, &count); err != nil {
 		response.Error(r.Context(), w, apierror.BadRequest("invalid request body"))
 		return
 	}
@@ -115,7 +115,7 @@ func (h *Handler) UpdateFavourRequestStatus(w http.ResponseWriter, r *http.Reque
 	var model struct {
 		Fulfilled bool `json:"fulfilled"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&model); err != nil {
+	if err := utils.SafeJSONDecode(r.Body, &model); err != nil {
 		response.Error(r.Context(), w, apierror.BadRequest("invalid request body"))
 		return
 	}

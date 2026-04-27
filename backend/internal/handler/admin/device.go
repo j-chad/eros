@@ -41,8 +41,8 @@ func (h *Handler) UpdateDeviceInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// interpret device info as raw string from body
-	buffer := make([]byte, r.ContentLength)
-	_, err := r.Body.Read(buffer)
+	const maxSize = 1024 // 1KB
+	buffer, err := io.ReadAll(io.LimitReader(r.Body, maxSize))
 	if err != nil && !errors.Is(err, io.EOF) {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err).WithDetail("msg", "failed to read device info"))
 		return

@@ -52,46 +52,6 @@ The raw API key persists in localStorage indefinitely. Any XSS reads `localStora
 
 ---
 
-### 17. No Rate Limiting on Node Unlock Endpoint
-
-**File:** `backend/internal/handler/router.go:69`
-
-`POST /api/nodes/{id}/unlock` has no rate limiting. Code gate codes can be brute-forced without restriction.
-
-**Fix:** Add per-device rate limiting on the unlock endpoint.
-
----
-
-### 18. Trusted `Content-Length` for Buffer Allocation
-
-**File:** `backend/internal/handler/admin/device.go:44`
-
-`make([]byte, r.ContentLength)` allocates based on the client-supplied header. A malicious `Content-Length: 2147483647` with a 1-byte body allocates ~2GB of memory (denial of service).
-
-**Fix:** Use `io.ReadAll(io.LimitReader(r.Body, maxSize))` instead of trusting `Content-Length`.
-
----
-
-### 19. Internal Error Details Leaked to Admin Responses
-
-**File:** `backend/pkg/response/response.go:42-44`
-
-When the context indicates admin, raw internal error messages (Go stack details, SQL errors, file paths) are included in JSON responses.
-
-**Fix:** Log internal errors server-side. Return generic error messages in API responses.
-
----
-
-### 20. Raw Error in `http.Error()`
-
-**File:** `backend/internal/handler/admin/graphs.go:16`
-
-`ListStartNodes` uses `http.Error()` with the raw Go error instead of the structured `response.Error()` pattern. Leaks internal details in plaintext.
-
-**Fix:** Replace with `response.Error(r.Context(), w, apierror.UnknownInternalError(err))`.
-
----
-
 ### 21. No File Type Allowlist on Upload
 
 **File:** `backend/internal/handler/admin/files.go:42-49`

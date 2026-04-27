@@ -31,7 +31,7 @@ func (h *Handler) GetFavourCount(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) RequestFavour(w http.ResponseWriter, r *http.Request) {
 	var favour models.FavourRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&favour); err != nil {
+	if err := utils.SafeJSONDecode(r.Body, &favour) err != nil {
 		response.Error(r.Context(), w, apierror.BadRequest("invalid request body"))
 		return
 	}

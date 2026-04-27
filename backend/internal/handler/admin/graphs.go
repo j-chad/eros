@@ -1,19 +1,20 @@
 package admin
 
 import (
+	"backend/internal/handler/utils"
 	"backend/internal/models"
 	"backend/internal/service"
 	"backend/pkg/apierror"
 	"backend/pkg/response"
-	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 )
 
 func (h *Handler) ListStartNodes(w http.ResponseWriter, r *http.Request) {
 	nodes, err := h.adminService.ListGraphs(r.Context())
 	if err != nil {
-		http.Error(w, "Failed to list start nodes: "+err.Error(), http.StatusInternalServerError)
+		response.Error(r.Context(), w, apierror.UnknownInternalError(fmt.Errorf("failed to list start nodes: %w", err)))
 		return
 	}
 
@@ -37,7 +38,7 @@ func (h *Handler) DeleteGraph(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) CreateGraph(w http.ResponseWriter, r *http.Request) {
 	var newGraphRequest models.NewGraphRequest
-	if err := json.NewDecoder(r.Body).Decode(&newGraphRequest); err != nil {
+	if err := utils.SafeJSONDecode(r.Body, &newGraphRequest); err != nil {
 		response.Error(r.Context(), w, apierror.BadRequest("invalid request body"))
 		return
 	}
@@ -115,7 +116,7 @@ func (h *Handler) UpdateGraph(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var graph models.Graph
-	if err := json.NewDecoder(r.Body).Decode(&graph); err != nil {
+	if err := utils.SafeJSONDecode(r.Body, &graph); err != nil {
 		response.Error(r.Context(), w, apierror.BadRequest("invalid request body"))
 		return
 	}
