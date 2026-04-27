@@ -1,49 +1,72 @@
 <script lang="ts">
 	import type { RewardNode } from '$lib/types/graph';
 	import { RewardType } from '$lib/types/graph';
-	import { Gift, Heart, Image, FileVideo, Calendar, CreditCard, FileText, File } from 'lucide-svelte';
+	import {
+		Gift,
+		Heart,
+		Image,
+		FileVideo,
+		Calendar,
+		CreditCard,
+		FileText,
+		File,
+		Download,
+	} from 'lucide-svelte';
 
 	const { node }: { node: RewardNode } = $props();
 
-	// lucide-svelte exports Svelte 4-style components; cast to any to avoid
-	// fighting their internal types with Svelte 5's Component<...> signature.
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const Icon: any = $derived(
-		node.data?.reward_type === RewardType.IMAGE ? Image :
-		node.data?.reward_type === RewardType.VIDEO ? FileVideo :
-		node.data?.reward_type === RewardType.CALENDAR ? Calendar :
-		node.data?.reward_type === RewardType.WALLET ? CreditCard :
-		node.data?.reward_type === RewardType.FAVOUR ? Heart :
-		node.data?.reward_type === RewardType.MARKDOWN ? FileText :
-		node.data?.reward_type === RewardType.FILE ? File :
-		Gift
-	);
+	const rewardType = $derived(node.data?.reward_type);
+	const file = $derived(node.data?.file);
 
-	const rewardLabel = $derived(
-		node.data?.reward_type === RewardType.IMAGE ? 'A photo for you' :
-		node.data?.reward_type === RewardType.VIDEO ? 'A video for you' :
-		node.data?.reward_type === RewardType.CALENDAR ? 'A date to remember' :
-		node.data?.reward_type === RewardType.WALLET ? 'Something special' :
-		node.data?.reward_type === RewardType.FAVOUR ? 'A favour, just for you' :
-		node.data?.reward_type === RewardType.MARKDOWN ? 'A message for you' :
-		node.data?.reward_type === RewardType.FILE ? 'Something to keep' :
-		'Your reward'
-	);
+	const FILE_BACKED_TYPES = new Set([
+		RewardType.IMAGE,
+		RewardType.VIDEO,
+		RewardType.FILE,
+		RewardType.CALENDAR,
+		RewardType.WALLET,
+	]);
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const ICONS: Record<RewardType, any> = {
+		[RewardType.IMAGE]: Image,
+		[RewardType.VIDEO]: FileVideo,
+		[RewardType.CALENDAR]: Calendar,
+		[RewardType.WALLET]: CreditCard,
+		[RewardType.FAVOUR]: Heart,
+		[RewardType.MARKDOWN]: FileText,
+		[RewardType.FILE]: File,
+	};
+
+	const isFileBacked = $derived(rewardType != null && FILE_BACKED_TYPES.has(rewardType));
+	const Icon = $derived(rewardType ? ICONS[rewardType] : Gift);
+
+	function formatSize(bytes: number): string {
+		if (bytes < 1024) return `${bytes} B`;
+		if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+	}
 </script>
 
 <div class="flex flex-col items-center gap-6 text-center animate-rewardReveal">
-	<div class="w-20 h-20 rounded-full bg-primary/15 flex items-center justify-center shadow-lg shadow-pink-200/60">
+	<!-- Icon -->
+	<div
+		class="w-20 h-20 rounded-full bg-primary/15 flex items-center justify-center shadow-lg shadow-pink-200/60"
+	>
 		<Icon size={32} class="text-primary" />
 	</div>
 
+	<!-- Title block -->
 	<div class="flex flex-col gap-2">
-		<p class="text-xs font-semibold opacity-60 uppercase tracking-wide">{rewardLabel}</p>
+		<p class="text-xs font-semibold opacity-60 uppercase tracking-wide">
+			Reward Unlocked
+		</p>
 		<h1 class="text-2xl font-extrabold">{node.title}</h1>
 		{#if node.description}
 			<p class="text-sm opacity-70 leading-relaxed">{node.description}</p>
 		{/if}
 	</div>
 
+	<!-- Favour badge -->
 	{#if node.data?.give_favours && node.data.give_favours > 0}
 		<div class="badge badge-primary rounded-2xl px-4 py-3 gap-1.5 text-xs font-semibold">
 			<Heart size={12} />
@@ -51,13 +74,81 @@
 		</div>
 	{/if}
 
-	{#if node.data?.payload}
+	<!-- Reward content -->
+	{#if rewardType === RewardType.IMAGE && file}
+		<div class="w-full rounded-2xl overflow-hidden shadow-md shadow-pink-200/30">
+			<img
+				src={file.url}
+				alt={node.title}
+				class="w-full h-auto object-contain max-h-[60vh]"
+				loading="eager"
+			/>
+		</div>
+
+	{:else if rewardType === RewardType.VIDEO && file}
+		<div class="w-full rounded-2xl overflow-hidden shadow-md shadow-pink-200/30">
+			<!-- svelte-ignore a11y_media_has_caption -->
+			<video
+				src={file.url}
+				controls
+				playsinline
+				preload="metadata"
+				class="w-full max-h-[60vh]"
+			>
+				Your browser does not support video playback.
+			</video>
+		</div>
+
+	{:else if rewardType === RewardType.CALENDAR && file}
+		<a
+			href={file.url}
+			download={file.filename}
+			class="btn btn-primary rounded-2xl gap-2 w-full max-w-xs"
+		>
+			<Calendar size={18} />
+			Add to Calendar
+		</a>
+		<p class="text-xs opacity-40">{file.filename}</p>
+
+	{:else if rewardType === RewardType.WALLET && file}
+		<a
+			href={file.url}
+			download={file.filename}
+			class="btn btn-primary rounded-2xl gap-2 w-full max-w-xs"
+		>
+			<CreditCard size={18} />
+			Add to Wallet
+		</a>
+		<p class="text-xs opacity-40">{file.filename}</p>
+
+	{:else if rewardType === RewardType.FILE && file}
+		<a
+			href={file.url}
+			download={file.filename}
+			class="btn btn-primary rounded-2xl gap-2 w-full max-w-xs"
+		>
+			<Download size={18} />
+			Download
+		</a>
+		<p class="text-xs opacity-40">{file.filename} ({formatSize(file.size_bytes)})</p>
+
+	{:else if rewardType === RewardType.MARKDOWN && node.data?.payload}
 		<div class="w-full bg-base-200 rounded-2xl px-5 py-4">
-			{#if node.data.reward_type === RewardType.MARKDOWN}
-				<p class="text-sm opacity-80 leading-relaxed text-left whitespace-pre-wrap">{node.data.payload}</p>
-			{:else}
-				<p class="text-xs opacity-50 text-center font-mono">{node.data.payload}</p>
-			{/if}
+			<p class="text-sm opacity-80 leading-relaxed text-left whitespace-pre-wrap">
+				{node.data.payload}
+			</p>
+		</div>
+
+	{:else if rewardType === RewardType.FAVOUR}
+		<!-- Favour-only reward: the badge above is the primary content -->
+		{#if !node.data?.give_favours}
+			<p class="text-sm opacity-50">This favour is waiting for you.</p>
+		{/if}
+
+	{:else if isFileBacked && !file}
+		<!-- File-backed type but no file attached -->
+		<div class="w-full bg-base-200 rounded-2xl px-5 py-4">
+			<p class="text-sm opacity-50 text-center">This reward is not available yet.</p>
 		</div>
 	{/if}
 </div>

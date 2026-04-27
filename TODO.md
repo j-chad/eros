@@ -19,9 +19,9 @@ Reward nodes can contain images, videos, and files. The backend can store them, 
   - [x] add file-related methods to `admin/src/lib/api.ts` (upload, list)
   - [x] build file upload component in the reward node edit dialog (`admin/src/routes/graphs/[id]/edit-node-dialog/`)
   - [x] display and manage uploaded files for reward nodes in the editor
-- [ ] Client #P0
-  - [ ] image/video reward viewer
-  - [ ] other reward type displays (Markdown, favour, calendar, wallet, file)
+- [x] Client #P0
+  - [x] image/video reward viewer
+  - [x] other reward type displays (Markdown, favour, calendar, wallet, file)
 
 ## Tech Debt and Nice-to-Haves (P2)
 - [ ] Backend: registration code validation bypassed — commented out in `internal/service/auth.go`
