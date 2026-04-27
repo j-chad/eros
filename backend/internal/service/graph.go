@@ -142,10 +142,18 @@ func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload st
 		newNodes := setDifferenceBy(*graphAfter.Nodes, *graphBefore.Nodes, func(n models.Node) string { return n.ID })
 		newEdges := setDifferenceBy(*graphAfter.Edges, *graphBefore.Edges, func(e models.Edge) string { return e.ID })
 
-		// Grant favour points from any newly revealed reward nodes.
+		// Build set of node IDs that were already unlocked before this action.
+		unlockedBefore := make(map[string]bool, len(*graphBefore.Nodes))
+		for _, n := range *graphBefore.Nodes {
+			if n.UnlockedAt != nil {
+				unlockedBefore[n.ID] = true
+			}
+		}
+
+		// Grant favour points from any newly unlocked reward nodes.
 		var totalFavours int
-		for _, n := range newNodes {
-			if n.Type == models.RewardNode {
+		for _, n := range *graphAfter.Nodes {
+			if n.Type == models.RewardNode && n.UnlockedAt != nil && !unlockedBefore[n.ID] {
 				if rd, ok := n.Data.(*models.RewardData); ok && rd.GiveFavours > 0 {
 					totalFavours += rd.GiveFavours
 				}
