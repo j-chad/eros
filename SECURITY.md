@@ -62,16 +62,6 @@ No validation against an allowlist of expected MIME types. An admin could upload
 
 ---
 
-### 22. No `MaxBytesReader` on JSON Request Bodies
-
-**Files:** Multiple handler files using `json.NewDecoder(r.Body).Decode()`
-
-JSON request bodies are decoded without size limits. Large payloads consume excessive memory.
-
-**Fix:** Wrap `r.Body` with `http.MaxBytesReader(w, r.Body, 1<<20)` (1MB) before decoding.
-
----
-
 ### 26. Save-Before-Verify Login Pattern (Admin)
 
 **File:** `admin/src/routes/login/+page.svelte:14-29`
@@ -79,16 +69,6 @@ JSON request bodies are decoded without size limits. Large payloads consume exce
 The login flow saves the API key to localStorage before verifying it with `api.ping()`. If the ping fails for a non-auth reason, an unverified key persists and the client-side auth gate is bypassed on next load.
 
 **Fix:** Only persist the key after successful verification.
-
----
-
-### 27. No Input Validation on Admin Forms
-
-**Files:** Multiple admin dialog components (`EditCodeDialog.svelte`, `EditLocationDialog.svelte`, `EditRewardDialog.svelte`, `FavourChoiceTable.svelte`)
-
-Client-side forms accept arbitrary input with minimal validation. No length limits, no bounds checking on lat/long, no URL scheme validation.
-
-**Fix:** Add client-side validation as defence-in-depth: lat -90 to 90, long -180 to 180, HTTPS URLs only, maxlength on strings.
 
 ---
 
@@ -124,66 +104,6 @@ The `Err` field is tagged `json:"err,omitempty"` instead of `json:"-"`. If any c
 
 ---
 
-### 31. `context.Background()` in Auth Validation
-
-**File:** `backend/internal/service/auth.go:44,54`
-
-Database queries use `context.Background()` instead of the request context. Cannot be cancelled when clients disconnect.
-
-**Fix:** Accept and propagate the request context.
-
----
-
-### 32. Nil Body Close on S3 GET
-
-**File:** `backend/internal/repository/storage/s3.go:91`
-
-`defer req.Body.Close()` on a GET request where `req.Body` is `http.NoBody`. Potential nil pointer panic.
-
-**Fix:** Remove `defer req.Body.Close()` from the GET method. Only response bodies need closing.
-
----
-
-### 33. UUID Panic on Crypto Failure
-
-**File:** `backend/internal/crypto/uuid.go:16`
-
-`panic(err)` if `crypto/rand.Reader` fails. Crashes the entire server.
-
-**Fix:** Return an error instead of panicking.
-
----
-
-### 34. Memory Leak in DateDisplay Component
-
-**File:** `admin/src/lib/components/DateDisplay.svelte:55-57`
-
-`setInterval` runs at module level without cleanup. Each component instance creates an interval that runs forever.
-
-**Fix:** Wrap in `onMount` with cleanup: `return () => clearInterval(id)`.
-
----
-
-### 35. Console Statements Leak Sensitive Data
-
-**Files:** Multiple files in both frontends (graph objects, form data, auth state, database operations)
-
-`console.log` and `console.error` expose internal data to anyone with DevTools open.
-
-**Fix:** Remove or gate behind `dev` checks. Use a logging utility that is silent in production.
-
----
-
-### 36. No Clickjacking Protection
-
-**Files:** Neither frontend configures `X-Frame-Options` or `frame-ancestors`
-
-The app can be embedded in an iframe on an attacker's site.
-
-**Fix:** Add `frame-ancestors 'none'` to CSP (see #14), or configure `X-Frame-Options: DENY` on serving infrastructure.
-
----
-
 ### 37. `skipWaiting()` Called Unconditionally
 
 **File:** `client/src/service-worker.ts:39`
@@ -201,34 +121,3 @@ Forces new service worker to activate immediately. A compromised update takes ef
 `Access-Control-Allow-Credentials: true` is set unconditionally, even when no origin is matched (production config has empty origins).
 
 **Fix:** Only set the credentials header when an origin is actually matched.
-
----
-
-## Positive Findings
-
-The following were done correctly:
-
-- **SQL injection:** All queries use parameterised `?` placeholders. Zero string concatenation in SQL.
-- **XSS via templates:** Zero `{@html}` usage across both frontends. Svelte escaping is active everywhere.
-- **Code execution:** Zero `eval()`, `Function()`, `innerHTML`, or `document.write` calls.
-- **Path traversal:** Local storage uses UUID regex allowlist in `safePath()`.
-- **Admin auth timing:** `crypto/subtle.ConstantTimeCompare` used for admin token validation.
-- **Token generation:** `crypto/rand` with sufficient entropy.
-- **S3 keys:** Server-generated UUIDs, not user input.
-- **Open redirects (admin):** `goto()` uses hardcoded paths only.
-- **Config layering:** Environment variables override file-based config as highest priority.
-
----
-
-## Priority Actions
-
-1. **Uncomment registration code validation** (`backend/internal/service/auth.go:62-69`)
-2. **Fix `go:embed` glob** to exclude `config.private.json`
-3. **Replace `admin123`** with a strong key and rotate S3 credentials
-4. **Fix open redirect** in client login with `returnTo` validation
-5. **Add Content-Security-Policy** to both frontends
-6. **Fix missing `return`** in `CreateGraph` handler
-7. **Fix transaction bypass** in `RequestFavour`
-8. **Use constant-time comparison** for code gates
-9. **Add rate limiting** to registration and unlock endpoints
-10. **Add `MaxBytesReader`** to all JSON-decoding handlers

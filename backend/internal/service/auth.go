@@ -40,10 +40,10 @@ func (s *AuthService) ValidateAdminToken(apiKey string) error {
 	return nil
 }
 
-func (s *AuthService) ValidateDeviceToken(token string) error {
+func (s *AuthService) ValidateDeviceToken(ctx context.Context, token string) error {
 	tokenHash := crypto.HashToken(token)
 
-	expiry, err := s.repo.GetDeviceExpiryByToken(context.Background(), tokenHash)
+	expiry, err := s.repo.GetDeviceExpiryByToken(ctx, tokenHash)
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func (s *AuthService) ValidateDeviceToken(token string) error {
 	}
 
 	// Update last seen timestamp
-	if err := s.repo.UpdateDeviceLastSeenByToken(context.Background(), tokenHash, time.Now()); err != nil {
+	if err := s.repo.UpdateDeviceLastSeenByToken(ctx, tokenHash, time.Now()); err != nil {
 		return err
 	}
 

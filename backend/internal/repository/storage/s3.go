@@ -88,7 +88,6 @@ func (s *S3FileStore) Get(ctx context.Context, key string) (io.ReadCloser, error
 	if err != nil {
 		return nil, fmt.Errorf("s3 get: build request: %w", err)
 	}
-	defer req.Body.Close()
 
 	s.signer.SignRequest(req, "")
 	resp, err := s.client.Do(req)

@@ -46,7 +46,7 @@ func WithClientAuth(next http.Handler, authService service.AuthService) http.Han
 			return
 		}
 
-		if err := authService.ValidateDeviceToken(token); err != nil {
+		if err := authService.ValidateDeviceToken(r.Context(), token); err != nil {
 			if errors.Is(err, service.ErrInvalidClientCredentials) {
 				response.Error(r.Context(), w, apierror.Unauthorized("invalid credentials"))
 			} else {

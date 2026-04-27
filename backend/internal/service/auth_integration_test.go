@@ -21,14 +21,14 @@ func TestValidateDeviceToken_Valid(t *testing.T) {
 	testutil.True(t, len(token) > 0, "token should not be empty")
 
 	// Validate the token
-	testutil.NilErr(t, svc.ValidateDeviceToken(token))
+	testutil.NilErr(t, svc.ValidateDeviceToken(context.Background(), token))
 }
 
 func TestValidateDeviceToken_Invalid(t *testing.T) {
 	repo := testdb.New(t)
 	svc := NewAuthService(config.AuthConfig{AdminAPIKey: "key"}, repo)
 
-	err := svc.ValidateDeviceToken("nonexistent-token")
+	err := svc.ValidateDeviceToken(context.Background(), "nonexistent-token")
 	// nil expiry returns ErrInvalidClientCredentials
 	testutil.ErrorIs(t, err, ErrInvalidClientCredentials)
 }
@@ -41,7 +41,7 @@ func TestValidateDeviceToken_Expired(t *testing.T) {
 	// Register a device with a past expiry directly via repo
 	repo.RegisterDevice(ctx, "expired-token", "old phone", time.Now().Add(-time.Hour))
 
-	err := svc.ValidateDeviceToken("expired-token")
+	err := svc.ValidateDeviceToken(context.Background(), "expired-token")
 	testutil.ErrorIs(t, err, ErrInvalidClientCredentials)
 }
 
@@ -54,8 +54,8 @@ func TestValidateDeviceToken_UpdatesLastSeen(t *testing.T) {
 	testutil.NilErr(t, err)
 
 	// Validate twice — should not error (last seen gets updated)
-	testutil.NilErr(t, svc.ValidateDeviceToken(token))
-	testutil.NilErr(t, svc.ValidateDeviceToken(token))
+	testutil.NilErr(t, svc.ValidateDeviceToken(context.Background(), token))
+	testutil.NilErr(t, svc.ValidateDeviceToken(context.Background(), token))
 }
 
 func TestRegisterDevice_CreatesDevice(t *testing.T) {
@@ -75,7 +75,7 @@ func TestRegisterDevice_CreatesDevice(t *testing.T) {
 	testutil.True(t, len(token) > 0, "should return a token")
 
 	// Verify device exists via token validation
-	testutil.NilErr(t, svc.ValidateDeviceToken(token))
+	testutil.NilErr(t, svc.ValidateDeviceToken(context.Background(), token))
 
 	// Verify registration code was deleted
 	code, err := repo.GetRegistrationCode(ctx)

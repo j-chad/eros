@@ -1,5 +1,7 @@
 <script lang="ts">
-    let {datetime, expiry = false, inline = false} = $props();
+    import {onMount} from "svelte";
+
+	let {datetime, expiry = false, inline = false} = $props();
 
     let now = $state(new Date());
 
@@ -52,9 +54,13 @@
     let formattedDate = $derived(formatDate(datetime));
     let relativeTime = $derived(getRelativeTime(datetime));
 
-    setInterval(() => {
-        now = new Date();
-    }, 1000);
+	onMount(() => {
+		const timer = setInterval(() => {
+			now = new Date();
+		}, 1000);
+
+		return () => clearInterval(timer);
+	});
 </script>
 
 {#if expiry && !inline && relativeTime === 'Expired' }
