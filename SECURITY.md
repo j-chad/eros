@@ -20,16 +20,6 @@ The bearer token sits in IndexedDB unencrypted. Any XSS — from a dependency, e
 
 ## High
 
-### 8. Device Tokens Stored in Plaintext in Database
-
-**Files:** `backend/internal/repository/sqlite/device.go`, `backend/internal/repository/sqlite/sqlite_init.sql:24`
-
-Tokens are stored and compared as plaintext. Database compromise exposes all active tokens.
-
-**Fix:** Store `SHA-256(token)` in the database. Hash the incoming token before comparison.
-
----
-
 ### 10. CORS Wildcard With Credentials
 
 **Files:** `backend/internal/config/config.develop.json:5`, `backend/internal/handler/middleware/cors.go:15,39`

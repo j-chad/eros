@@ -41,7 +41,9 @@ func (s *AuthService) ValidateAdminToken(apiKey string) error {
 }
 
 func (s *AuthService) ValidateDeviceToken(token string) error {
-	expiry, err := s.repo.GetDeviceExpiryByToken(context.Background(), token)
+	tokenHash := crypto.HashToken(token)
+
+	expiry, err := s.repo.GetDeviceExpiryByToken(context.Background(), tokenHash)
 	if err != nil {
 		return err
 	}
@@ -51,7 +53,7 @@ func (s *AuthService) ValidateDeviceToken(token string) error {
 	}
 
 	// Update last seen timestamp
-	if err := s.repo.UpdateDeviceLastSeenByToken(context.Background(), token, time.Now()); err != nil {
+	if err := s.repo.UpdateDeviceLastSeenByToken(context.Background(), tokenHash, time.Now()); err != nil {
 		return err
 	}
 
@@ -73,13 +75,15 @@ func (s *AuthService) RegisterDevice(ctx context.Context, registrationCode strin
 		return "", err
 	}
 
+	tokenHash := crypto.HashToken(secureToken)
+
 	expiry := time.Now().Add(TokenExpiry)
 	err = s.repo.WithTx(ctx, nil, func(repo repository.Repository) error {
 		if err := repo.DeleteRegistrationCode(ctx); err != nil {
 			return err
 		}
 
-		if err := repo.RegisterDevice(ctx, secureToken, deviceInfo, expiry); err != nil {
+		if err := repo.RegisterDevice(ctx, tokenHash, deviceInfo, expiry); err != nil {
 			return err
 		}
 

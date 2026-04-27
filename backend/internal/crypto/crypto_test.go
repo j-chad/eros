@@ -75,3 +75,20 @@ func TestGenerateSecureToken_URLSafe(t *testing.T) {
 		testutil.False(t, strings.ContainsAny(token, "+/"), "should be URL-safe: "+token)
 	}
 }
+
+func TestHashToken_Deterministic(t *testing.T) {
+	token := "test-token-value"
+	testutil.Equal(t, HashToken(token), HashToken(token))
+}
+
+func TestHashToken_HexEncoded(t *testing.T) {
+	hash := HashToken("test")
+	// SHA-256 produces 32 bytes = 64 hex chars
+	testutil.Equal(t, len(hash), 64)
+	pattern := regexp.MustCompile(`^[0-9a-f]{64}$`)
+	testutil.True(t, pattern.MatchString(hash), "should be lowercase hex: "+hash)
+}
+
+func TestHashToken_DifferentInputs(t *testing.T) {
+	testutil.True(t, HashToken("a") != HashToken("b"), "different inputs should produce different hashes")
+}

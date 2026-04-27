@@ -2,7 +2,9 @@ package crypto
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 )
@@ -32,4 +34,11 @@ func GenerateSecureToken(n int) (string, error) {
 	}
 	// Encode as URL-safe base64 without padding
 	return base64.RawURLEncoding.EncodeToString(bytes), nil
+}
+
+// HashToken returns the SHA-256 hex digest of a token.
+// Used to store and look up device tokens without keeping plaintext in the database.
+func HashToken(token string) string {
+	h := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(h[:])
 }

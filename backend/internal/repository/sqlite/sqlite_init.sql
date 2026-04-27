@@ -21,7 +21,7 @@ CREATE INDEX IF NOT EXISTS idx_registration_codes_code ON registration_codes (co
 CREATE TABLE IF NOT EXISTS device
 (
 	id            INTEGER PRIMARY KEY AUTOINCREMENT,
-	token         TEXT     NOT NULL, -- High-entropy device token
+	token         TEXT     NOT NULL, -- High-entropy device token, hashed with sha256
 	device_info   TEXT     NOT NULL,
 	registered_at DATETIME NOT NULL DEFAULT (datetime('now')),
 	last_seen_at  DATETIME NOT NULL DEFAULT (datetime('now')),
