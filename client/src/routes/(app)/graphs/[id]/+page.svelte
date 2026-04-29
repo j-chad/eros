@@ -51,7 +51,7 @@
 			if (!best) return n;
 			if (!best.unlocked_at) return n;
 			if (!n.unlocked_at) return best;
-			return n.unlocked_at > best.unlocked_at ? n : best;
+			return n.unlocked_at >= best.unlocked_at ? n : best;
 		});
 	});
 
@@ -109,6 +109,9 @@
 	}
 
 	function handleUnlock(result: UnlockResult) {
+		// Reset branch choice so we advance past the completed gate.
+		chosenNodeId = null;
+
 		// Update the unlocked node
 		const nodeIndex = nodes.findIndex(n => n.id === result.unlocked_node.id);
 		if (nodeIndex >= 0) {
