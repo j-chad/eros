@@ -4,21 +4,31 @@ import (
 	"backend/internal/config"
 	"backend/internal/repository"
 	"backend/internal/repository/sqlite"
+	"backend/internal/repository/sqlite/migrations"
 	"backend/internal/repository/storage"
+	"context"
 	"testing"
 )
 
 // New creates an in-memory SQLite repository for testing.
 // Uses cache=shared so all connections in the pool share the same database.
+// Applies all migrations to set up the full schema.
 // Automatically closed when the test finishes.
 func New(t *testing.T) repository.Repository {
 	t.Helper()
-	repo, err := sqlite.NewSQLiteDB(config.DatabaseConfig{
+
+	db, err := sqlite.OpenDB(config.DatabaseConfig{
 		Path: "file::memory:?cache=shared",
 	})
 	if err != nil {
-		t.Fatalf("failed to create test repo: %v", err)
+		t.Fatalf("failed to open test db: %v", err)
 	}
+
+	if err := migrations.Apply(context.Background(), db); err != nil {
+		t.Fatalf("failed to apply migrations: %v", err)
+	}
+
+	repo := sqlite.NewFromDB(db)
 	t.Cleanup(func() { repo.Close() })
 	return repo
 }

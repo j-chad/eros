@@ -1,5 +1,3 @@
-PRAGMA foreign_keys = ON;
-
 -- ----------------------------------------------------------------------------
 -- DEVICE REGISTRATION
 -- ----------------------------------------------------------------------------
@@ -323,7 +321,7 @@ SELECT n.id,
 				   'latitude', nlg.hint_latitude,
 				   'longitude', nlg.hint_longitude,
 				   'radius_m', nlg.hint_radius_meters
-			   ) ELSE NULL END
+																						  ) ELSE NULL END
 								)
 		   WHEN 'code' THEN json_object(
 			   'codes', json(ncg.codes)

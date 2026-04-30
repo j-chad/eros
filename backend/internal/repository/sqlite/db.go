@@ -5,23 +5,13 @@ import (
 	"backend/internal/repository"
 	"context"
 	"database/sql"
-	_ "embed"
 	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-//go:embed sqlite_init.sql
-var sqliteInitSQL string
-
-type executor interface {
-	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
-	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
-	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
-}
-
-func NewSQLiteDB(conf config.DatabaseConfig) (repository.Repository, error) {
-	//goland:noinspection GoResourceLeak connection is designed to be long-lived
+//goland:noinspection GoResourceLeak
+func OpenDB(conf config.DatabaseConfig) (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", conf.Path)
 	if err != nil {
 		return nil, err
@@ -45,12 +35,37 @@ func NewSQLiteDB(conf config.DatabaseConfig) (repository.Repository, error) {
 		}
 	}
 
-	// initialise the database schema
-	if _, err := db.Exec(sqliteInitSQL); err != nil {
-		return nil, fmt.Errorf("error initializing database: %w", err)
+	if _, err := db.Exec("PRAGMA foreign_keys = ON;"); err != nil {
+		return nil, fmt.Errorf("error enabling foreign keys: %w", err)
 	}
 
-	return &sqliteDB{db: db}, nil
+	return db, nil
+}
+
+type Queryable interface {
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+}
+
+// NewSQLiteDB opens a SQLite connection and wraps it as a repository.
+// It does NOT run migrations — the caller must run migrations separately
+// via the migrate command. If the database hasn't been migrated, the server
+// will fail on first query, making it obvious that migrations need to be run.
+func NewSQLiteDB(conf config.DatabaseConfig) (repository.Repository, error) {
+	db, err := OpenDB(conf)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewFromDB(db), nil
+}
+
+// NewFromDB wraps a pre-opened *sql.DB as a repository.Repository.
+// Does not configure PRAGMAs or run schema init — the caller is
+// responsible for that (via OpenDB and/or the migration runner).
+func NewFromDB(db *sql.DB) repository.Repository {
+	return &sqliteDB{db: db}
 }
 
 type sqliteDB struct {
@@ -108,7 +123,7 @@ func (s *sqliteDB) withTx(ctx context.Context, opts *sql.TxOptions, fn func(db *
 	return nil
 }
 
-func (s *sqliteDB) executor() executor {
+func (s *sqliteDB) executor() Queryable {
 	if s.tx != nil {
 		return s.tx
 	}

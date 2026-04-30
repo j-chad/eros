@@ -57,7 +57,12 @@ rsync -a --delete client/build/ "$NAS_HOST:$NAS_DIR/client-build/"
 step "Copying compose and Caddy config"
 scp docker-compose.yml Caddyfile "$NAS_HOST:$NAS_DIR/"
 
-# 6. Restart the stack
+# 6. Run database migrations
+step "Running database migrations"
+ssh "$NAS_HOST" "cd $NAS_DIR && docker compose stop backend"
+ssh "$NAS_HOST" "cd $NAS_DIR && docker compose run --rm backend eros-backend migrate"
+
+# 7. Restart the stack
 step "Restarting Docker Compose stack"
 ssh "$NAS_HOST" "cd $NAS_DIR && docker compose up -d --force-recreate"
 
