@@ -50,6 +50,7 @@
 
         if (dateValue) {
             const localDate = new Date(dateValue + 'T00:00:00');
+            localDate.setHours(8, 0, 0, 0);
             graph.starting_at = localDate.toISOString();
         }
     }

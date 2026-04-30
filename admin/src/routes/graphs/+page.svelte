@@ -22,7 +22,7 @@
         try {
             const graphId = await api.graph.create({
                 title,
-                starting_at: date.toISOString(),
+                starting_at: dateWithTime.toISOString(),
             });
 
             const newGraph: Graph = {
