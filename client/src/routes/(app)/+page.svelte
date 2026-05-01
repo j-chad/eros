@@ -18,25 +18,23 @@
 
 	// --- determine which view to show ---
 
-	const pastGraphs = $derived(data.graphs.filter((g) => g.starting_at.getTime() <= Date.now()));
+	let tick = $state(Date.now());
+
+	const pastGraphs = $derived(data.graphs.filter((g) => g.starting_at.getTime() <= tick));
 	const hasUnlocked = $derived(pastGraphs.length > 0);
 
-	// For countdown: pick the soonest upcoming graph.
 	const nextGraph = $derived(
 		data.graphs
-			.filter((g) => g.starting_at.getTime() > Date.now())
+			.filter((g) => g.starting_at.getTime() > tick)
 			.sort((a, b) => a.starting_at.getTime() - b.starting_at.getTime())[0] ?? null,
 	);
 
-	// Simple check: has the countdown completed (target in the past)?
-	let tick = $state(Date.now());
 	$effect(() => {
 		if (!hasUnlocked && nextGraph) {
 			const id = setInterval(() => { tick = Date.now(); }, 1000);
 			return () => clearInterval(id);
 		}
 	});
-	const countdownDone = $derived(nextGraph ? nextGraph.starting_at.getTime() <= tick : false);
 </script>
 
 <svelte:head>
@@ -61,19 +59,6 @@
 				<p class="text-center text-sm opacity-70 animate-popIn">
 					Nothing scheduled yet. Check back soon.
 				</p>
-			</Card>
-		{:else if countdownDone && nextGraph}
-			<!-- Countdown reached zero -->
-			<Card>
-				<div class="flex flex-col items-center gap-4 py-4 animate-popIn">
-					<div class="text-5xl font-extrabold text-primary">It's time.</div>
-					{#if nextGraph.title}
-						<p class="text-center text-base font-semibold">{nextGraph.title}</p>
-					{/if}
-					{#if nextGraph.description}
-						<p class="text-center text-sm opacity-70">{nextGraph.description}</p>
-					{/if}
-				</div>
 			</Card>
 		{:else if nextGraph}
 			<!-- Countdown to next graph -->
