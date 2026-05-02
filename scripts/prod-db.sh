@@ -16,7 +16,7 @@ LOCAL_DB="${2:-./eros-prod.sqlite}"
 case "${1:-}" in
   pull)
     echo "Checkpointing WAL on remote..."
-    ssh "$REMOTE" "sqlite3 '$REMOTE_DB' 'PRAGMA wal_checkpoint(TRUNCATE);'"
+    ssh -t "$REMOTE" "sudo sqlite3 '$REMOTE_DB' 'PRAGMA wal_checkpoint(TRUNCATE);'"
     echo "Copying database to $LOCAL_DB..."
     scp "$REMOTE:$REMOTE_DB" "$LOCAL_DB"
     echo "Done. Open with: sqlite3 $LOCAL_DB"
