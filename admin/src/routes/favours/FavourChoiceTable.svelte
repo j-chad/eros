@@ -71,6 +71,22 @@
         );
     }
 
+    async function handleUpdateChoiceCost(choiceID: string, newValue: string) {
+        const cost = parseInt(newValue, 10);
+        if (isNaN(cost) || cost < 1) {
+            alert('Cost must be at least 1');
+            throw new Error('Invalid cost');
+        }
+
+        const choice = choices.find(f => f.id === choiceID);
+        if (!choice) return;
+
+        await api.favours.updateChoice(choiceID, { ...choice, cost });
+        choices = choices.map(f =>
+            f.id === choiceID ? { ...f, cost, updated_at: new Date().toISOString() } : f
+        );
+    }
+
     async function handleToggleChoiceMessaging(choiceID: string) {
         const choice = choices.find(f => f.id === choiceID);
         if (!choice) return;
@@ -189,7 +205,12 @@
                             </div>
                         </td>
                         <td>
-                            <strong>{choice.cost}</strong>
+                            <EditableField
+                                    value={String(choice.cost)}
+                                    onSave={(newValue) => handleUpdateChoiceCost(choice.id, newValue)}
+                                    type="number"
+                                    min={1}
+                            />
                         </td>
                         <td>
                             <button

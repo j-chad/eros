@@ -5,11 +5,15 @@
     let {
         value = $bindable(),
         onSave,
-        multiline = false
+        multiline = false,
+        type = 'text',
+        min
     }: {
         value: string;
         onSave?: (newValue: string) => (Promise<void> | void);
         multiline?: boolean;
+        type?: 'text' | 'number';
+        min?: number;
     } = $props();
 
     let isEditing = $state(false);
@@ -67,7 +71,8 @@
                         rows="3"></textarea>
             {:else}
                 <input
-                        type="text"
+                        {type}
+                        {min}
                         bind:value={editValue}
                         onkeydown={handleKeydown}
                         disabled={isSaving}
