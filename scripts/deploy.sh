@@ -12,8 +12,6 @@ set -euo pipefail
 
 NAS_HOST="lounge@192.168.1.197"
 NAS_DIR="~/eros"
-API_URL="https://eros.jacksonc.dev/api"
-S3_ORIGIN="${S3_ORIGIN:-}"  # e.g. https://s3.us-east-1.amazonaws.com
 
 step() { printf "\n\033[1;34m==> %s\033[0m\n" "$1"; }
 
@@ -32,10 +30,10 @@ fi
 
 # 1. Build frontends
 step "Building admin frontend"
-(cd admin && VITE_API_BASE_URL="$API_URL" VITE_S3_ORIGIN="$S3_ORIGIN" npm run build)
+(cd admin && npm run build)
 
 step "Building client frontend"
-(cd client && PUBLIC_SERVER_URL="$API_URL" PUBLIC_S3_ORIGIN="$S3_ORIGIN" npm run build)
+(cd client && npm run build)
 
 # 2. Build Docker images
 step "Building backend Docker image (linux/amd64)"
