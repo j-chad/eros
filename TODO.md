@@ -3,6 +3,7 @@
 > Priority: **P0** = critical path (blocks core features), **P1** = important, **P2** = nice to have
 
 ## Bugs (P0)
+- [ ] Backend+Client: reward auto-unlock breaks branching choices — when a gate has outgoing edges to both reward and non-reward nodes, the reward auto-unlocks eagerly, triggering the anti-backtracking clause and hiding sibling branches. See [spec](.opencode/plans/fix-branching-reward-autounlock/spec.md).
 - [ ] Client: date type inconsistency — `GraphSummary` uses `Date` objects but IndexedDB round-trips them to strings, so `Calendar.svelte` will throw offline when calling `.getTime()` on a string
 
 ## Important (P1)

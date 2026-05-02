@@ -7,11 +7,19 @@
 
     let {children} = $props();
 
+    const s3Origin = import.meta.env.VITE_S3_ORIGIN ?? '';
+    const s3Csp = s3Origin ? ` ${s3Origin}` : '';
+    const csp = `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org${s3Csp}; connect-src 'self' http://localhost:* https://*; media-src 'self' blob:${s3Csp}; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'`;
+
     function handleLogout() {
         auth.logout();
         goto('/login');
     }
 </script>
+
+<svelte:head>
+    <meta http-equiv="Content-Security-Policy" content={csp} />
+</svelte:head>
 
 {#if auth.isAuthenticated}
     <!-- Authenticated Layout -->
