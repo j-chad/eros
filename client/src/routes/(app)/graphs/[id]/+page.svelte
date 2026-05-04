@@ -69,7 +69,24 @@
 			outgoingEdges.some((e) => e.to === n.id),
 		);
 		if (directFrontier.length > 0) return directFrontier;
-		// No reachable frontier — graph complete, show last unlocked.
+
+		// No reachable frontier — graph complete.
+		// Use graph topology: show terminal node(s) — nodes with no outgoing edges.
+		// This avoids timestamp tie-breaking issues when the backend auto-unlocks
+		// reward nodes at the same instant as their preceding gate.
+		const nodesWithOutgoing = new Set(edges.map((e) => e.from));
+		const terminalNodes = unlockedNodes.filter((n) => !nodesWithOutgoing.has(n.id));
+		if (terminalNodes.length === 1) return terminalNodes;
+		if (terminalNodes.length > 1) {
+			// Multiple terminals (branching endings): pick the most recently unlocked.
+			return [terminalNodes.reduce((best, n) => {
+				if (!best.unlocked_at) return n;
+				if (!n.unlocked_at) return best;
+				return n.unlocked_at > best.unlocked_at ? n : best;
+			})];
+		}
+
+		// Fallback (shouldn't normally be reached).
 		const last = latestUnlocked();
 		return last ? [last] : [];
 	});
