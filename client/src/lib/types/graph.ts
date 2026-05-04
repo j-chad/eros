@@ -39,6 +39,7 @@ export enum RewardType {
 	FAVOUR = 'favour',
 	FILE = 'file',
 	MARKDOWN = 'markdown',
+	URL = 'url',
 }
 
 export interface Node<Type extends NodeType = NodeType, Data = undefined> {

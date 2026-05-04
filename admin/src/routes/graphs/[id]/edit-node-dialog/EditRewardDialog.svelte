@@ -1,7 +1,7 @@
 <script lang="ts">
 	import {type FileInfo, type RewardNode, RewardType} from '$lib/types';
 	import {api} from '$lib/api';
-	import {Calendar, File as FileIcon, Gift, Image, NotebookPen, Sparkles, Star, Upload, Video} from 'lucide-svelte';
+	import {Calendar, ExternalLink, File as FileIcon, Gift, Image, NotebookPen, Sparkles, Star, Upload, Video} from 'lucide-svelte';
 
 	const FILE_BACKED_TYPES = new Set([
 		RewardType.IMAGE,
@@ -109,7 +109,8 @@
 		{ value: RewardType.CALENDAR, label: 'Calendar Event', icon: Calendar, description: 'Add event to calendar' },
 		{ value: RewardType.WALLET, label: 'Coupon', icon: Gift, description: 'Apple Wallet coupon' },
 		{ value: RewardType.MARKDOWN, label: 'Markdown', icon: NotebookPen, description: 'Custom message with markdown formatting' },
-		{ value: RewardType.FILE, label: 'File', icon: FileIcon, description: 'Provide a downloadable file' }
+		{ value: RewardType.FILE, label: 'File', icon: FileIcon, description: 'Provide a downloadable file' },
+		{ value: RewardType.URL, label: 'URL', icon: ExternalLink, description: 'Open a link in the browser' }
 	];
 
 	const fileTypeAccept: Record<string, string> = {
@@ -215,6 +216,37 @@
 						placeholder="Enter custom message with **markdown** formatting"
 					></textarea>
 				</div>
+
+				{#if editForm.give_favours > 0}
+					<div class="favour-badge">
+						<Star size={16} />
+						<span>+{editForm.give_favours} Favours</span>
+					</div>
+				{/if}
+
+			{:else if editForm.reward_type === RewardType.URL}
+				<div class="form-group">
+					<label for="url_content">URL</label>
+					<input
+						id="url_content"
+						type="url"
+						bind:value={editForm.payload}
+						placeholder="https://example.com"
+						pattern="https?://.*"
+						required
+					/>
+					<span class="help-text">Must start with http:// or https://</span>
+				</div>
+
+				{#if editForm.payload}
+					<div class="info-box">
+						<strong>Preview</strong>
+						<p>Users will see a button that opens this link in a new tab.</p>
+						<a href={editForm.payload} target="_blank" rel="noopener noreferrer" class="url-preview">
+							{editForm.payload}
+						</a>
+					</div>
+				{/if}
 
 				{#if editForm.give_favours > 0}
 					<div class="favour-badge">
@@ -581,6 +613,18 @@
 	.drop-zone-content p {
 		margin: 0;
 		font-size: 0.875rem;
+	}
+
+	.url-preview {
+		display: block;
+		color: #2563eb;
+		font-size: 0.875rem;
+		word-break: break-all;
+		text-decoration: underline;
+	}
+
+	.url-preview:hover {
+		color: #1d4ed8;
 	}
 
 	.error-text {

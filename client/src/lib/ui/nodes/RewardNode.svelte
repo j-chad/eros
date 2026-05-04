@@ -11,6 +11,7 @@
 		FileText,
 		File,
 		Download,
+		ExternalLink,
 	} from 'lucide-svelte';
 
 	const { node }: { node: RewardNode } = $props();
@@ -35,9 +36,15 @@
 		[RewardType.FAVOUR]: Heart,
 		[RewardType.MARKDOWN]: FileText,
 		[RewardType.FILE]: File,
+		[RewardType.URL]: ExternalLink,
 	};
 
 	const isFileBacked = $derived(rewardType != null && FILE_BACKED_TYPES.has(rewardType));
+	const urlHostname = $derived.by(() => {
+		const payload = node.data?.payload;
+		if (!payload) return '';
+		try { return new URL(payload).hostname; } catch { return payload; }
+	});
 	const Icon = $derived(rewardType ? ICONS[rewardType] : Gift);
 
 	function formatSize(bytes: number): string {
@@ -138,6 +145,18 @@
 				{node.data.payload}
 			</p>
 		</div>
+
+	{:else if rewardType === RewardType.URL && node.data?.payload}
+		<a
+			href={node.data.payload}
+			target="_blank"
+			rel="noopener noreferrer"
+			class="btn btn-primary rounded-2xl gap-2 w-full max-w-xs"
+		>
+			<ExternalLink size={18} />
+			Open Link
+		</a>
+		<p class="text-xs opacity-40">{urlHostname}</p>
 
 	{:else if rewardType === RewardType.FAVOUR}
 		<!-- Favour-only reward: the badge above is the primary content -->

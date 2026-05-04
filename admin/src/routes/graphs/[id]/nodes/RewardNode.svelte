@@ -1,5 +1,5 @@
 <script lang="ts">
-	import {Gift, Eye, EyeOff, Star, Image, Video, Calendar, Ticket, Files} from 'lucide-svelte';
+	import {Gift, Eye, EyeOff, Star, Image, Video, Calendar, Ticket, Files, ExternalLink} from 'lucide-svelte';
 	import {type RewardNode, RewardType} from '$lib/types';
 	import BaseNode from './BaseNode.svelte';
 	import type { NodeProps } from './types';
@@ -24,6 +24,7 @@
 			case RewardType.WALLET: return Ticket;
 			case RewardType.FAVOUR: return Star;
 			case RewardType.FILE: return Files;
+			case RewardType.URL: return ExternalLink;
 			default: return Gift;
 		}
 	});
@@ -37,6 +38,7 @@
 			case RewardType.WALLET: return 'Coupon';
 			case RewardType.FAVOUR: return 'Favour Points';
 			case RewardType.FILE: return 'File';
+			case RewardType.URL: return 'URL';
 			default: return rewardType;
 		}
 	});
@@ -44,6 +46,9 @@
 	// Parse and format payload preview
 	const payloadPreview = $derived.by(() => {
 		if (!payload) return '—';
+		if (rewardType === RewardType.URL) {
+			try { return new URL(payload).hostname; } catch { return payload; }
+		}
 		try {
 			const parsed = JSON.parse(payload);
 			switch (rewardType) {
