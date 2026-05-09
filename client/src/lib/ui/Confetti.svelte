@@ -69,7 +69,7 @@
 
 		// fixed inset-0 already makes the canvas fill the viewport via CSS.
 		// Set the buffer to match the CSS layout size (no DPR scaling needed
-		// for a brief decorative animation — keeps coordinates simple).
+		// for a brief decorative animation - keeps coordinates simple).
 		const rect = canvas.getBoundingClientRect();
 		const w = rect.width;
 		const h = rect.height;

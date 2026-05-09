@@ -30,10 +30,10 @@
 	// We determine the "current" node as follows:
 	//   1. Find all unlocked nodes (unlocked_at is set, or type is START).
 	//   2. Among accessible (returned) nodes that are NOT unlocked, those are
-	//      the frontier — nodes available to attempt next.
+	//      the frontier - nodes available to attempt next.
 	//   3. If there is exactly one frontier node, that becomes the active node.
 	//   4. If there are multiple frontier nodes (branching path), show a choice screen.
-	//   5. If there are no frontier nodes, the graph is complete — show the last
+	//   5. If there are no frontier nodes, the graph is complete - show the last
 	//      unlocked node (likely a reward).
 
 	const unlockedNodes = $derived(
@@ -70,8 +70,8 @@
 		);
 		if (directFrontier.length > 0) return directFrontier;
 
-		// No reachable frontier — graph complete.
-		// Use graph topology: show terminal node(s) — nodes with no outgoing edges.
+		// No reachable frontier - graph complete.
+		// Use graph topology: show terminal node(s) - nodes with no outgoing edges.
 		// This avoids timestamp tie-breaking issues when the backend auto-unlocks
 		// reward nodes at the same instant as their preceding gate.
 		const nodesWithOutgoing = new Set(edges.map((e) => e.from));
@@ -154,7 +154,7 @@
 </script>
 
 <svelte:head>
-	<title>{data.graph.title} — Eros</title>
+	<title>{data.graph.title} - Eros</title>
 </svelte:head>
 
 <div class="mx-auto min-h-dvh max-w-md px-4 py-6 flex flex-col gap-6">

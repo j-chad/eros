@@ -53,7 +53,7 @@ func TestValidateDeviceToken_UpdatesLastSeen(t *testing.T) {
 	token, err := svc.RegisterDevice(ctx, "CODE", "iPhone")
 	testutil.NilErr(t, err)
 
-	// Validate twice — should not error (last seen gets updated)
+	// Validate twice - should not error (last seen gets updated)
 	testutil.NilErr(t, svc.ValidateDeviceToken(context.Background(), token))
 	testutil.NilErr(t, svc.ValidateDeviceToken(context.Background(), token))
 }

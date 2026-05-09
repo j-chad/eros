@@ -15,7 +15,7 @@
 
 	const isOnline = $derived(useOnlineStatus());
 
-	// Local mutable state — initialised from load data, mutated on actions.
+	// Local mutable state - initialised from load data, mutated on actions.
 	let count = $state<FavourCount>(data.count);
 	let requests = $state<FavourRequest[]>(data.requests);
 
@@ -30,7 +30,7 @@
 		[...data.choices].sort((a, b) => a.cost - b.cost || a.label.localeCompare(b.label))
 	);
 
-	// Tab state — only show tabs if there are requests
+	// Tab state - only show tabs if there are requests
 	const hasRequests = $derived(requests.length > 0);
 	let activeTab = $state<'spend' | 'requests'>('spend');
 
@@ -53,7 +53,7 @@
 			.sort((a, b) => b.fulfilled_at!.localeCompare(a.fulfilled_at!))
 	);
 
-	// Collapsible sections — collapsed by default
+	// Collapsible sections - collapsed by default
 	let pendingOpen = $state(true);
 	let fulfilledOpen = $state(false);
 
@@ -91,7 +91,7 @@
 			count = await getCount();
 		} catch (e) {
 			if (e && typeof e === 'object' && 'status' in e) {
-				// Refresh count — balance may have changed
+				// Refresh count - balance may have changed
 				try {
 					const { getCount } = await import('$lib/services/favour');
 					count = await getCount();
@@ -113,7 +113,7 @@
 </script>
 
 <svelte:head>
-	<title>Favours — Eros</title>
+	<title>Favours - Eros</title>
 </svelte:head>
 
 <div class="mx-auto min-h-dvh max-w-md px-4 py-6 flex flex-col gap-6">
@@ -162,7 +162,7 @@
 	{#if activeTab === 'spend'}
 		<div class="flex flex-col gap-4 animate-popIn">
 			<p class="text-sm opacity-60 text-center">
-				Pick from the menu, or propose your own — the worst that can happen is a no.
+				Pick from the menu, or propose your own - the worst that can happen is a no.
 			</p>
 
 			{#if sortedChoices.length === 0}

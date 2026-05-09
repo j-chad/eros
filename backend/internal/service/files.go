@@ -26,7 +26,7 @@ func (s *FileService) GetFile(ctx context.Context, fileID string) (*models.File,
 	return s.repo.GetFile(ctx, fileID)
 }
 
-// GetFileStream returns the file bytes and metadata. It does not check access — the caller must do that.
+// GetFileStream returns the file bytes and metadata. It does not check access - the caller must do that.
 func (s *FileService) GetFileStream(ctx context.Context, fileID string) (io.ReadCloser, *models.File, error) {
 	file, err := s.repo.GetFile(ctx, fileID)
 	if err != nil {

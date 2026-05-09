@@ -23,12 +23,12 @@ func TestValidateAdminToken_Empty(t *testing.T) {
 
 func TestValidateAdminToken_EmptyConfig(t *testing.T) {
 	svc := NewAuthService(config.AuthConfig{AdminAPIKey: ""}, nil)
-	// Empty matches empty — constant time compare returns 1
+	// Empty matches empty - constant time compare returns 1
 	testutil.NilErr(t, svc.ValidateAdminToken(""))
 }
 
 func TestValidateAdminToken_TimingResistant(t *testing.T) {
-	// Ensure it uses constant-time compare — different lengths should still error, not panic
+	// Ensure it uses constant-time compare - different lengths should still error, not panic
 	svc := NewAuthService(config.AuthConfig{AdminAPIKey: "short"}, nil)
 	testutil.ErrorIs(t, svc.ValidateAdminToken("a-much-longer-key-that-differs"), ErrInvalidAdminCredentials)
 }

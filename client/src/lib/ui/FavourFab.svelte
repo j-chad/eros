@@ -11,7 +11,7 @@
 
 	let panelOpen = $state(false);
 
-	// Tutorial hint — null suppresses render until we know the DB state
+	// Tutorial hint - null suppresses render until we know the DB state
 	let showCursor: boolean | null = $state(null);
 
 	onMount(async () => {

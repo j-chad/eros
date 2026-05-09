@@ -84,7 +84,7 @@ body {
 	}
 }
 
-/* Navigation progress bar — indeterminate sweep while a page load is in-flight */
+/* Navigation progress bar - indeterminate sweep while a page load is in-flight */
 .animate-navProgress {
 	animation: navProgress 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 	transform-origin: left center;
@@ -95,7 +95,7 @@ body {
 	100% { transform: scaleX(0.1) translateX(1100%); }
 }
 
-/* Fade-in used for the navigation dim overlay — delayed slightly so it won't flash on fast navigations */
+/* Fade-in used for the navigation dim overlay - delayed slightly so it won't flash on fast navigations */
 .animate-fadeIn {
 	animation: fadeIn 150ms ease-out 80ms both;
 }
@@ -104,7 +104,7 @@ body {
 	to   { opacity: 1; }
 }
 
-/* Reward unlock — bigger, more dramatic entrance */
+/* Reward unlock - bigger, more dramatic entrance */
 .animate-rewardReveal {
 	animation: rewardReveal 800ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
@@ -123,7 +123,7 @@ body {
 	}
 }
 
-/* Celebratory shake — quick excited wobble */
+/* Celebratory shake - quick excited wobble */
 .animate-celebrateShake {
 	animation: celebrateShake 800ms ease-in-out;
 }

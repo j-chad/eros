@@ -29,7 +29,7 @@
         {#if graphs.length > 0}
             <div class="graphs">
                 {#each graphs as graph}
-                    <div class="graph-item" title={graph.description ? `${graph.title} — ${graph.description}` : graph.title}>
+                    <div class="graph-item" title={graph.description ? `${graph.title} - ${graph.description}` : graph.title}>
                         <div class="graph-content">
                             <div class="graph-title">{graph.title}</div>
                             {#if graph.description}

@@ -45,7 +45,7 @@
 
 	// Parse and format payload preview
 	const payloadPreview = $derived.by(() => {
-		if (!payload) return '—';
+		if (!payload) return '-';
 		if (rewardType === RewardType.URL) {
 			try { return new URL(payload).hostname; } catch { return payload; }
 		}
@@ -54,13 +54,13 @@
 			switch (rewardType) {
 				case RewardType.IMAGE:
 				case RewardType.VIDEO:
-					return parsed.url ? new URL(parsed.url).hostname : '—';
+					return parsed.url ? new URL(parsed.url).hostname : '-';
 				case RewardType.CALENDAR:
-					return parsed.event_title || '—';
+					return parsed.event_title || '-';
 				case RewardType.WALLET:
-					return parsed.url ? 'Wallet Pass' : '—';
+					return parsed.url ? 'Wallet Pass' : '-';
 				case RewardType.FILE:
-					return parsed.filename || '—';
+					return parsed.filename || '-';
 				default:
 					return `${payload.length} chars`;
 			}

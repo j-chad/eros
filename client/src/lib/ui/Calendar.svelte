@@ -106,7 +106,7 @@
 		return cells;
 	});
 
-	/** Key of the first past-graph day in the visible month — this is where the cursor sits. */
+	/** Key of the first past-graph day in the visible month - this is where the cursor sits. */
 	const cursorKey = $derived.by(() => {
 		for (const cell of dayCells) {
 			if (!cell) continue;

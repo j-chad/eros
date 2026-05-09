@@ -49,7 +49,7 @@ type Queryable interface {
 }
 
 // NewSQLiteDB opens a SQLite connection and wraps it as a repository.
-// It does NOT run migrations — the caller must run migrations separately
+// It does NOT run migrations - the caller must run migrations separately
 // via the migrate command. If the database hasn't been migrated, the server
 // will fail on first query, making it obvious that migrations need to be run.
 func NewSQLiteDB(conf config.DatabaseConfig) (repository.Repository, error) {
@@ -62,7 +62,7 @@ func NewSQLiteDB(conf config.DatabaseConfig) (repository.Repository, error) {
 }
 
 // NewFromDB wraps a pre-opened *sql.DB as a repository.Repository.
-// Does not configure PRAGMAs or run schema init — the caller is
+// Does not configure PRAGMAs or run schema init - the caller is
 // responsible for that (via OpenDB and/or the migration runner).
 func NewFromDB(db *sql.DB) repository.Repository {
 	return &sqliteDB{db: db}

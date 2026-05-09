@@ -170,7 +170,7 @@ func TestUnlockNode_NoReward_NoAutoUnlock(t *testing.T) {
 	ctx := context.Background()
 
 	// Graph: Start → LocationGate1 → LocationGate2
-	// No rewards — gate2 should be accessible but not unlocked.
+	// No rewards - gate2 should be accessible but not unlocked.
 	buildGraph(t, repo,
 		[]models.Node{
 			{ID: "gate1", Type: models.LocationGateNode, Title: "Gate 1", Data: models.LocationData{LocationArea: models.LocationArea{Latitude: 0, Longitude: 0, RadiusM: 1000000}}},

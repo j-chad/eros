@@ -11,18 +11,18 @@ import (
 
 // accessibleCTEsFor returns two CTE definitions that determine which nodes are
 // reachable by the client. The result starts with a newline and is intended to
-// follow a WITH keyword — e.g. `WITH` + accessibleCTEsFor("?1") or after a
+// follow a WITH keyword - e.g. `WITH` + accessibleCTEsFor("?1") or after a
 // preceding CTE with a trailing comma.
 //
-//  1. unlocked — every node that is already unlocked or is a start node
+//  1. unlocked - every node that is already unlocked or is a start node
 //     (start nodes are always considered unlocked).
 //
-//  2. accessible — the unlocked set, plus destinations that are exactly one
+//  2. accessible - the unlocked set, plus destinations that are exactly one
 //     hop away from an unlocked source node. A destination is excluded when a
 //     *sibling* edge from the same source already has its destination unlocked,
 //     meaning the user committed to that other branch and cannot backtrack.
 //
-// graphIDExpr is a SQL expression that resolves to the graph ID — typically
+// graphIDExpr is a SQL expression that resolves to the graph ID - typically
 // "?1" for direct queries or a subquery like "(SELECT graph_id FROM node_graph)".
 func accessibleCTEsFor(graphIDExpr string) string {
 	return strings.ReplaceAll(`

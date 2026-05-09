@@ -146,7 +146,7 @@
 			Show approximate location to user
 		</label>
 		<span class="help-text">
-			Displays a shaded circle on a map as a hint — the center can be offset from the real location.
+			Displays a shaded circle on a map as a hint - the center can be offset from the real location.
 		</span>
 	</div>
 

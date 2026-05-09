@@ -88,7 +88,7 @@ func mergeMap(dst reflect.Value, src map[string]any) error {
 }
 
 func setField(field reflect.Value, val any) error {
-	// Nested struct — recurse with sub-map
+	// Nested struct - recurse with sub-map
 	if field.Kind() == reflect.Struct && field.Type() != reflect.TypeOf(time.Time{}) {
 		sub, ok := val.(map[string]any)
 		if !ok {

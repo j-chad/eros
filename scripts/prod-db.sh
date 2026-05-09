@@ -2,8 +2,8 @@
 # Sync the production SQLite database.
 #
 # Usage:
-#   ./scripts/prod-db.sh pull [local_path]   — download prod DB locally
-#   ./scripts/prod-db.sh push [local_path]   — upload local DB to prod (stops/starts app)
+#   ./scripts/prod-db.sh pull [local_path]   - download prod DB locally
+#   ./scripts/prod-db.sh push [local_path]   - upload local DB to prod (stops/starts app)
 #
 # Requires: ssh access to lounge@192.168.1.197
 

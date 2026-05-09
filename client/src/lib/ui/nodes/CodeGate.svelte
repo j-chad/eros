@@ -30,7 +30,7 @@
 		} catch (error: any) {
 			// Handle specific error types
 			if (error.status === 403) {
-				errorMessage = "That's not quite right — try again.";
+				errorMessage = "That's not quite right - try again.";
 				inputValue = '';
 				showShake = true;
 				setTimeout(() => showShake = false, 600);

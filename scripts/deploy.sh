@@ -24,7 +24,7 @@ fi
 # Verify NAS is reachable
 step "Checking NAS connectivity"
 if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$NAS_HOST" true; then
-    echo "Error: cannot reach $NAS_HOST — check SSH key auth (ssh-copy-id $NAS_HOST)" >&2
+    echo "Error: cannot reach $NAS_HOST - check SSH key auth (ssh-copy-id $NAS_HOST)" >&2
     exit 1
 fi
 

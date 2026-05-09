@@ -45,7 +45,7 @@ func TestUpdateGraph_NodeEmptyGraphID_PassesValidation(t *testing.T) {
 	graph := models.Graph{ID: "g1", Nodes: &nodes}
 
 	svc := &AdminService{repo: nil}
-	// Validation passes, then panics on nil repo — recover to confirm validation OK
+	// Validation passes, then panics on nil repo - recover to confirm validation OK
 	panicked := false
 	func() {
 		defer func() {

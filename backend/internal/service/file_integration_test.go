@@ -38,7 +38,7 @@ func TestUploadFile_ReplacesExisting(t *testing.T) {
 	testutil.NilErr(t, err)
 	testutil.Equal(t, file1.Filename, "first.jpg")
 
-	// Upload second file — should replace the first.
+	// Upload second file - should replace the first.
 	file2, err := svc.UploadFile(ctx, rewardNodeID, "second.jpg", "image/jpeg", 200, strings.NewReader("second"))
 	testutil.NilErr(t, err)
 	testutil.Equal(t, file2.Filename, "second.jpg")

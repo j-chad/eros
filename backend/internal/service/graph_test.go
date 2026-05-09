@@ -67,7 +67,7 @@ func TestValidateUnlockPayload_LocationGate_DefaultRadius(t *testing.T) {
 		Type: models.LocationGateNode,
 		Data: &models.LocationData{LocationArea: models.LocationArea{Latitude: -36.8485, Longitude: 174.7633, RadiusM: 0}},
 	}
-	// ~5m away — within default 10m
+	// ~5m away - within default 10m
 	testutil.NilErr(t, validateUnlockPayload(node, "-36.84846,174.7633"))
 }
 

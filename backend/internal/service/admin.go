@@ -193,14 +193,14 @@ func (s *AdminService) UploadFile(ctx context.Context, nodeID, filename, mime st
 		return nil
 	})
 	if err != nil {
-		// DB failed — clean up the newly uploaded file from storage.
+		// DB failed - clean up the newly uploaded file from storage.
 		if delErr := s.files.Delete(ctx, storageKey); delErr != nil {
 			logger.ErrorContext(ctx, "failed to clean up uploaded file after database error", "storageKey", storageKey, "err", delErr)
 		}
 		return nil, fmt.Errorf("failed to replace file in database: %w", err)
 	}
 
-	// Transaction succeeded — clean up old storage files (best-effort).
+	// Transaction succeeded - clean up old storage files (best-effort).
 	for _, key := range oldStorageKeys {
 		if delErr := s.files.Delete(ctx, key); delErr != nil {
 			logger.ErrorContext(ctx, "failed to delete old file from storage", "storageKey", key, "err", delErr)

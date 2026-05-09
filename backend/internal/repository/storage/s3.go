@@ -214,7 +214,7 @@ func (s *S3FileStore) deleteBatch(ctx context.Context, keys []string) error {
 
 	var result deleteResult
 	if err := xml.NewDecoder(resp.Body).Decode(&result); err != nil {
-		// Quiet mode with 200 OK — body may be empty, which is fine.
+		// Quiet mode with 200 OK - body may be empty, which is fine.
 		return nil
 	}
 

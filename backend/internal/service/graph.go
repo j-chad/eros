@@ -190,7 +190,7 @@ func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload st
 		if err := s.files.AttachFileMetadataToNodes(ctx, allNodes); err != nil {
 			return nil, fmt.Errorf("failed to attach file metadata: %w", err)
 		}
-		// Copy back — UnlockedNode is the last element.
+		// Copy back - UnlockedNode is the last element.
 		result.UnlockedNode = allNodes[len(allNodes)-1]
 		result.NewNodes = allNodes[:len(allNodes)-1]
 	}

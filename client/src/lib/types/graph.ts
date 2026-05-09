@@ -10,7 +10,7 @@ export interface GraphSummary {
 	updated_at: Date;
 }
 
-/** Full graph with accessible nodes and edges — returned by GET /api/graphs/:id */
+/** Full graph with accessible nodes and edges - returned by GET /api/graphs/:id */
 export interface GraphDetail {
 	id: string;
 	title: string;
