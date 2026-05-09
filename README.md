@@ -264,7 +264,7 @@ npm run build
 
 API testing collections for [Bruno](https://www.usebruno.com/) live in the `bruno/` directory, organised by admin and client endpoints.
 
-There are no automated tests yet. The `SECURITY.md` file contains a full security audit if you're looking for areas to harden.
+Backend tests use Go's stdlib `testing` package. Run `go test ./...` from `backend/` for unit tests, or `go test -tags integration ./...` to include integration tests (requires CGo for SQLite).
 
 ---
 
