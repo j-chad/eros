@@ -245,11 +245,8 @@
 								disabled={count.remaining < choice.cost || !online}
 								onclick={() => handleExpand(choice.id)}
 							>
-								Request
+								{online ? "Request" : "Offline"}
 							</button>
-							{#if !online}
-								<p class="text-xs opacity-50 text-center mt-1">You're offline</p>
-							{/if}
 						{/if}
 					</Card>
 				{/each}

@@ -14,8 +14,11 @@
 		ExternalLink,
 	} from 'lucide-svelte';
 
+	import { isOnline } from '$lib/online.svelte';
+
 	const { node }: { node: RewardNode } = $props();
 
+	const online = $derived(isOnline());
 	const rewardType = $derived(node.data?.reward_type);
 	const file = $derived(node.data?.file);
 
@@ -82,7 +85,19 @@
 	{/if}
 
 	<!-- Reward content -->
-	{#if rewardType === RewardType.IMAGE && file}
+	{#if isFileBacked && file && !online}
+		<!-- Offline: file-backed rewards can't load -->
+		<div class="w-full bg-base-200 rounded-2xl px-5 py-4 flex flex-col items-center gap-2">
+			<Icon size={24} class="opacity-40" />
+			<p class="text-sm opacity-50 text-center">
+				Available when you're back online.
+			</p>
+			{#if file.filename}
+				<p class="text-xs opacity-30">{file.filename}</p>
+			{/if}
+		</div>
+
+	{:else if rewardType === RewardType.IMAGE && file}
 		<div class="w-full rounded-2xl overflow-hidden shadow-md shadow-pink-200/30">
 			<img
 				src={file.url}
