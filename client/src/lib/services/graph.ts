@@ -1,25 +1,28 @@
 import { fetchGraph, fetchGraphs, unlockNode as unlockNodeAPI, type UnlockResult } from '$lib/api/graph.api';
 import { getAllGraphs, getGraphDetail, putGraphDetail, putGraphs } from '$lib/db/stores/graph';
+import { cached } from './cached';
 import type { GraphDetail, GraphSummary } from '$lib/types/graph';
 
 export async function listGraphs(): Promise<GraphSummary[]> {
-	if (navigator.onLine) {
-		const graphs = await fetchGraphs();
-		await putGraphs(graphs);
-		return graphs;
-	}
-
-	return await getAllGraphs();
+	return cached(
+		async () => {
+			const graphs = await fetchGraphs();
+			await putGraphs(graphs);
+			return graphs;
+		},
+		() => getAllGraphs(),
+	);
 }
 
 export async function getGraph(id: string): Promise<GraphDetail | null> {
-	if (navigator.onLine) {
-		const graph = await fetchGraph(id);
-		await putGraphDetail(graph);
-		return graph;
-	}
-
-	return (await getGraphDetail(id)) ?? null;
+	return cached(
+		async () => {
+			const graph = await fetchGraph(id);
+			await putGraphDetail(graph);
+			return graph;
+		},
+		async () => (await getGraphDetail(id)) ?? null,
+	);
 }
 
 export async function unlockNode(graphId: string, nodeId: string, payload: string): Promise<UnlockResult> {
