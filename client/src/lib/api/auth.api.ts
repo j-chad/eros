@@ -1,10 +1,15 @@
-import { rawRequest, request } from '$lib/api/http';
+import { rawRequest, request, ServerUnreachableError } from '$lib/api/http';
 
 export async function isSessionValid(): Promise<boolean> {
 	try {
 		const response = await rawRequest('/ping', { method: 'GET' });
 		return response.ok;
-	} catch {
+	} catch (e) {
+		// Let ServerUnreachableError propagate so the auth service can
+		// distinguish "server down" from "token invalid".
+		if (e instanceof ServerUnreachableError) {
+			throw e;
+		}
 		return false;
 	}
 }

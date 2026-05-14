@@ -2,7 +2,7 @@
 	import type { TimeNode } from '$lib/types/graph';
 	import type { UnlockResult } from '$lib/api/graph.api';
 	import { Clock } from 'lucide-svelte';
-	import { useOnlineStatus } from '$lib/online.svelte';
+	import { isOnline } from '$lib/online.svelte';
 	import Countdown from '$lib/ui/Countdown.svelte';
 
 	const { node, graphId, onUnlock }: {
@@ -11,7 +11,7 @@
 		onUnlock: (result: UnlockResult) => void
 	} = $props();
 
-	const isOnline = $derived(useOnlineStatus());
+	const isOnline = $derived(isOnline());
 	const unlockAt = $derived(new Date(node.data!.unlock_at));
 
 	let isSubmitting = $state(false);

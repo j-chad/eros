@@ -2,7 +2,7 @@
 	import type { CodeNode } from '$lib/types/graph';
 	import type { UnlockResult } from '$lib/api/graph.api';
 	import { KeyRound } from 'lucide-svelte';
-	import { useOnlineStatus } from '$lib/online.svelte';
+	import { isOnline } from '$lib/online.svelte';
 
 	const { node, graphId, onUnlock }: { 
 		node: CodeNode; 
@@ -10,7 +10,7 @@
 		onUnlock: (result: UnlockResult) => void 
 	} = $props();
 
-	const isOnline = $derived(useOnlineStatus());
+	const isOnline = $derived(isOnline());
 	
 	let inputValue = $state('');
 	let isSubmitting = $state(false);

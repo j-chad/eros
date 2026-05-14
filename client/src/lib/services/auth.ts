@@ -1,5 +1,7 @@
 import { loginRequest, isSessionValid } from '$lib/api/auth.api';
 import { setToken, loadToken, clearToken } from '$lib/api/auth';
+import { ServerUnreachableError } from '$lib/api/http';
+import { isOnline } from '$lib/online.svelte';
 import { invalidate } from '$app/navigation';
 
 export const AUTH_DEPENDENCY = 'auth:session';
@@ -11,13 +13,22 @@ export async function isAuthenticated(): Promise<boolean> {
 		return false;
 	}
 
-	if (!navigator.onLine) {
-		return true;
+	if (!isOnline()) {
+		return true; // trust cached token when server is unreachable
 	}
 
-	if (!await isSessionValid()) {
-		console.warn('Auth session is not valid, user is not authenticated.');
-		return false;
+	try {
+		if (!(await isSessionValid())) {
+			console.warn('Auth session is not valid, user is not authenticated.');
+			return false;
+		}
+	} catch (e) {
+		if (e instanceof ServerUnreachableError) {
+			// Server went down between the isOnline() check and the ping.
+			// Trust the cached token rather than logging the user out.
+			return true;
+		}
+		throw e;
 	}
 
 	return true;

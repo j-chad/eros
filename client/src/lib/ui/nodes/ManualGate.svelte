@@ -2,7 +2,7 @@
 	import type { ManualNode } from '$lib/types/graph';
 	import type { UnlockResult } from '$lib/api/graph.api';
 	import { Clock } from 'lucide-svelte';
-	import { useOnlineStatus } from '$lib/online.svelte';
+	import { isOnline } from '$lib/online.svelte';
 	import { onMount, onDestroy } from 'svelte';
 
 	const { node, graphId, onUnlock }: {
@@ -11,7 +11,7 @@
 		onUnlock: (result: UnlockResult) => void
 	} = $props();
 
-	const isOnline = $derived(useOnlineStatus());
+	const isOnline = $derived(isOnline());
 	const isApproved = $derived(!!node.unlocked_at || !!node.data?.unlocked_at);
 
 	let isSubmitting = $state(false);

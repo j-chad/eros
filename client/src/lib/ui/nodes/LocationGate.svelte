@@ -2,7 +2,7 @@
 	import type { LocationNode } from '$lib/types/graph';
 	import type { UnlockResult } from '$lib/api/graph.api';
 	import { MapPin } from 'lucide-svelte';
-	import { useOnlineStatus } from '$lib/online.svelte';
+	import { isOnline } from '$lib/online.svelte';
 	import HintMap from './HintMap.svelte';
 
 	const { node, graphId, onUnlock }: {
@@ -11,7 +11,7 @@
 		onUnlock: (result: UnlockResult) => void
 	} = $props();
 
-	const isOnline = $derived(useOnlineStatus());
+	const isOnline = $derived(isOnline());
 
 	let isChecking = $state(false);
 	let errorMessage = $state<string | null>(null);

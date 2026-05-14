@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type {Snippet} from "svelte";
-	import { useOnlineStatus } from '$lib/online.svelte';
+	import { isOnline } from '$lib/online.svelte';
 
 	const {
 		title = 'Eros',
@@ -14,7 +14,7 @@
 		compact?: boolean;
 	} = $props();
 
-	const online = $derived(useOnlineStatus());
+	const online = $derived(isOnline());
 </script>
 
 {#if compact}

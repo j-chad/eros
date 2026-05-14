@@ -2,7 +2,7 @@
 	import { Heart, ChevronLeft, Check } from 'lucide-svelte';
 	import Card from '$lib/ui/base/Card.svelte';
 	import { goto } from '$app/navigation';
-	import { useOnlineStatus } from '$lib/online.svelte';
+	import { isOnline } from '$lib/online.svelte';
 	import type { FavourChoice, FavourCount, FavourRequest } from '$lib/types/favour';
 
 	const { data }: {
@@ -13,7 +13,7 @@
 		};
 	} = $props();
 
-	const isOnline = $derived(useOnlineStatus());
+	const isOnline = $derived(isOnline());
 
 	// Local mutable state - initialised from load data, mutated on actions.
 	let count = $state<FavourCount>(data.count);

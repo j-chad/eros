@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { dev } from '$app/environment'
 	import { onNavigate } from '$app/navigation';
-	import { PUBLIC_SERVICE_WORKER, PUBLIC_S3_ORIGIN } from '$env/static/public';
+	import { PUBLIC_SERVICE_WORKER, PUBLIC_S3_ORIGIN, PUBLIC_MAINTENANCE_MODE } from '$env/static/public';
+	import MaintenanceBanner from '$lib/ui/MaintenanceBanner.svelte';
 
 	import "../app.css";
 
 	let { children } = $props();
+
+	const maintenanceMode = PUBLIC_MAINTENANCE_MODE === 'true';
 
 	const s3Origin = PUBLIC_S3_ORIGIN ?? '';
 	const s3Csp = s3Origin ? ` ${s3Origin}` : '';
@@ -40,5 +43,9 @@
 <svelte:head>
 	<meta http-equiv="Content-Security-Policy" content={csp} />
 </svelte:head>
+
+{#if maintenanceMode}
+	<MaintenanceBanner />
+{/if}
 
 {@render children()}
