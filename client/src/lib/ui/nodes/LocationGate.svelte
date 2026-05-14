@@ -11,7 +11,7 @@
 		onUnlock: (result: UnlockResult) => void
 	} = $props();
 
-	const isOnline = $derived(isOnline());
+	const online = $derived(isOnline());
 
 	let isChecking = $state(false);
 	let errorMessage = $state<string | null>(null);
@@ -19,7 +19,7 @@
 	let isPermissionDenied = $state(false);
 
 	async function handleCheckLocation() {
-		if (isChecking || !isOnline) return;
+		if (isChecking || !online) return;
 
 		isChecking = true;
 		errorMessage = null;
@@ -97,7 +97,7 @@
 		{/if}
 	</div>
 
-	{#if node.data?.hint && isOnline}
+	{#if node.data?.hint && online}
 		<HintMap hint={node.data.hint} />
 	{/if}
 
@@ -126,7 +126,7 @@
 
 		<button
 			onclick={handleCheckLocation}
-			disabled={isChecking || !isOnline}
+			disabled={isChecking || !online}
 			class="btn btn-primary rounded-2xl w-full"
 		>
 			{#if isChecking}
@@ -137,7 +137,7 @@
 			{/if}
 		</button>
 
-		{#if !isOnline}
+		{#if !online}
 			<p class="text-xs opacity-50 text-center">You're offline. Connect to check your location.</p>
 		{/if}
 	</div>

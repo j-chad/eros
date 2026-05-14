@@ -10,7 +10,7 @@
 		onUnlock: (result: UnlockResult) => void 
 	} = $props();
 
-	const isOnline = $derived(isOnline());
+	const online = $derived(isOnline());
 	
 	let inputValue = $state('');
 	let isSubmitting = $state(false);
@@ -18,7 +18,7 @@
 	let showShake = $state(false);
 
 	async function handleSubmit() {
-		if (!inputValue.trim() || isSubmitting || !isOnline) return;
+		if (!inputValue.trim() || isSubmitting || !online) return;
 
 		isSubmitting = true;
 		errorMessage = null;
@@ -78,14 +78,14 @@
 			placeholder="••••••"
 			bind:value={inputValue}
 			onkeydown={handleKeyDown}
-			disabled={isSubmitting || !isOnline}
+			disabled={isSubmitting || !online}
 			class="input input-bordered rounded-2xl w-full text-center font-mono tracking-widest text-lg"
 			class:animate-shake={showShake}
 		/>
 		
 		<button 
 			onclick={handleSubmit}
-			disabled={isSubmitting || !isOnline || !inputValue.trim()}
+			disabled={isSubmitting || !online || !inputValue.trim()}
 			class="btn btn-primary rounded-2xl w-full"
 			class:loading={isSubmitting}
 		>
@@ -97,7 +97,7 @@
 			{/if}
 		</button>
 		
-		{#if !isOnline}
+		{#if !online}
 			<p class="text-xs opacity-50 text-center">You're offline. Connect to try unlocking.</p>
 		{/if}
 	</div>

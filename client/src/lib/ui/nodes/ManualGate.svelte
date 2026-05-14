@@ -11,7 +11,7 @@
 		onUnlock: (result: UnlockResult) => void
 	} = $props();
 
-	const isOnline = $derived(isOnline());
+	const online = $derived(isOnline());
 	const isApproved = $derived(!!node.unlocked_at || !!node.data?.unlocked_at);
 
 	let isSubmitting = $state(false);
@@ -19,7 +19,7 @@
 	let pollInterval: number | null = null;
 
 	async function handleContinue() {
-		if (isSubmitting || !isOnline || !isApproved) return;
+		if (isSubmitting || !online || !isApproved) return;
 
 		isSubmitting = true;
 		errorMessage = null;
@@ -44,7 +44,7 @@
 	}
 
 	async function handleRefresh() {
-		if (!isOnline) return;
+		if (!online) return;
 
 		try {
 			const { getGraph } = await import('$lib/services/graph');
@@ -56,10 +56,10 @@
 	}
 
 	function startPolling() {
-		if (pollInterval || isApproved || !isOnline) return;
+		if (pollInterval || isApproved || !online) return;
 
 		pollInterval = window.setInterval(() => {
-			if (document.visibilityState === 'visible' && isOnline) {
+			if (document.visibilityState === 'visible' && online) {
 				handleRefresh();
 			}
 		}, 30000); // 30 seconds
@@ -96,14 +96,14 @@
 	$effect(() => {
 		if (isApproved) {
 			stopPolling();
-		} else if (isOnline && !pollInterval) {
+		} else if (online && !pollInterval) {
 			startPolling();
 		}
 	});
 
 	// Handle online/offline changes
 	$effect(() => {
-		if (!isOnline) {
+		if (!online) {
 			stopPolling();
 		} else if (!isApproved && !pollInterval) {
 			startPolling();
@@ -143,7 +143,7 @@
 			</div>
 			<button
 				onclick={handleContinue}
-				disabled={isSubmitting || !isOnline}
+				disabled={isSubmitting || !online}
 				class="btn btn-primary rounded-2xl w-full"
 				class:loading={isSubmitting}
 			>
@@ -159,7 +159,7 @@
 		<div class="w-full flex flex-col gap-3">
 			<div class="bg-base-200 rounded-2xl px-5 py-4">
 				<p class="text-sm opacity-70">
-					{#if !isOnline}
+					{#if !online}
 						You're offline. Approval checks will resume when you reconnect.
 					{:else}
 						Waiting for approval. Check back soon.
@@ -168,7 +168,7 @@
 			</div>
 			<button
 				onclick={handleRefresh}
-				disabled={!isOnline}
+				disabled={!online}
 				class="btn btn-ghost rounded-2xl w-full btn-sm"
 			>
 				Refresh

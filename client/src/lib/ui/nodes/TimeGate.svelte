@@ -11,7 +11,7 @@
 		onUnlock: (result: UnlockResult) => void
 	} = $props();
 
-	const isOnline = $derived(isOnline());
+	const online = $derived(isOnline());
 	const unlockAt = $derived(new Date(node.data!.unlock_at));
 
 	let isSubmitting = $state(false);
@@ -19,7 +19,7 @@
 	let countdownDone = $state(Date.now() >= unlockAt.getTime());
 
 	async function handleContinue() {
-		if (isSubmitting || !isOnline) return;
+		if (isSubmitting || !online) return;
 
 		isSubmitting = true;
 		errorMessage = null;
@@ -69,7 +69,7 @@
 
 			<button
 				onclick={handleContinue}
-				disabled={isSubmitting || !isOnline}
+				disabled={isSubmitting || !online}
 				class="btn btn-primary rounded-2xl w-full"
 				class:loading={isSubmitting}
 			>

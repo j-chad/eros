@@ -13,7 +13,7 @@
 		};
 	} = $props();
 
-	const isOnline = $derived(isOnline());
+	const online = $derived(isOnline());
 
 	// Local mutable state - initialised from load data, mutated on actions.
 	let count = $state<FavourCount>(data.count);
@@ -242,12 +242,12 @@
 							<!-- Request button -->
 							<button
 								class="btn btn-primary btn-sm rounded-2xl w-full mt-3"
-								disabled={count.remaining < choice.cost || !isOnline}
+								disabled={count.remaining < choice.cost || !online}
 								onclick={() => handleExpand(choice.id)}
 							>
 								Request
 							</button>
-							{#if !isOnline}
+							{#if !online}
 								<p class="text-xs opacity-50 text-center mt-1">You're offline</p>
 							{/if}
 						{/if}
