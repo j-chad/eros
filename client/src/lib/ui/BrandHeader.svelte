@@ -37,7 +37,9 @@
 			<div>
 				<div class="text-lg font-extrabold leading-tight">{title}</div>
 				<div class="flex items-center gap-1.5">
-					<div class="text-xs opacity-70">{subtitle}</div>
+					{#if subtitle}
+						<div class="text-xs opacity-70">{subtitle}</div>
+					{/if}
 					{#if !online}
 						<div
 							class="flex items-center gap-1 rounded-full bg-base-200 px-1.5 py-0.5 animate-popIn"
