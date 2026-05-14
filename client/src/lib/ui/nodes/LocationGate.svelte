@@ -66,7 +66,7 @@
 			navigator.geolocation.getCurrentPosition(
 				resolve,
 				(error) => {
-					const errorTypes = {
+					const errorTypes: Record<number, string> = {
 						[error.PERMISSION_DENIED]: 'PermissionDenied',
 						[error.POSITION_UNAVAILABLE]: 'PositionUnavailable',
 						[error.TIMEOUT]: 'Timeout'

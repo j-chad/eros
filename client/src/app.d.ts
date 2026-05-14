@@ -9,6 +9,8 @@ interface ApiError {
 }
 
 declare global {
+	const __GIT_SHA__: string;
+
 	namespace App {
 		interface Error {
 			message: string;

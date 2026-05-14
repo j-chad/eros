@@ -44,8 +44,9 @@
 	// --- Diagnostics ---
 	interface Diagnostics {
 		serverUrl: string;
+		gitSha: string;
 		dbVersion: number;
-		authSet: string | null; // relative time string or null
+		authSet: string | null;
 		swStatus: string;
 		storeCounts: Record<string, number>;
 		favourBalance: string | null;
@@ -120,6 +121,7 @@
 
 			diagnostics = {
 				serverUrl: PUBLIC_SERVER_URL,
+				gitSha: __GIT_SHA__,
 				dbVersion: DB_VERSION,
 				authSet,
 				swStatus,
@@ -525,7 +527,7 @@
 	<title>Debug</title>
 </svelte:head>
 
-<div class="mx-auto min-h-dvh max-w-4xl px-4 py-6 flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:gap-8">
+<div class="mx-auto min-h-dvh max-w-4xl px-4 py-6 pb-20 lg:pb-6 flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:gap-8">
 	<div class="flex flex-col gap-6">
 		<BrandHeader subtitle="Debug tools">
 			{#snippet rightContent()}
@@ -554,6 +556,13 @@
 					<div class="flex items-center justify-between">
 						<span class="opacity-50 text-xs">Server</span>
 						<span class="font-mono text-xs truncate ml-4">{diagnostics.serverUrl}</span>
+					</div>
+
+					<div class="border-t border-base-content/5"></div>
+
+					<div class="flex items-center justify-between">
+						<span class="opacity-50 text-xs">Build</span>
+						<span class="font-mono text-xs">{diagnostics.gitSha}</span>
 					</div>
 
 					<div class="border-t border-base-content/5"></div>
@@ -789,7 +798,7 @@
 		flex: 1;
 		overflow-y: auto;
 		overscroll-behavior: contain;
-		padding: 4px 20px 20px;
+		padding: 4px 20px calc(20px + env(safe-area-inset-bottom, 0px));
 		font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 		font-size: 0.75rem;
 		line-height: 1.625;
