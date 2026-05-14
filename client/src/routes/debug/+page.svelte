@@ -1,14 +1,16 @@
 <script lang="ts">
-	import {db, promisifyRequest} from '$lib/db/db';
-	import {DB_NAME} from '$lib/db/schema';
-	import {KVKey} from '$lib/db/stores/kv';
-	import {isOnline} from '$lib/online.svelte';
-	import {getGraph, listGraphs} from '$lib/services/graph';
-	import {getCount, listChoices, listRequests} from '$lib/services/favour';
-	import {clearToken} from '$lib/api/auth';
-	import {goto} from '$app/navigation';
-	import {ChevronLeft, ChevronUp} from 'lucide-svelte';
+	import { db, promisifyRequest } from '$lib/db/db';
+	import { DB_NAME, DB_VERSION } from '$lib/db/schema';
+	import { KVKey, KVStore } from '$lib/db/stores/kv';
+	import { isOnline } from '$lib/online.svelte';
+	import { listGraphs, getGraph } from '$lib/services/graph';
+	import { listChoices, getCount, listRequests } from '$lib/services/favour';
+	import { clearToken } from '$lib/api/auth';
+	import { goto } from '$app/navigation';
+	import { ChevronLeft, ChevronUp, RefreshCw } from 'lucide-svelte';
+	import { PUBLIC_SERVER_URL } from '$env/static/public';
 	import BrandHeader from '$lib/ui/BrandHeader.svelte';
+	import type { FavourCount } from '$lib/types/favour';
 
 	type LogType = 'command' | 'result' | 'error' | 'summary';
 	type LogEntry = { type: LogType; text: string };
@@ -18,11 +20,17 @@
 	let clearing = $state(false);
 	let syncing = $state(false);
 	let loggingOut = $state(false);
+	let pinging = $state(false);
+	let updatingSW = $state(false);
+	let unregisteringSW = $state(false);
+	let resettingTips = $state(false);
 	let desktopTerminalEl: HTMLDivElement | undefined = $state();
 	let mobileTerminalEl: HTMLDivElement | undefined = $state();
 
 	const online = $derived(isOnline());
-	const busy = $derived(clearing || syncing || loggingOut);
+	const busy = $derived(
+		clearing || syncing || loggingOut || pinging || updatingSW || unregisteringSW || resettingTips
+	);
 
 	const lastEntry = $derived(log.length > 0 ? log[log.length - 1] : null);
 	const lastEntryHint = $derived(
@@ -32,6 +40,101 @@
 				: lastEntry.text
 			: ''
 	);
+
+	// --- Diagnostics ---
+	interface Diagnostics {
+		serverUrl: string;
+		dbVersion: number;
+		authSet: string | null; // relative time string or null
+		swStatus: string;
+		storeCounts: Record<string, number>;
+		favourBalance: string | null;
+	}
+
+	let diagnostics = $state<Diagnostics | null>(null);
+	let loadingDiagnostics = $state(false);
+
+	function timeAgo(timestamp: number): string {
+		const seconds = Math.floor((Date.now() - timestamp) / 1000);
+		if (seconds < 60) return `${seconds}s ago`;
+		const minutes = Math.floor(seconds / 60);
+		if (minutes < 60) return `${minutes}m ago`;
+		const hours = Math.floor(minutes / 60);
+		if (hours < 24) return `${hours}h ago`;
+		const days = Math.floor(hours / 24);
+		return `${days}d ago`;
+	}
+
+	async function loadDiagnostics() {
+		loadingDiagnostics = true;
+		try {
+			// Auth timestamp
+			let authSet: string | null = null;
+			try {
+				const kvStore = await db.getStore('kv', 'readonly');
+				const authEntry = await promisifyRequest(kvStore.get(KVKey.AuthSession));
+				if (authEntry) {
+					authSet = timeAgo((authEntry as { timestamp: number }).timestamp);
+				}
+			} catch { /* db might not be initialized */ }
+
+			// Store counts
+			const storeNames = ['graphs', 'graphDetails', 'favourChoices', 'favourRequests', 'kv'] as const;
+			const storeCounts: Record<string, number> = {};
+			for (const name of storeNames) {
+				try {
+					const store = await db.getStore(name, 'readonly');
+					storeCounts[name] = await promisifyRequest(store.count());
+				} catch {
+					storeCounts[name] = -1;
+				}
+			}
+
+			// Favour balance
+			let favourBalance: string | null = null;
+			try {
+				const count = await KVStore.get(KVKey.FavourCount) as FavourCount | null;
+				if (count) {
+					favourBalance = `${count.remaining} / ${count.total} remaining`;
+				}
+			} catch { /* ignore */ }
+
+			// Service worker status
+			let swStatus = 'Not supported';
+			if ('serviceWorker' in navigator) {
+				try {
+					const reg = await navigator.serviceWorker.getRegistration();
+					if (!reg) {
+						swStatus = 'Not registered';
+					} else if (reg.waiting) {
+						swStatus = 'Update waiting';
+					} else if (reg.active) {
+						swStatus = 'Active';
+					} else if (reg.installing) {
+						swStatus = 'Installing';
+					}
+				} catch {
+					swStatus = 'Error reading';
+				}
+			}
+
+			diagnostics = {
+				serverUrl: PUBLIC_SERVER_URL,
+				dbVersion: DB_VERSION,
+				authSet,
+				swStatus,
+				storeCounts,
+				favourBalance,
+			};
+		} finally {
+			loadingDiagnostics = false;
+		}
+	}
+
+	// Load diagnostics on mount
+	$effect(() => {
+		loadDiagnostics();
+	});
 
 	// Auto-scroll both terminals when log changes
 	$effect(() => {
@@ -55,11 +158,9 @@
 	let isDragging = $state(false);
 	let drawerHeight = $state(SNAP_COLLAPSED);
 
-	// Recalculate drawer height when the viewport resizes (e.g. rotating device,
-	// or dragging browser edge between mobile/desktop breakpoints).
+	// Recalculate drawer height when the viewport resizes
 	$effect(() => {
 		function onResize() {
-			// Re-snap to the current snap point with the new viewport size
 			drawerHeight = snapHeightPx(drawerSnap);
 		}
 		window.addEventListener('resize', onResize);
@@ -114,9 +215,8 @@
 		if (!isDragging) return;
 		isDragging = false;
 
-		// Calculate velocity for flick detection
 		const endY = e.changedTouches[0].clientY;
-		const velocity = touchStartY - endY; // positive = swiped up
+		const velocity = touchStartY - endY;
 
 		const collapsedH = snapHeightPx('collapsed');
 		const halfH = snapHeightPx('half');
@@ -124,27 +224,15 @@
 
 		const FLICK_THRESHOLD = 60;
 
-		// If a strong flick, bias towards the direction
 		if (Math.abs(velocity) > FLICK_THRESHOLD) {
 			if (velocity > 0) {
-				// Swiped up
-				if (drawerSnap === 'collapsed' || drawerHeight < halfH) {
-					snapTo('half');
-				} else {
-					snapTo('full');
-				}
+				snapTo(drawerSnap === 'collapsed' || drawerHeight < halfH ? 'half' : 'full');
 			} else {
-				// Swiped down
-				if (drawerSnap === 'full' || drawerHeight > halfH) {
-					snapTo('half');
-				} else {
-					snapTo('collapsed');
-				}
+				snapTo(drawerSnap === 'full' || drawerHeight > halfH ? 'half' : 'collapsed');
 			}
 			return;
 		}
 
-		// Otherwise snap to nearest
 		const dCollapsed = Math.abs(drawerHeight - collapsedH);
 		const dHalf = Math.abs(drawerHeight - halfH);
 		const dFull = Math.abs(drawerHeight - fullH);
@@ -210,6 +298,7 @@
 			}
 
 			appendSummary('database cleared (auth preserved)');
+			loadDiagnostics();
 		} catch (e) {
 			appendError(e instanceof Error ? e.message : String(e));
 		} finally {
@@ -250,6 +339,7 @@
 			appendResult(`${requests.length} request(s)`);
 
 			appendSummary('sync complete');
+			loadDiagnostics();
 		} catch (e) {
 			appendError(e instanceof Error ? e.message : String(e));
 		} finally {
@@ -270,6 +360,147 @@
 		} catch (e) {
 			appendError(e instanceof Error ? e.message : String(e));
 			loggingOut = false;
+		}
+	}
+
+	async function pingServer() {
+		pinging = true;
+		log = [];
+
+		try {
+			append(`ping ${PUBLIC_SERVER_URL}/health`);
+			const start = performance.now();
+			const controller = new AbortController();
+			const timeout = setTimeout(() => controller.abort(), 5000);
+
+			const res = await fetch(`${PUBLIC_SERVER_URL}/health`, {
+				method: 'GET',
+				signal: controller.signal,
+			});
+			clearTimeout(timeout);
+
+			const latency = Math.round(performance.now() - start);
+
+			if (res.ok) {
+				appendResult(`${res.status} OK — ${latency}ms`);
+			} else {
+				appendResult(`${res.status} ${res.statusText} — ${latency}ms`);
+			}
+			appendSummary('server reachable');
+		} catch (e) {
+			if (e instanceof DOMException && e.name === 'AbortError') {
+				appendError('timed out after 5s');
+			} else {
+				appendError(e instanceof Error ? e.message : String(e));
+			}
+			appendSummary('server unreachable');
+		} finally {
+			pinging = false;
+		}
+	}
+
+	async function forceUpdateSW() {
+		updatingSW = true;
+		log = [];
+
+		try {
+			if (!('serviceWorker' in navigator)) {
+				appendError('service workers not supported');
+				return;
+			}
+
+			append('get registration');
+			const reg = await navigator.serviceWorker.getRegistration();
+			if (!reg) {
+				appendError('no service worker registered');
+				return;
+			}
+			appendResult('ok');
+
+			append('check for update');
+			await reg.update();
+
+			if (reg.waiting) {
+				append('activate waiting worker');
+				reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+				appendResult('ok');
+				appendSummary('updated — reloading...');
+				window.location.reload();
+			} else if (reg.installing) {
+				appendResult('installing...');
+				appendSummary('new worker installing — check back shortly');
+			} else {
+				appendResult('already up to date');
+				appendSummary('no update available');
+			}
+			loadDiagnostics();
+		} catch (e) {
+			appendError(e instanceof Error ? e.message : String(e));
+		} finally {
+			updatingSW = false;
+		}
+	}
+
+	async function unregisterSW() {
+		unregisteringSW = true;
+		log = [];
+
+		try {
+			if (!('serviceWorker' in navigator)) {
+				appendError('service workers not supported');
+				return;
+			}
+
+			append('get registration');
+			const reg = await navigator.serviceWorker.getRegistration();
+			if (!reg) {
+				appendResult('none registered');
+				appendSummary('nothing to unregister');
+				return;
+			}
+
+			append('unregister service worker');
+			const ok = await reg.unregister();
+			appendResult(ok ? 'ok' : 'failed');
+
+			append('clear cache storage');
+			const keys = await caches.keys();
+			for (const key of keys) {
+				await caches.delete(key);
+				appendResult(`deleted "${key}"`);
+			}
+			if (keys.length === 0) {
+				appendResult('no caches found');
+			}
+
+			appendSummary('service worker removed');
+			loadDiagnostics();
+		} catch (e) {
+			appendError(e instanceof Error ? e.message : String(e));
+		} finally {
+			unregisteringSW = false;
+		}
+	}
+
+	async function resetTips() {
+		resettingTips = true;
+		log = [];
+
+		try {
+			append('delete CalendarTipSeen');
+			await KVStore.delete(KVKey.CalendarTipSeen);
+			appendResult('ok');
+
+			append('delete FavourTipSeen');
+			await KVStore.delete(KVKey.FavourTipSeen);
+			appendResult('ok');
+
+			appendSummary('onboarding tips reset');
+			loadDiagnostics();
+		} catch (e) {
+			appendError(e instanceof Error ? e.message : String(e));
+		} finally {
+			resettingTips = false;
 		}
 	}
 </script>
@@ -305,16 +536,105 @@
 			{/snippet}
 		</BrandHeader>
 
-		<div class="flex flex-col gap-2">
+		<!-- Diagnostics card -->
+		{#if diagnostics}
+			<div class="bg-base-100 rounded-3xl p-5 shadow-[0_2px_12px_0_theme(colors.pink.200/40)] flex flex-col gap-4">
+				<div class="flex items-center justify-between">
+					<p class="text-xs font-semibold opacity-60 uppercase tracking-wide">Info</p>
+					<button
+						class="btn btn-ghost btn-xs rounded-xl gap-1 opacity-40 hover:opacity-100"
+						disabled={loadingDiagnostics}
+						onclick={() => loadDiagnostics()}
+					>
+						<RefreshCw size={12} class={loadingDiagnostics ? 'animate-spin' : ''} />
+					</button>
+				</div>
+
+				<div class="flex flex-col gap-2.5 text-sm">
+					<div class="flex items-center justify-between">
+						<span class="opacity-50 text-xs">Server</span>
+						<span class="font-mono text-xs truncate ml-4">{diagnostics.serverUrl}</span>
+					</div>
+
+					<div class="border-t border-base-content/5"></div>
+
+					<div class="flex items-center justify-between">
+						<span class="opacity-50 text-xs">Auth</span>
+						<span class="text-xs">
+							{#if diagnostics.authSet}
+								<span class="font-semibold">Active</span>
+								<span class="opacity-40">({diagnostics.authSet})</span>
+							{:else}
+								<span class="opacity-40">None</span>
+							{/if}
+						</span>
+					</div>
+
+					<div class="border-t border-base-content/5"></div>
+
+					<div class="flex items-center justify-between">
+						<span class="opacity-50 text-xs">Database</span>
+						<span class="font-mono text-xs">{DB_NAME} v{diagnostics.dbVersion}</span>
+					</div>
+
+					<div class="flex flex-wrap gap-1.5">
+						{#each Object.entries(diagnostics.storeCounts).filter(([k]) => k !== 'kv') as [name, count]}
+							<span class="bg-base-200 rounded-xl px-2 py-0.5 text-xs font-mono">
+								{name} <span class="opacity-50">{count === -1 ? '?' : count}</span>
+							</span>
+						{/each}
+					</div>
+
+					<div class="border-t border-base-content/5"></div>
+
+					<div class="flex items-center justify-between">
+						<span class="opacity-50 text-xs">Favours</span>
+						<span class="font-mono text-xs">{diagnostics.favourBalance ?? 'Not cached'}</span>
+					</div>
+
+					<div class="border-t border-base-content/5"></div>
+
+					<div class="flex items-center justify-between">
+						<span class="opacity-50 text-xs">Service Worker</span>
+						<span class="font-mono text-xs">{diagnostics.swStatus}</span>
+					</div>
+				</div>
+			</div>
+		{/if}
+
+		<!-- Status -->
+		<div class="flex flex-col gap-3">
 			<p class="text-xs font-semibold opacity-60 uppercase tracking-wide">Status</p>
 			<div class="flex items-center gap-2">
 				<span class="inline-block h-2 w-2 rounded-full {online ? 'bg-success' : 'bg-warning'}"></span>
 				<span class="text-sm">{online ? 'Server reachable' : 'Server offline'}</span>
 			</div>
+			<button
+				class="btn btn-outline rounded-2xl"
+				disabled={busy}
+				onclick={pingServer}
+			>
+				{#if pinging}
+					<span class="loading loading-spinner loading-sm"></span>
+				{/if}
+				Ping server
+			</button>
 		</div>
 
+		<!-- Data -->
 		<div class="flex flex-col gap-3">
 			<p class="text-xs font-semibold opacity-60 uppercase tracking-wide">Data</p>
+			<button
+				class="btn btn-primary rounded-2xl"
+				disabled={busy || !online}
+				onclick={syncAll}
+			>
+				{#if syncing}
+					<span class="loading loading-spinner loading-sm"></span>
+				{/if}
+				Sync from server
+			</button>
+
 			<button
 				class="btn btn-error btn-outline rounded-2xl"
 				disabled={busy}
@@ -327,17 +647,44 @@
 			</button>
 
 			<button
-				class="btn btn-primary rounded-2xl"
-				disabled={busy || !online}
-				onclick={syncAll}
+				class="btn btn-outline rounded-2xl"
+				disabled={busy}
+				onclick={resetTips}
 			>
-				{#if syncing}
+				{#if resettingTips}
 					<span class="loading loading-spinner loading-sm"></span>
 				{/if}
-				Sync from server
+				Reset onboarding tips
 			</button>
 		</div>
 
+		<!-- Service Worker -->
+		<div class="flex flex-col gap-3">
+			<p class="text-xs font-semibold opacity-60 uppercase tracking-wide">Service Worker</p>
+			<button
+				class="btn btn-outline rounded-2xl"
+				disabled={busy}
+				onclick={forceUpdateSW}
+			>
+				{#if updatingSW}
+					<span class="loading loading-spinner loading-sm"></span>
+				{/if}
+				Force update
+			</button>
+
+			<button
+				class="btn btn-error btn-outline rounded-2xl"
+				disabled={busy}
+				onclick={unregisterSW}
+			>
+				{#if unregisteringSW}
+					<span class="loading loading-spinner loading-sm"></span>
+				{/if}
+				Unregister + clear caches
+			</button>
+		</div>
+
+		<!-- Session -->
 		<div class="flex flex-col gap-3">
 			<p class="text-xs font-semibold opacity-60 uppercase tracking-wide">Session</p>
 			<button
