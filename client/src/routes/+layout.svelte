@@ -41,7 +41,7 @@
 </script>
 
 <svelte:head>
-	<meta http-equiv="Content-Security-Policy" content={csp} />
+	<meta http-equiv="content-security-policy" content={csp} />
 </svelte:head>
 
 {#if maintenanceMode}

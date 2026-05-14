@@ -2,7 +2,10 @@ package config
 
 import (
 	"embed"
+	"errors"
 	"fmt"
+	"log/slog"
+	"os"
 )
 
 //go:embed config.default.json config.develop.json config.production.json
@@ -29,8 +32,12 @@ func Load() (*Config, error) {
 
 	// Layer 2: private config loaded from disk (never embedded in binary)
 	privatePath := getEnv("CONFIG_PRIVATE_PATH", privateConfigFile)
-	if err := mergeFromFile(cfg, privatePath, false); err != nil {
-		return nil, fmt.Errorf("load private config: %w", err)
+	if err := mergeFromFile(cfg, privatePath); err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			return nil, fmt.Errorf("load private config: %w", err)
+		}
+
+		slog.Warn("private config file not found, skipping", "path", privatePath)
 	}
 
 	// Layer 3: environment variables

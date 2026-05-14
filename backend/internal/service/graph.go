@@ -57,6 +57,10 @@ func (s *GraphService) GetGraph(ctx context.Context, graphID string) (*models.Gr
 		return nil, err
 	}
 
+	if graph == nil {
+		return nil, nil
+	}
+
 	graph.Viewport = nil
 	sanitizeLocationData(graph)
 

@@ -35,12 +35,9 @@ func mergeFromEmbed(cfg *Config, configFile string, required bool) error {
 	return nil
 }
 
-func mergeFromFile(cfg *Config, path string, required bool) error {
+func mergeFromFile(cfg *Config, path string) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) && !required {
-			return nil
-		}
 		return fmt.Errorf("read config file %s: %w", path, err)
 	}
 
