@@ -37,3 +37,18 @@ func (h *Handler) SubscribePush(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 }
+
+func (h *Handler) UnsubscribePush(w http.ResponseWriter, r *http.Request) {
+	deviceID, ok := authctx.DeviceID(r.Context())
+	if !ok {
+		response.Error(r.Context(), w, apierror.BadRequest("invalid device id"))
+	}
+
+	err := h.pushService.Unregister(r.Context(), deviceID)
+	if err != nil {
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

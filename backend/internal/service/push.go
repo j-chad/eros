@@ -31,6 +31,10 @@ func (p *PushService) Register(ctx context.Context, deviceID string, sub models.
 	return p.repo.CreatePushSubscription(ctx, deviceID, sub)
 }
 
+func (p *PushService) Unregister(ctx context.Context, deviceID string) error {
+	return p.repo.DeletePushSubscriptions(ctx, deviceID)
+}
+
 func (p *PushService) validateSubscription(sub models.PushSubscription) error {
 	err := p.validateEndpoint(sub.Endpoint)
 	if err != nil {
