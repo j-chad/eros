@@ -130,6 +130,7 @@ export function setOfflineOverride(force: boolean): void {
 		setOffline(OfflineReason.forced);
 	} else {
 		// Restore real state by pinging immediately.
+		setOffline(OfflineReason.pingFailed)
 		void ping();
 	}
 }

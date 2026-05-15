@@ -2,7 +2,13 @@
 	import { db, promisifyRequest } from '$lib/db/db';
 	import { DB_NAME, DB_VERSION } from '$lib/db/schema';
 	import { KVKey, KVStore } from '$lib/db/stores/kv';
-	import { isOnline } from '$lib/online.svelte';
+	import {
+		isOnline,
+		getOfflineReason,
+		isOfflineOverridden,
+		setOfflineOverride,
+		type OfflineReason,
+	} from '$lib/online.svelte';
 	import { listGraphs, getGraph } from '$lib/services/graph';
 	import { listChoices, getCount, listRequests } from '$lib/services/favour';
 	import { clearToken } from '$lib/api/auth';
@@ -11,6 +17,13 @@
 	import { PUBLIC_SERVER_URL } from '$env/static/public';
 	import BrandHeader from '$lib/ui/BrandHeader.svelte';
 	import type { FavourCount } from '$lib/types/favour';
+
+	// @ts-expect-error — daisyui theme objects have no type declarations
+	import draculaTheme from 'daisyui/theme/dracula/object.js';
+	// @ts-expect-error — daisyui theme objects have no type declarations
+	import retroTheme from 'daisyui/theme/retro/object.js';
+	// @ts-expect-error — daisyui theme objects have no type declarations
+	import forestTheme from 'daisyui/theme/forest/object.js';
 
 	type LogType = 'command' | 'result' | 'error' | 'summary';
 	type LogEntry = { type: LogType; text: string };
@@ -28,6 +41,8 @@
 	let mobileTerminalEl: HTMLDivElement | undefined = $state();
 
 	const online = $derived(isOnline());
+	const offlineReason = $derived(getOfflineReason());
+	const offlineOverride = $derived(isOfflineOverridden());
 	const busy = $derived(
 		clearing || syncing || loggingOut || pinging || updatingSW || unregisteringSW || resettingTips
 	);
@@ -40,6 +55,65 @@
 				: lastEntry.text
 			: ''
 	);
+
+	// --- Status display ---
+	const REASON_LABELS: Record<NonNullable<OfflineReason>, string> = {
+		'browser-offline': 'Browser offline',
+		'ping-failed': 'Server unreachable',
+		'ping-timeout': 'Server timed out',
+		'api-error': 'API request failed',
+		forced: 'Forced offline',
+	};
+
+	const statusLabel = $derived(
+		online ? 'Server reachable' : REASON_LABELS[offlineReason!] ?? 'Offline'
+	);
+
+	const statusColor = $derived(
+		online ? 'bg-success' : offlineReason === 'forced' ? 'bg-info' : 'bg-warning'
+	);
+
+	// --- Theme switcher ---
+	const THEMES: { name: string; label: string; obj: Record<string, string> | null }[] = [
+		{ name: 'valentine', label: 'Valentine', obj: null },
+		{ name: 'dracula', label: 'Dracula', obj: draculaTheme },
+		{ name: 'retro', label: 'Retro', obj: retroTheme },
+		{ name: 'forest', label: 'Forest', obj: forestTheme },
+	];
+
+	let activeTheme = $state('valentine');
+
+	function applyTheme(themeName: string) {
+		activeTheme = themeName;
+		const theme = THEMES.find((t) => t.name === themeName);
+
+		// Remove any previously injected theme style
+		const existing = document.getElementById('debug-theme');
+
+		if (!theme || !theme.obj) {
+			// Revert to default valentine (built into the bundle)
+			existing?.remove();
+			document.documentElement.removeAttribute('data-theme');
+			return;
+		}
+
+		const props = Object.entries(theme.obj)
+			.map(([k, v]) => (k === 'color-scheme' ? `color-scheme: ${v}` : `${k}: ${v}`))
+			.join(';\n  ');
+
+		const css = `:root, [data-theme="${themeName}"] {\n  ${props};\n}`;
+
+		if (existing) {
+			existing.textContent = css;
+		} else {
+			const style = document.createElement('style');
+			style.id = 'debug-theme';
+			style.textContent = css;
+			document.head.appendChild(style);
+		}
+
+		document.documentElement.setAttribute('data-theme', themeName);
+	}
 
 	// --- Diagnostics ---
 	interface Diagnostics {
@@ -77,10 +151,18 @@
 				if (authEntry) {
 					authSet = timeAgo((authEntry as { timestamp: number }).timestamp);
 				}
-			} catch { /* db might not be initialized */ }
+			} catch {
+				/* db might not be initialized */
+			}
 
 			// Store counts
-			const storeNames = ['graphs', 'graphDetails', 'favourChoices', 'favourRequests', 'kv'] as const;
+			const storeNames = [
+				'graphs',
+				'graphDetails',
+				'favourChoices',
+				'favourRequests',
+				'kv',
+			] as const;
 			const storeCounts: Record<string, number> = {};
 			for (const name of storeNames) {
 				try {
@@ -94,11 +176,13 @@
 			// Favour balance
 			let favourBalance: string | null = null;
 			try {
-				const count = await KVStore.get(KVKey.FavourCount) as FavourCount | null;
+				const count = (await KVStore.get(KVKey.FavourCount)) as FavourCount | null;
 				if (count) {
 					favourBalance = `${count.remaining} / ${count.total} remaining`;
 				}
-			} catch { /* ignore */ }
+			} catch {
+				/* ignore */
+			}
 
 			// Service worker status
 			let swStatus = 'Not supported';
@@ -160,7 +244,6 @@
 	let isDragging = $state(false);
 	let drawerHeight = $state(SNAP_COLLAPSED);
 
-	// Recalculate drawer height when the viewport resizes
 	$effect(() => {
 		function onResize() {
 			drawerHeight = snapHeightPx(drawerSnap);
@@ -401,6 +484,10 @@
 		}
 	}
 
+	function toggleOfflineOverride() {
+		setOfflineOverride(!offlineOverride);
+	}
+
 	async function forceUpdateSW() {
 		updatingSW = true;
 		log = [];
@@ -527,7 +614,9 @@
 	<title>Debug</title>
 </svelte:head>
 
-<div class="mx-auto min-h-dvh max-w-4xl px-4 py-6 pb-20 lg:pb-6 flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:gap-8">
+<div
+	class="mx-auto min-h-dvh max-w-4xl px-4 py-6 pb-20 lg:pb-6 flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:gap-8"
+>
 	<div class="flex flex-col gap-6">
 		<BrandHeader subtitle="Debug tools">
 			{#snippet rightContent()}
@@ -540,7 +629,9 @@
 
 		<!-- Diagnostics card -->
 		{#if diagnostics}
-			<div class="bg-base-100 rounded-3xl p-5 shadow-[0_2px_12px_0_theme(colors.pink.200/40)] flex flex-col gap-4">
+			<div
+				class="bg-base-100 rounded-3xl p-5 shadow-[0_2px_12px_0_theme(colors.pink.200/40)] flex flex-col gap-4"
+			>
 				<div class="flex items-center justify-between">
 					<p class="text-xs font-semibold opacity-60 uppercase tracking-wide">Info</p>
 					<button
@@ -613,21 +704,51 @@
 
 		<!-- Status -->
 		<div class="flex flex-col gap-3">
-			<p class="text-xs font-semibold opacity-60 uppercase tracking-wide">Status</p>
-			<div class="flex items-center gap-2">
-				<span class="inline-block h-2 w-2 rounded-full {online ? 'bg-success' : 'bg-warning'}"></span>
-				<span class="text-sm">{online ? 'Server reachable' : 'Server offline'}</span>
-			</div>
-			<button
-				class="btn btn-outline rounded-2xl"
-				disabled={busy}
-				onclick={pingServer}
-			>
-				{#if pinging}
-					<span class="loading loading-spinner loading-sm"></span>
+			<p class="text-xs font-semibold opacity-60 uppercase tracking-wide">Connectivity</p>
+			<div class="flex flex-col gap-1.5">
+				<div class="flex items-center gap-2">
+					<span class="inline-block h-2 w-2 rounded-full {statusColor}"></span>
+					<span class="text-sm font-semibold">{statusLabel}</span>
+				</div>
+				{#if !online && offlineReason && offlineReason !== 'forced'}
+					<p class="text-xs opacity-50 pl-4">
+						{#if offlineReason === 'browser-offline'}
+							Device has no network connection
+						{:else if offlineReason === 'ping-failed'}
+							Health check failed — server may be down or URL is wrong
+						{:else if offlineReason === 'ping-timeout'}
+							Health check timed out after 5s
+						{:else if offlineReason === 'api-error'}
+							An API request threw a network error
+						{/if}
+					</p>
 				{/if}
-				Ping server
-			</button>
+				<div class="flex items-center gap-3 text-xs opacity-40 pl-4 font-mono">
+					<span>navigator.onLine: {typeof navigator !== 'undefined' ? String(navigator.onLine) : '?'}</span>
+				</div>
+			</div>
+
+			<div class="flex gap-2">
+				<button
+					class="btn btn-outline rounded-2xl flex-1"
+					disabled={busy}
+					onclick={pingServer}
+				>
+					{#if pinging}
+						<span class="loading loading-spinner loading-sm"></span>
+					{/if}
+					Ping server
+				</button>
+
+				<button
+					class="btn rounded-2xl flex-1"
+					class:btn-info={!offlineOverride}
+					class:btn-warning={offlineOverride}
+					onclick={toggleOfflineOverride}
+				>
+					{offlineOverride ? 'Resume connectivity' : 'Force offline'}
+				</button>
+			</div>
 		</div>
 
 		<!-- Data -->
@@ -655,11 +776,7 @@
 				Clear cached data
 			</button>
 
-			<button
-				class="btn btn-outline rounded-2xl"
-				disabled={busy}
-				onclick={resetTips}
-			>
+			<button class="btn btn-outline rounded-2xl" disabled={busy} onclick={resetTips}>
 				{#if resettingTips}
 					<span class="loading loading-spinner loading-sm"></span>
 				{/if}
@@ -670,11 +787,7 @@
 		<!-- Service Worker -->
 		<div class="flex flex-col gap-3">
 			<p class="text-xs font-semibold opacity-60 uppercase tracking-wide">Service Worker</p>
-			<button
-				class="btn btn-outline rounded-2xl"
-				disabled={busy}
-				onclick={forceUpdateSW}
-			>
+			<button class="btn btn-outline rounded-2xl" disabled={busy} onclick={forceUpdateSW}>
 				{#if updatingSW}
 					<span class="loading loading-spinner loading-sm"></span>
 				{/if}
@@ -691,6 +804,23 @@
 				{/if}
 				Unregister + clear caches
 			</button>
+		</div>
+
+		<!-- Theme -->
+		<div class="flex flex-col gap-3">
+			<p class="text-xs font-semibold opacity-60 uppercase tracking-wide">Theme</p>
+			<p class="text-xs opacity-40">Session only — resets on reload</p>
+			<div class="flex flex-wrap gap-2">
+				{#each THEMES as theme}
+					<button
+						class="btn btn-outline rounded-2xl flex-1 min-w-[calc(50%-0.25rem)]"
+						class:btn-active={activeTheme === theme.name}
+						onclick={() => applyTheme(theme.name)}
+					>
+						{theme.label}
+					</button>
+				{/each}
+			</div>
 		</div>
 
 		<!-- Session -->
@@ -714,7 +844,7 @@
 		<div
 			bind:this={desktopTerminalEl}
 			class="hidden lg:block bg-base-300 rounded-3xl p-5 font-mono text-xs leading-relaxed
-				shadow-[0_2px_12px_0_--theme(--color-pink-200/40)]
+				shadow-[0_2px_12px_0_theme(colors.pink.200/40)]
 				lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100dvh-3rem)] lg:overflow-y-auto"
 		>
 			{@render terminalLines()}
@@ -738,7 +868,9 @@
 			role="button"
 			tabindex="0"
 			onclick={handleHandleTap}
-			onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleHandleTap(); }}
+			onkeydown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') handleHandleTap();
+			}}
 			ontouchstart={handleTouchStart}
 			ontouchmove={handleTouchMove}
 			ontouchend={handleTouchEnd}
@@ -753,10 +885,7 @@
 		</div>
 
 		<!-- Scrollable terminal content -->
-		<div
-			bind:this={mobileTerminalEl}
-			class="drawer-content"
-		>
+		<div bind:this={mobileTerminalEl} class="drawer-content">
 			{@render terminalLines()}
 		</div>
 	</div>
