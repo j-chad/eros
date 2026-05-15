@@ -710,6 +710,13 @@
 					<div class="border-t border-base-content/5"></div>
 
 					<div class="flex items-center justify-between">
+						<span class="opacity-50 text-xs">Source Maps</span>
+						<span class="font-mono text-xs">hidden</span>
+					</div>
+
+					<div class="border-t border-base-content/5"></div>
+
+					<div class="flex items-center justify-between">
 						<span class="opacity-50 text-xs">Service Worker</span>
 						<span class="font-mono text-xs">{diagnostics.swStatus}</span>
 					</div>

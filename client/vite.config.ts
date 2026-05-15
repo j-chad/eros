@@ -26,6 +26,9 @@ export default defineConfig(({mode}) => {
 	}
 
 	return ({
+		build: {
+			sourcemap: 'hidden'
+		},
 		server: {
 			port: 5174, // Prevent service worker conflicts with the default Vite port (5173)
 			allowedHosts: env.ALLOWED_HOSTS ? env.ALLOWED_HOSTS.split(',') : undefined,
