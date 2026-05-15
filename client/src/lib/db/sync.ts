@@ -79,4 +79,6 @@ export function startSync(): void {
 	});
 
 	setInterval(syncAll, SYNC_INTERVAL_MS);
+
+	void syncAll();
 }
