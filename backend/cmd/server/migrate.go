@@ -5,8 +5,24 @@ import (
 	"backend/internal/repository/sqlite"
 	"backend/internal/repository/sqlite/migrations"
 	"context"
+	"flag"
 	"log"
 )
+
+func runMigrateCmd(conf config.DatabaseConfig, args []string) {
+	fs := flag.NewFlagSet("migrate", flag.ExitOnError)
+	status := fs.Bool("status", false, "show migration status")
+	err := fs.Parse(args)
+	if err != nil {
+		log.Fatalf("error parsing migrate flags: %v", err)
+	}
+
+	if *status {
+		runMigrateStatus(conf)
+		return
+	}
+	runMigrate(conf)
+}
 
 func runMigrateStatus(conf config.DatabaseConfig) {
 	ctx := context.Background()

@@ -15,14 +15,18 @@ func main() {
 
 	logging.Init(conf.Logging)
 
-	if len(os.Args) > 1 && os.Args[1] == "migrate" {
-		if len(os.Args) > 2 && os.Args[2] == "status" {
-			runMigrateStatus(conf.Database)
-			return
-		}
-		runMigrate(conf.Database)
-		return
+	cmd := ""
+	if len(os.Args) > 1 {
+		cmd = os.Args[1]
 	}
-
-	runServer(conf)
+	switch cmd {
+	case "generate-vapid":
+		runGenerateVAPIDCmd()
+	case "migrate":
+		runMigrateCmd(conf.Database, os.Args[2:])
+	case "", "serve":
+		runServer(conf)
+	default:
+		log.Fatalf("unknown command: %s", cmd)
+	}
 }

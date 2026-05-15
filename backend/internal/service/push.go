@@ -13,6 +13,7 @@ import (
 )
 
 var ErrSubValidationFailed = errors.New("subscription validation failed")
+var ErrPushNotConfigured = errors.New("push not configured")
 
 type PushService struct {
 	config config.PushConfig
@@ -37,7 +38,7 @@ func (p *PushService) Unregister(ctx context.Context, deviceID string) error {
 
 func (p *PushService) GetVAPIDPublicKey() (string, error) {
 	if p.config.VAPID.PublicKey == "" {
-		return "", fmt.Errorf("vapid not configured")
+		return "", ErrPushNotConfigured
 	}
 
 	return p.config.VAPID.PublicKey, nil
