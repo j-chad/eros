@@ -3,10 +3,12 @@ package client
 import (
 	"backend/internal/handler/utils"
 	"backend/internal/models"
+	"backend/internal/service"
 	"backend/pkg/apierror"
+	"backend/pkg/authctx"
 	"backend/pkg/response"
+	"errors"
 	"net/http"
-	"net/url"
 )
 
 func (h *Handler) SubscribePush(w http.ResponseWriter, r *http.Request) {
@@ -17,8 +19,20 @@ func (h *Handler) SubscribePush(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, err := url.Parse(subscription.Endpoint)
-	if err != nil || u.Host == "" || u.Scheme != "https" {
-		response.Error(r.Context(), w, apierror.BadRequest("invalid endpoint"))
+	deviceID, ok := authctx.DeviceID(r.Context())
+	if !ok {
+		response.Error(r.Context(), w, apierror.BadRequest("invalid device id"))
 	}
+
+	if err := h.pushService.Register(r.Context(), deviceID, subscription); err != nil {
+		if errors.Is(err, service.ErrSubValidationFailed) {
+			response.Error(r.Context(), w, apierror.BadRequest(err.Error()))
+			return
+		}
+
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
 }

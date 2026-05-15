@@ -16,18 +16,21 @@ func (s *sqliteDB) RegisterDevice(ctx context.Context, token string, deviceInfo 
 	return err
 }
 
-func (s *sqliteDB) GetDeviceExpiryByToken(ctx context.Context, token string) (expiresAt *time.Time, err error) {
+func (s *sqliteDB) GetDeviceByToken(ctx context.Context, token string) (*models.Device, error) {
+	var device models.Device
+
+	//language=sqlite
 	row := s.executor().QueryRowContext(ctx, `
-		SELECT expires_at
+		SELECT id, device_info, registered_at, last_seen_at, expires_at
 		FROM device
 		WHERE token = ? AND expires_at > CURRENT_TIMESTAMP
 	`, token)
-	err = row.Scan(&expiresAt)
+	err := row.Scan(&device.ID, &device.DeviceInfo, &device.RegisteredAt, &device.LastSeenAt, &device.ExpiresAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 
-	return expiresAt, err
+	return &device, err
 }
 
 func (s *sqliteDB) ListDevices(ctx context.Context) ([]models.Device, error) {

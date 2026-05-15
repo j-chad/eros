@@ -16,6 +16,7 @@ type Repository interface {
 	FavourRepository
 	GraphRepository
 	FileRepository
+	PushRepository
 }
 
 type RegistrationRepository interface {
@@ -26,7 +27,7 @@ type RegistrationRepository interface {
 
 type DeviceRepository interface {
 	RegisterDevice(ctx context.Context, token string, deviceInfo string, expiry time.Time) error
-	GetDeviceExpiryByToken(ctx context.Context, token string) (expiresAt *time.Time, err error)
+	GetDeviceByToken(ctx context.Context, token string) (device *models.Device, err error)
 	ListDevices(ctx context.Context) ([]models.Device, error)
 	DeleteDevice(ctx context.Context, deviceID string) error
 	UpdateDeviceInfo(ctx context.Context, deviceID string, deviceInfo string) error

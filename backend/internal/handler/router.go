@@ -27,7 +27,7 @@ func NewHandler(
 	handler := &Handler{
 		auth:   authService,
 		admin:  admin.NewHandler(adminService),
-		client: client.NewHandler(authService, favourService, graphService, fileService),
+		client: client.NewHandler(authService, favourService, graphService, fileService, pushService),
 	}
 	return handler
 }

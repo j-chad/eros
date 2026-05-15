@@ -3,6 +3,7 @@ package service
 import (
 	"backend/internal/config"
 	"backend/internal/crypto"
+	"backend/internal/models"
 	"backend/internal/repository"
 	"context"
 	"crypto/subtle"
@@ -16,7 +17,6 @@ var (
 	ErrInvalidRegistrationCode  = errors.New("invalid registration code")
 )
 
-const TokenLength = 32
 const TokenExpiry = 40 * 24 * time.Hour
 
 type AuthService struct {
@@ -40,24 +40,24 @@ func (s *AuthService) ValidateAdminToken(apiKey string) error {
 	return nil
 }
 
-func (s *AuthService) ValidateDeviceToken(ctx context.Context, token string) error {
+func (s *AuthService) ValidateDeviceToken(ctx context.Context, token string) (models.Device, error) {
 	tokenHash := crypto.HashToken(token)
 
-	expiry, err := s.repo.GetDeviceExpiryByToken(ctx, tokenHash)
+	device, err := s.repo.GetDeviceByToken(ctx, tokenHash)
 	if err != nil {
-		return err
+		return models.Device{}, err
 	}
 
-	if expiry == nil || expiry.Before(time.Now()) {
-		return ErrInvalidClientCredentials
+	if device.IsExpired() {
+		return models.Device{}, ErrInvalidClientCredentials
 	}
 
 	// Update last seen timestamp
 	if err := s.repo.UpdateDeviceLastSeenByToken(ctx, tokenHash, time.Now()); err != nil {
-		return err
+		return models.Device{}, err
 	}
 
-	return nil
+	return *device, nil
 }
 
 func (s *AuthService) RegisterDevice(ctx context.Context, registrationCode string, deviceInfo string) (string, error) {

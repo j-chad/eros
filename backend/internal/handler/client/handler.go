@@ -9,6 +9,7 @@ type Handler struct {
 	favourService *service.FavourService
 	graphService  *service.GraphService
 	fileService   *service.FileService
+	pushService   *service.PushService
 }
 
 func NewHandler(
@@ -16,6 +17,7 @@ func NewHandler(
 	favourService *service.FavourService,
 	graphService *service.GraphService,
 	fileService *service.FileService,
+	pushService *service.PushService,
 ) *Handler {
-	return &Handler{authService: authService, favourService: favourService, graphService: graphService, fileService: fileService}
+	return &Handler{authService: authService, favourService: favourService, graphService: graphService, fileService: fileService, pushService: pushService}
 }
