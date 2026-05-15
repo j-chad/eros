@@ -83,8 +83,9 @@ type S3FileStorageConfig struct {
 }
 
 type PushConfig struct {
-	AllowedHosts []string    `json:"allowed_hosts" env:"PUSH_ALLOWED_HOSTS"`
-	VAPID        VAPIDConfig `json:"vapid"`
+	AllowedHosts     []string      `json:"allowed_hosts" env:"PUSH_ALLOWED_HOSTS"`
+	VAPID            VAPIDConfig   `json:"vapid"`
+	ScheduleInterval time.Duration `json:"schedule_interval" env:"PUSH_SCHEDULE_INTERVAL"`
 }
 
 type VAPIDConfig struct {
