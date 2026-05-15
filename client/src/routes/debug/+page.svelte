@@ -24,6 +24,7 @@
 	import retroTheme from 'daisyui/theme/retro/object.js';
 	// @ts-expect-error — daisyui theme objects have no type declarations
 	import forestTheme from 'daisyui/theme/forest/object.js';
+	import {env} from "$env/dynamic/public";
 
 	type LogType = 'command' | 'result' | 'error' | 'summary';
 	type LogEntry = { type: LogType; text: string };
@@ -73,7 +74,6 @@
 		online ? 'bg-success' : offlineReason === 'forced' ? 'bg-info' : 'bg-warning'
 	);
 
-	// --- Theme switcher ---
 	const THEMES: { name: string; label: string; obj: Record<string, string> | null }[] = [
 		{ name: 'valentine', label: 'Valentine', obj: null },
 		{ name: 'dracula', label: 'Dracula', obj: draculaTheme },
@@ -115,10 +115,10 @@
 		document.documentElement.setAttribute('data-theme', themeName);
 	}
 
-	// --- Diagnostics ---
 	interface Diagnostics {
 		serverUrl: string;
 		gitSha: string;
+		maintenanceMode: boolean;
 		dbVersion: number;
 		authSet: string | null;
 		swStatus: string;
@@ -206,6 +206,7 @@
 			diagnostics = {
 				serverUrl: PUBLIC_SERVER_URL,
 				gitSha: __GIT_SHA__,
+				maintenanceMode: env.PUBLIC_MAINTENANCE_MODE === 'true',
 				dbVersion: DB_VERSION,
 				authSet,
 				swStatus,
@@ -630,7 +631,7 @@
 		<!-- Diagnostics card -->
 		{#if diagnostics}
 			<div
-				class="bg-base-100 rounded-3xl p-5 shadow-[0_2px_12px_0_theme(colors.pink.200/40)] flex flex-col gap-4"
+				class="bg-base-100 rounded-3xl p-5 shadow-[0_2px_12px_0_--theme(--color-pink-200/40)] flex flex-col gap-4"
 			>
 				<div class="flex items-center justify-between">
 					<p class="text-xs font-semibold opacity-60 uppercase tracking-wide">Info</p>
@@ -654,6 +655,13 @@
 					<div class="flex items-center justify-between">
 						<span class="opacity-50 text-xs">Build</span>
 						<span class="font-mono text-xs">{diagnostics.gitSha}</span>
+					</div>
+
+					<div class="border-t border-base-content/5"></div>
+
+					<div class="flex items-center justify-between">
+						<span class="opacity-50 text-xs">Maintenance Mode</span>
+						<span class="font-mono text-xs">{diagnostics.maintenanceMode}</span>
 					</div>
 
 					<div class="border-t border-base-content/5"></div>
