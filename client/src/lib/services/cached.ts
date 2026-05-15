@@ -1,17 +1,21 @@
 import { ServerUnreachableError } from '$lib/api/http';
-import { isOnline } from '$lib/online.svelte';
+import { isOnline, isInitialPingDone } from '$lib/online.svelte';
 
 /**
- * Fetch-with-cache-fallback helper. If online, tries `fetchFn` (which should
- * fetch from the API and write through to IndexedDB) and returns the result.
- * If the server is unreachable — either because we already know we're offline,
- * or because the fetch threw a `ServerUnreachableError` — falls back to
- * `cacheFn` (which reads from IndexedDB).
+ * Fetch-with-cache-fallback helper.
  *
- * Any non-network error (4xx, 5xx, etc.) is re-thrown as-is.
+ * During early startup (before the initial health ping has settled) we don't
+ * yet know whether the server is reachable. Rather than blocking the page on a
+ * network request that may hang, we return cached data immediately so the UI
+ * can render. The background sync cycle will refresh the cache once
+ * connectivity is established.
+ *
+ * After the initial ping has resolved we know the connectivity state, so we
+ * use the normal network-first strategy: try `fetchFn`, fall back to `cacheFn`
+ * on `ServerUnreachableError`.
  */
 export async function cached<T>(fetchFn: () => Promise<T>, cacheFn: () => Promise<T>): Promise<T> {
-	if (!isOnline()) {
+	if (!isInitialPingDone() || !isOnline()) {
 		return cacheFn();
 	}
 

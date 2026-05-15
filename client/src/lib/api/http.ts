@@ -4,6 +4,8 @@ import { get } from 'svelte/store';
 import { PUBLIC_SERVER_URL as API_BASE } from '$env/static/public';
 import { markOffline } from '$lib/online.svelte';
 
+const REQUEST_TIMEOUT = 5_000;
+
 export interface APIError {
 	code: string;
 	message: string;
@@ -52,14 +54,20 @@ export async function rawRequest(
 
 	const method = options.method ?? 'GET';
 
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
 	try {
 		return await fetch(`${API_BASE}${endpoint}`, {
 			...options,
 			headers,
+			signal: controller.signal,
 		});
 	} catch (err) {
 		markOffline();
 		throw new ServerUnreachableError(endpoint, method, err);
+	} finally {
+		clearTimeout(timeout);
 	}
 }
 
