@@ -52,3 +52,13 @@ func (h *Handler) UnsubscribePush(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func (h *Handler) GetVAPIDPublicKey(w http.ResponseWriter, r *http.Request) {
+	pubKey, err := h.pushService.GetVAPIDPublicKey()
+	if err != nil {
+		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
+		return
+	}
+
+	response.JSON(w, http.StatusOK, pubKey)
+}

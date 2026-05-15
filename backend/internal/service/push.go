@@ -35,6 +35,14 @@ func (p *PushService) Unregister(ctx context.Context, deviceID string) error {
 	return p.repo.DeletePushSubscriptions(ctx, deviceID)
 }
 
+func (p *PushService) GetVAPIDPublicKey() (string, error) {
+	if p.config.VAPID.PublicKey == "" {
+		return "", fmt.Errorf("vapid not configured")
+	}
+
+	return p.config.VAPID.PublicKey, nil
+}
+
 func (p *PushService) validateSubscription(sub models.PushSubscription) error {
 	err := p.validateEndpoint(sub.Endpoint)
 	if err != nil {
