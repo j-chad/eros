@@ -83,5 +83,12 @@ type S3FileStorageConfig struct {
 }
 
 type PushConfig struct {
-	AllowedHosts []string `json:"allowed_hosts" env:"PUSH_ALLOWED_HOSTS"`
+	AllowedHosts []string    `json:"allowed_hosts" env:"PUSH_ALLOWED_HOSTS"`
+	VAPID        VAPIDConfig `json:"vapid"`
+}
+
+type VAPIDConfig struct {
+	PrivateKey string `json:"private_key" env:"VAPID_PRIVATE_KEY"`
+	PublicKey  string `json:"public_key" env:"VAPID_PUBLIC_KEY"`
+	Subject    string `json:"subject" env:"VAPID_SUBJECT"`
 }
