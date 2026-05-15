@@ -4,22 +4,39 @@ const PING_INTERVAL = 30_000;
 const PING_TIMEOUT = 5_000;
 
 /**
- * Server-reachability state. `true` means the backend responded to a health
- * check, `false` means a network error occurred (fetch threw). HTTP error
- * responses (4xx/5xx) still count as "online" — the server responded.
- *
- * Starts `true` optimistically so the first load attempts the API. The initial
- * ping will correct this within milliseconds if the server is actually down.
+ * The reason the app last went offline.
  */
-let onlineState = $state(true);
+export enum OfflineReason {
+	browserOffline = "browser-offline",
+	pingFailed = "ping-failed",
+	pingTimeout = "ping-timeout",
+	apiError = "api-error",
+	forced = "forced",
+}
 
 /** Whether the initial health ping has resolved. */
 let initialPingDone = $state(false);
 
+/** Why the app is currently considered offline. `null` = online. */
+let onlineState = $state<OfflineReason | null>(null);
+
+function setOffline(reason: OfflineReason) {
+	onlineState = reason;
+}
+
+function setOnline() {
+	onlineState = null;
+}
+
 async function ping(): Promise<boolean> {
+	// Debug override — skip real pings entirely.
+	if (onlineState === OfflineReason.forced) {
+		return false;
+	}
+
 	// No point hitting the network if the browser itself is offline.
 	if (typeof navigator !== 'undefined' && !navigator.onLine) {
-		onlineState = false;
+		setOffline(OfflineReason.browserOffline);
 		return false;
 	}
 
@@ -35,15 +52,19 @@ async function ping(): Promise<boolean> {
 
 		// Any HTTP response means the server is reachable.
 		if (res.ok) {
-			onlineState = true;
+			setOnline();
 			return true;
 		}
 
 		// Non-OK but still a response — server is reachable, don't flip offline.
+		setOnline();
 		return true;
-	} catch {
-		// Network error (connection refused, DNS failure, timeout, abort).
-		onlineState = false;
+	} catch (err) {
+		if (err instanceof DOMException && err.name === 'AbortError') {
+			setOffline(OfflineReason.pingTimeout);
+		} else {
+			setOffline(OfflineReason.pingFailed);
+		}
 		return false;
 	}
 }
@@ -51,7 +72,7 @@ async function ping(): Promise<boolean> {
 if (typeof window !== 'undefined') {
 	// Flip offline immediately when the browser reports no network.
 	window.addEventListener('offline', () => {
-		onlineState = false;
+		setOffline(OfflineReason.browserOffline);
 	});
 
 	// When the browser comes back online, ping to verify the server is up too.
@@ -72,7 +93,7 @@ if (typeof window !== 'undefined') {
  * Whether the server is currently reachable.
  */
 export function isOnline(): boolean {
-	return onlineState;
+	return onlineState === null;
 }
 
 /**
@@ -90,5 +111,32 @@ export function isInitialPingDone(): boolean {
  * scheduled ping.
  */
 export function markOffline(): void {
-	onlineState = false;
+	setOffline(OfflineReason.apiError);
+}
+
+/**
+ * The current reason the app considers itself offline. `null` when online.
+ */
+export function getOfflineReason(): OfflineReason | null {
+	return onlineState;
+}
+
+/**
+ * Force the app offline (or release the override). When releasing, immediately
+ * pings to restore real connectivity state.
+ */
+export function setOfflineOverride(force: boolean): void {
+	if (force) {
+		setOffline(OfflineReason.forced);
+	} else {
+		// Restore real state by pinging immediately.
+		void ping();
+	}
+}
+
+/**
+ * Whether the debug offline override is currently active.
+ */
+export function isOfflineOverridden(): boolean {
+	return onlineState === OfflineReason.forced;
 }
