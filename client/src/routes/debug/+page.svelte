@@ -9,8 +9,7 @@
 		setOfflineOverride,
 		type OfflineReason,
 	} from '$lib/online.svelte';
-	import { listGraphs, getGraph } from '$lib/services/graph';
-	import { listChoices, getCount, listRequests } from '$lib/services/favour';
+	import { syncAll } from '$lib/db/sync';
 	import { clearToken } from '$lib/api/auth';
 	import { goto } from '$app/navigation';
 	import { ChevronLeft, ChevronUp, RefreshCw } from 'lucide-svelte';
@@ -392,42 +391,16 @@
 		}
 	}
 
-	async function syncAll() {
+	async function handleSync() {
 		syncing = true;
 		log = [];
 
 		try {
-			append('fetch graphs');
-			const graphs = await listGraphs();
-			appendResult(`${graphs.length} graph(s)`);
-
-			for (const g of graphs) {
-				if (g.starting_at > new Date()) {
-					append(`skip future graph "${g.id}"`);
-					continue;
-				}
-
-				append(`fetch graph "${g.title}"`);
-				await getGraph(g.id);
-				appendResult('ok');
-			}
-
-			append('fetch favour choices');
-			const choices = await listChoices();
-			appendResult(`${choices.length} choice(s)`);
-
-			append('fetch favour count');
-			await getCount();
-			appendResult('ok');
-
-			append('fetch favour requests');
-			const requests = await listRequests();
-			appendResult(`${requests.length} request(s)`);
-
+			await syncAll({ step: append, result: appendResult, error: appendError });
 			appendSummary('sync complete');
 			loadDiagnostics();
-		} catch (e) {
-			appendError(e instanceof Error ? e.message : String(e));
+		} catch {
+			// error already logged to terminal by syncAll
 		} finally {
 			syncing = false;
 		}
@@ -779,7 +752,7 @@
 			<button
 				class="btn btn-primary rounded-2xl"
 				disabled={busy || !online}
-				onclick={syncAll}
+				onclick={handleSync}
 			>
 				{#if syncing}
 					<span class="loading loading-spinner loading-sm"></span>

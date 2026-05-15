@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { dev } from '$app/environment'
+	import { onMount } from 'svelte';
 	import { onNavigate } from '$app/navigation';
 	import { PUBLIC_SERVICE_WORKER, PUBLIC_S3_ORIGIN, PUBLIC_MAINTENANCE_MODE } from '$env/static/public';
 	import MaintenanceBanner from '$lib/ui/MaintenanceBanner.svelte';
+	import { startSync } from '$lib/db/sync';
 
 	import "../app.css";
 
@@ -23,6 +25,10 @@
 				await navigation.complete;
 			});
 		});
+	});
+
+	onMount(() => {
+		startSync();
 	});
 
 	if (PUBLIC_SERVICE_WORKER == "true" && 'serviceWorker' in navigator) {

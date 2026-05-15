@@ -121,14 +121,14 @@ Each graph has a **starting date**. Before that date, the client sees a countdow
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Backend | Go 1.26, stdlib `net/http`, SQLite via `go-sqlite3` (CGo) |
-| Admin frontend | SvelteKit (Svelte 5), TypeScript, Vite 7, SvelteFlow, scoped CSS |
+| Layer           | Technology                                                          |
+|-----------------|---------------------------------------------------------------------|
+| Backend         | Go 1.26, stdlib `net/http`, SQLite via `go-sqlite3` (CGo)           |
+| Admin frontend  | SvelteKit (Svelte 5), TypeScript, Vite 7, SvelteFlow, scoped CSS    |
 | Client frontend | SvelteKit (Svelte 5), TypeScript, Vite 7, Tailwind CSS 4, DaisyUI 5 |
-| Icons | lucide-svelte |
-| Database | SQLite with WAL mode |
-| External deps | One: `github.com/mattn/go-sqlite3`. Everything else is Go stdlib. |
+| Icons           | lucide-svelte                                                       |
+| Database        | SQLite with WAL mode                                                |
+| External deps   | One: `github.com/mattn/go-sqlite3`. Everything else is Go stdlib.   |
 
 ---
 
@@ -227,13 +227,13 @@ The backend loads configuration in four layers, each overriding the previous:
 
 Key environment variables:
 
-| Variable | Description | Default |
-|----------|------------|---------|
-| `APP_ENV` | `develop` or `production` | `develop` |
-| `SERVER_PORT` | Port the backend listens on | `8080` |
-| `ADMIN_API_KEY` | Static key for admin auth | — |
-| `DATABASE_PATH` | Path to SQLite file | `db.sqlite` |
-| `FILE_STORAGE_TYPE` | `local` or `s3` | `local` |
+| Variable            | Description                 | Default     |
+|---------------------|-----------------------------|-------------|
+| `APP_ENV`           | `develop` or `production`   | `develop`   |
+| `SERVER_PORT`       | Port the backend listens on | `8080`      |
+| `ADMIN_API_KEY`     | Static key for admin auth   | —           |
+| `DATABASE_PATH`     | Path to SQLite file         | `db.sqlite` |
+| `FILE_STORAGE_TYPE` | `local` or `s3`             | `local`     |
 
 Both frontends use `PUBLIC_SERVER_URL` to point at the backend (no `/api` suffix — all endpoint paths include it).
 
