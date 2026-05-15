@@ -67,11 +67,13 @@ self.addEventListener('fetch', (event) => {
 		caches.match(request).then((cached) => {
 			if (cached) return cached;
 
-			// Navigation requests that miss the cache get the SPA fallback,
-			// so the client-side router can handle the URL
-			if (request.mode === 'navigate') {
-				return caches.match(APP_SHELL).then((fallback) => fallback || fetch(request));
-			}
+		// Navigation requests that miss the cache get the SPA fallback,
+		// so the client-side router can handle the URL.
+		// Exception: /_app/ paths are static build assets (JS, source maps, etc.)
+		// that should be fetched from the network, not replaced with the SPA shell.
+		if (request.mode === 'navigate' && !url.pathname.startsWith('/_app/')) {
+			return caches.match(APP_SHELL).then((fallback) => fallback || fetch(request));
+		}
 
 			return fetch(request);
 		})
