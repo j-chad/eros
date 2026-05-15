@@ -231,7 +231,7 @@
 							 class:animate-popIn={celebrationState === 'gate-success'}
 						>
 							<div
-								class="w-20 h-20 rounded-full flex items-center justify-center shadow-lg {celebrationState === 'reward-reveal' ? 'bg-primary/15 shadow-pink-200/60 animate-glowPulse' : 'bg-success/15'}"
+								class="w-20 h-20 rounded-full flex items-center justify-center shadow-lg {celebrationState === 'reward-reveal' ? 'bg-primary/15 shadow-primary/30 animate-glowPulse' : 'bg-success/15'}"
 							>
 								{#if celebrationState === 'reward-reveal'}
 									<Heart size={32} class="text-primary" />

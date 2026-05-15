@@ -21,7 +21,7 @@
 	<img
 		src="/favicon.svg"
 		alt="Eros"
-		class="h-9 w-9 rounded-xl shadow shadow-pink-200"
+		class="h-9 w-9 rounded-xl shadow shadow-primary/20"
 		aria-hidden="true"
 	/>
 {:else}
@@ -30,7 +30,7 @@
 			<img
 				src="/favicon.svg"
 				alt="Eros"
-				class="h-11 w-11 rounded-2xl shadow-lg shadow-pink-200"
+				class="h-11 w-11 rounded-2xl shadow-lg shadow-primary/20"
 				aria-hidden="true"
 			/>
 

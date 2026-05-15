@@ -41,7 +41,7 @@
 		<div class="flex flex-1 items-center justify-center sm:py-12" style="view-transition-name: card-content">
 			<div class="w-full animate-popIn">
 				<!-- Full-bleed on mobile, card on sm+ -->
-				<div class="card-body gap-6 text-center sm:card sm:rounded-3xl sm:bg-secondary sm:shadow-xl sm:shadow-pink-200/40">
+				<div class="card-body gap-6 text-center sm:card sm:rounded-3xl sm:bg-secondary sm:shadow-xl sm:shadow-primary/20">
 					<p class="text-5xl font-black text-primary/30">{status}</p>
 
 					<div class="space-y-2">

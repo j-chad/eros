@@ -258,7 +258,7 @@
 						<div class="pointer-events-none absolute inset-0 grid place-items-center">
 							<div
 								class="w-[72%] max-w-70 aspect-square rounded-3xl border-2 border-white/70 shadow-[0_0_0_999px_rgba(0,0,0,0.25)]">
-								<div class="h-full w-full rounded-3xl ring-2 ring-pink-300/60"></div>
+								<div class="h-full w-full rounded-3xl ring-2 ring-primary/60"></div>
 							</div>
 						</div>
 

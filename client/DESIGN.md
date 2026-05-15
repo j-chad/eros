@@ -17,9 +17,11 @@ The app should work beautifully on both mobile and desktop. The most common use 
 
 Built on DaisyUI's `valentine` theme. The palette is blush pinks with deep rose accents. Don't introduce colours outside this set.
 
-- **Cards** sit on `base-100` (white/off-white) with a pink-tinted shadow (`shadow-pink-200/40`)
+- **Cards** sit on `base-100` (white/off-white) with a primary-tinted shadow (`shadow-primary/20`)
 - **Primary actions** use the DaisyUI `primary` colour (deep rose)
 - **Subtle insets** use `base-200` (a light grey-pink)
+
+All coloured shadows and rings must use DaisyUI semantic tokens (e.g. `shadow-primary/20`, `ring-primary/60`) — never hardcoded Tailwind palette colours like `pink-200`. This ensures shadows adapt when the active theme changes.
 
 ---
 
@@ -29,7 +31,7 @@ Everything is heavily rounded — this softness is core to the feel.
 
 - **Cards and large containers:** `rounded-3xl`
 - **Buttons, inputs, alerts, chips:** `rounded-2xl`
-- **Elevated surfaces** (cards, the brand logo) carry a pink shadow. Plain white surfaces should never float without one.
+- **Elevated surfaces** (cards, the brand logo) carry a primary-tinted shadow (`shadow-primary/20`). Plain white surfaces should never float without one.
 
 ---
 

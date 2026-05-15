@@ -60,7 +60,7 @@
 <div class="flex flex-col items-center gap-6 text-center animate-rewardReveal">
 	<!-- Icon -->
 	<div
-		class="w-20 h-20 rounded-full bg-primary/15 flex items-center justify-center shadow-lg shadow-pink-200/60"
+		class="w-20 h-20 rounded-full bg-primary/15 flex items-center justify-center shadow-lg shadow-primary/30"
 	>
 		<Icon size={32} class="text-primary" />
 	</div>
@@ -98,7 +98,7 @@
 		</div>
 
 	{:else if rewardType === RewardType.IMAGE && file}
-		<div class="w-full rounded-2xl overflow-hidden shadow-md shadow-pink-200/30">
+		<div class="w-full rounded-2xl overflow-hidden shadow-md shadow-primary/15">
 			<img
 				src={file.url}
 				alt={node.title}
@@ -108,7 +108,7 @@
 		</div>
 
 	{:else if rewardType === RewardType.VIDEO && file}
-		<div class="w-full rounded-2xl overflow-hidden shadow-md shadow-pink-200/30">
+		<div class="w-full rounded-2xl overflow-hidden shadow-md shadow-primary/15">
 			<!-- svelte-ignore a11y_media_has_caption -->
 			<video
 				src={file.url}
