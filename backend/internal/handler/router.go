@@ -22,6 +22,7 @@ func NewHandler(
 	favourService *service.FavourService,
 	graphService *service.GraphService,
 	fileService *service.FileService,
+	pushService *service.PushService,
 ) *Handler {
 	handler := &Handler{
 		auth:   authService,
@@ -77,6 +78,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	clientMux.HandleFunc("GET /api/graphs", h.client.ListGraphs)
 	clientMux.HandleFunc("GET /api/graphs/{id}", h.client.GetGraph)
 	clientMux.Handle("POST /api/nodes/{id}/unlock", nodeRateLimiter.Middleware(http.HandlerFunc(h.client.UnlockNode)))
+	clientMux.HandleFunc("POST /api/push/subscribe", h.client.SubscribePush)
 	mux.Handle("/api/", middleware.WithClientAuth(clientMux, *h.auth))
 
 	mux.HandleFunc("/", routeNotFound)

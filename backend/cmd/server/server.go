@@ -30,12 +30,13 @@ func runServer(conf *config.Config) {
 	}
 
 	authService := service.NewAuthService(conf.Auth, database)
+	pushService := service.NewPushService(conf.Push, database)
 	favourService := service.NewFavourService(database)
 	fileService := service.NewFileService(database, fileStore)
 	adminService := service.NewAdminService(database, fileStore, fileService)
 	graphService := service.NewGraphService(database, fileService)
 
-	h := handler.NewHandler(authService, adminService, favourService, graphService, fileService)
+	h := handler.NewHandler(authService, adminService, favourService, graphService, fileService, pushService)
 
 	mux := http.NewServeMux()
 	h.RegisterRoutes(mux)

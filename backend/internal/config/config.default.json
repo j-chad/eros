@@ -17,5 +17,13 @@
 			"max_spans": 10000,
 			"trace_header": "X-Trace-Id"
 		}
+	},
+	"push": {
+		"allowed_hosts": [
+			"fcm.googleapis.com",
+			"updates.push.services.mozilla.com",
+			"wns.windows.com",
+			"push.apple.com"
+		]
 	}
 }

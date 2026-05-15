@@ -12,6 +12,7 @@ type Config struct {
 	Database    DatabaseConfig    `json:"database"`
 	Auth        AuthConfig        `json:"auth"`
 	FileStorage FileStorageConfig `json:"file_storage"`
+	Push        PushConfig        `json:"push"`
 }
 
 // LoggingConfig contains logging settings
@@ -79,4 +80,8 @@ type S3FileStorageConfig struct {
 	Endpoint  string `json:"endpoint" env:"FILE_STORAGE_S3_ENDPOINT"`
 	AccessKey string `json:"access_key" env:"FILE_STORAGE_S3_ACCESS_KEY"`
 	SecretKey string `json:"secret_key" env:"FILE_STORAGE_S3_SECRET_KEY"`
+}
+
+type PushConfig struct {
+	AllowedHosts []string `json:"allowed_hosts" env:"PUSH_ALLOWED_HOSTS"`
 }
