@@ -3,6 +3,7 @@
 	import type { UnlockResult } from '$lib/api/graph.api';
 	import { KeyRound } from 'lucide-svelte';
 	import { isOnline } from '$lib/online.svelte';
+	import NodeDescription from "$lib/ui/nodes/NodeDescription.svelte";
 
 	const { node, graphId, onUnlock }: { 
 		node: CodeNode; 
@@ -59,9 +60,7 @@
 
 	<div class="flex flex-col gap-2">
 		<h1 class="text-2xl font-extrabold">{node.title}</h1>
-		{#if node.description}
-			<pre class="text-sm opacity-70 leading-relaxed">{node.description}</pre>
-		{/if}
+		<NodeDescription description={node.description}/>
 	</div>
 
 	<div class="w-full flex flex-col gap-3">

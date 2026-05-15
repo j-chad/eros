@@ -15,6 +15,7 @@
 	} from 'lucide-svelte';
 
 	import { isOnline } from '$lib/online.svelte';
+	import NodeDescription from "$lib/ui/nodes/NodeDescription.svelte";
 
 	const { node }: { node: RewardNode } = $props();
 
@@ -71,9 +72,7 @@
 			Reward Unlocked
 		</p>
 		<h1 class="text-2xl font-extrabold">{node.title}</h1>
-		{#if node.description}
-			<pre class="text-sm opacity-70 leading-relaxed">{node.description}</pre>
-		{/if}
+		<NodeDescription description={node.description}/>
 	</div>
 
 	<!-- Favour badge -->

@@ -4,6 +4,7 @@
 	import { Clock } from 'lucide-svelte';
 	import { isOnline } from '$lib/online.svelte';
 	import Countdown from '$lib/ui/Countdown.svelte';
+	import NodeDescription from "$lib/ui/nodes/NodeDescription.svelte";
 
 	const { node, graphId, onUnlock }: {
 		node: TimeNode;
@@ -49,9 +50,7 @@
 
 	<div class="flex flex-col gap-2">
 		<h1 class="text-2xl font-extrabold">{node.title}</h1>
-		{#if node.description}
-			<pre class="text-sm opacity-70 leading-relaxed">{node.description}</pre>
-		{/if}
+		<NodeDescription description={node.description}/>
 	</div>
 
 	{#if errorMessage}

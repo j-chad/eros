@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { StartNode } from '$lib/types/graph';
 	import { MapPin } from 'lucide-svelte';
+	import NodeDescription from "$lib/ui/nodes/NodeDescription.svelte";
 
 	const { node }: { node: StartNode } = $props();
 </script>
@@ -12,9 +13,7 @@
 
 	<div class="flex flex-col gap-2">
 		<h1 class="text-2xl font-extrabold">{node.title}</h1>
-		{#if node.description}
-			<pre class="text-sm opacity-70 leading-relaxed">{node.description}</pre>
-		{/if}
+		<NodeDescription description={node.description}/>
 	</div>
 
 	<div class="badge badge-primary badge-outline rounded-2xl px-4 py-3 text-xs font-semibold">
