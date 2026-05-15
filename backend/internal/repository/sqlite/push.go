@@ -7,9 +7,9 @@ import (
 
 func (s *sqliteDB) CreatePushSubscription(ctx context.Context, deviceID string, sub models.PushSubscription) error {
 	_, err := s.executor().ExecContext(ctx, `
-		INSERT INTO push_subscription (device_id, endpoint, p256dh, auth)
-		VALUES (?, ?, ?, ?)
-	`, deviceID, sub.Endpoint, sub.P256DH, sub.Auth)
+		INSERT INTO push_subscription (device_id, endpoint, p256dh, auth) VALUES (?, ?, ?, ?) 
+		ON CONFLICT(device_id) DO UPDATE SET endpoint = excluded.endpoint, p256dh = excluded.p256dh, auth = excluded.auth
+	`, deviceID, sub.Endpoint, sub.Keys.P256dh, sub.Keys.Auth)
 	return err
 }
 
@@ -28,7 +28,7 @@ func (s *sqliteDB) GetPushSubscriptions(ctx context.Context) ([]models.PushSubsc
 	var subs []models.PushSubscription
 	for rows.Next() {
 		var sub models.PushSubscription
-		if err := rows.Scan(&sub.Endpoint, &sub.P256DH, &sub.Auth); err != nil {
+		if err := rows.Scan(&sub.Endpoint, &sub.Keys.P256dh, &sub.Keys.Auth); err != nil {
 			return nil, err
 		}
 		subs = append(subs, sub)
