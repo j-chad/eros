@@ -703,6 +703,13 @@
 					<div class="border-t border-base-content/5"></div>
 
 					<div class="flex items-center justify-between">
+						<span class="opacity-50 text-xs">Flag</span>
+						<span class="font-mono text-xs">eros&lbrace;n0t_f0r_y0ur_3y3s&rbrace;</span>
+					</div>
+
+					<div class="border-t border-base-content/5"></div>
+
+					<div class="flex items-center justify-between">
 						<span class="opacity-50 text-xs">Service Worker</span>
 						<span class="font-mono text-xs">{diagnostics.swStatus}</span>
 					</div>
