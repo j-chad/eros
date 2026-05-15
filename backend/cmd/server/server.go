@@ -43,7 +43,7 @@ func runServer(conf *config.Config) {
 	serverAddr := fmt.Sprintf("%s:%d", conf.Server.Host, conf.Server.Port)
 	server := &http.Server{
 		Addr:         serverAddr,
-		Handler:      middleware.WithLogging(middleware.WithCORS(mux, conf.Server.CorsOrigins)),
+		Handler:      middleware.WithLogging(middleware.WithCTF(middleware.WithCORS(mux, conf.Server.CorsOrigins))),
 		ReadTimeout:  conf.Server.ReadTimeout,
 		WriteTimeout: conf.Server.WriteTimeout,
 		IdleTimeout:  conf.Server.IdleTimeout,
