@@ -16,8 +16,25 @@
 	const s3Csp = s3Origin ? ` ${s3Origin}` : '';
 	const csp = `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.tile.openstreetmap.org${s3Csp}; connect-src 'self' http://localhost:* https://*; media-src 'self' blob:${s3Csp}; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'`;
 
+	// Detect iOS edge-swipe-back so we can skip the View Transition for it —
+	// iOS provides its own slide animation and layering ours on top causes a
+	// flash of the old page.
+	const isIOS = /iPhone|iPad/.test(navigator.userAgent);
+	let iosEdgeSwipe = false;
+
+	if (isIOS) {
+		window.addEventListener('touchstart', (e) => {
+			const touch = e.touches[0];
+			if (touch && touch.clientX < 25) {
+				iosEdgeSwipe = true;
+				setTimeout(() => { iosEdgeSwipe = false; }, 2000);
+			}
+		}, { passive: true });
+	}
+
 	onNavigate((navigation) => {
 		if (!document.startViewTransition) return;
+		if (iosEdgeSwipe && navigation.type === 'popstate') return;
 
 		return new Promise((resolve) => {
 			document.startViewTransition(async () => {
