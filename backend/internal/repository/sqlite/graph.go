@@ -265,3 +265,45 @@ func (s *sqliteDB) LockNode(ctx context.Context, nodeID string) error {
 
 	return nil
 }
+
+func (s *sqliteDB) GetGraphsPendingNotification(ctx context.Context) ([]models.Graph, error) {
+	//language=sqlite
+	rows, err := s.executor().QueryContext(ctx, `
+		SELECT id, title, description, created_at, updated_at, starting_at
+		FROM graph
+		WHERE notified_at IS NULL 
+		  AND starting_at IS NOT NULL 
+		  AND starting_at <= CURRENT_TIMESTAMP
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query graphs pending notification: %w", err)
+	}
+	defer rows.Close()
+
+	var graphs []models.Graph
+	for rows.Next() {
+		var graph models.Graph
+		if err := rows.Scan(&graph.ID, &graph.Title, &graph.Description, &graph.CreatedAt, &graph.UpdatedAt, &graph.StartingAt); err != nil {
+			return nil, fmt.Errorf("failed to scan graph pending notification: %w", err)
+		}
+		graphs = append(graphs, graph)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating graphs pending notification: %w", err)
+	}
+
+	return graphs, nil
+}
+
+func (s *sqliteDB) MarkGraphNotified(ctx context.Context, graphID string) error {
+	//language=sqlite
+	_, err := s.executor().ExecContext(ctx, `
+		UPDATE graph SET notified_at = CURRENT_TIMESTAMP WHERE id = ? AND notified_at IS NULL
+	`)
+	if err != nil {
+		return fmt.Errorf("failed to mark graph notified %s: %w", graphID, err)
+	}
+
+	return nil
+}

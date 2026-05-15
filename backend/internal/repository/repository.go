@@ -58,6 +58,8 @@ type GraphRepository interface {
 	GetAccessibleNode(ctx context.Context, nodeID string) (*models.Node, error)
 	UnlockNode(ctx context.Context, nodeID string) error
 	LockNode(ctx context.Context, nodeID string) error
+	GetGraphsPendingNotification(ctx context.Context) ([]models.Graph, error)
+	MarkGraphNotified(ctx context.Context, graphID string) error
 }
 
 type FileRepository interface {
@@ -67,4 +69,10 @@ type FileRepository interface {
 	GetFileByNodeID(ctx context.Context, nodeID string) (*models.File, error)
 	GetFilesByNodeIDs(ctx context.Context, nodeIDs []string) (map[string]models.File, error)
 	DeleteFilesByNodeID(ctx context.Context, nodeID string) ([]string, error) // Returns storage keys for cleanup.
+}
+
+type PushRepository interface {
+	CreatePushSubscription(ctx context.Context, deviceID string, sub models.PushSubscription) error
+	DeletePushSubscriptions(ctx context.Context, deviceID string) error
+	GetPushSubscriptions(ctx context.Context) ([]models.PushSubscription, error)
 }
