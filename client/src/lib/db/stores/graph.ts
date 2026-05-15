@@ -1,9 +1,19 @@
 import { db, promisifyRequest } from '$lib/db/db';
 import type { GraphDetail, GraphSummary } from '$lib/types/graph';
 
+function hydrateGraphSummary(g: GraphSummary): GraphSummary {
+	return {
+		...g,
+		starting_at: g.starting_at instanceof Date ? g.starting_at : new Date(g.starting_at as unknown as string),
+		created_at: g.created_at instanceof Date ? g.created_at : new Date(g.created_at as unknown as string),
+		updated_at: g.updated_at instanceof Date ? g.updated_at : new Date(g.updated_at as unknown as string),
+	};
+}
+
 export async function getAllGraphs(): Promise<GraphSummary[]> {
 	const store = await db.getStore('graphs', 'readonly');
-	return promisifyRequest(store.getAll());
+	const graphs = await promisifyRequest(store.getAll());
+	return graphs.map(hydrateGraphSummary);
 }
 
 export async function putGraphs(graphs: GraphSummary[]): Promise<void> {

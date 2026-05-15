@@ -26,6 +26,11 @@
 	});
 
 	if (PUBLIC_SERVICE_WORKER == "true" && 'serviceWorker' in navigator) {
+		const prevController = navigator.serviceWorker.controller;
+		navigator.serviceWorker.addEventListener('controllerchange', () => {
+			if (prevController) window.location.reload();
+		});
+
 		if (document.readyState === 'complete') {
 			registerSW();
 		} else {
