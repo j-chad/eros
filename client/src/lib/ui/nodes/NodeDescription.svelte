@@ -3,7 +3,7 @@
 </script>
 
 {#if description}
-	<div class="prose prose-sm text-sm opacity-70 leading-relaxed text-center">
+	<div class="prose prose-sm text-sm opacity-70 leading-relaxed">
 		{@html description}
 	</div>
 {/if}
