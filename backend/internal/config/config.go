@@ -36,7 +36,12 @@ type ServerConfig struct {
 	ReadTimeout  time.Duration `json:"read_timeout" env:"SERVER_READ_TIMEOUT"`
 	WriteTimeout time.Duration `json:"write_timeout" env:"SERVER_WRITE_TIMEOUT"`
 	IdleTimeout  time.Duration `json:"idle_timeout" env:"SERVER_IDLE_TIMEOUT"`
-	CorsOrigins  []string      `json:"cors_origins" env:"CORS_ALLOWED_ORIGINS"`
+	CORS         CORSConfig    `json:"cors"`
+}
+
+type CORSConfig struct {
+	AllowedOrigins      []string `json:"allowed_origins" env:"CORS_ALLOWED_ORIGINS"`
+	AllowPrivateNetwork bool     `json:"allow_private_network" env:"CORS_ALLOW_PRIVATE_NETWORK"`
 }
 
 // DatabaseConfig contains database settings

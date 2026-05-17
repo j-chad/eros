@@ -1,10 +1,13 @@
 package middleware
 
-import "net/http"
+import (
+	"backend/internal/config"
+	"net/http"
+)
 
-func WithCORS(next http.Handler, allowedOrigins []string) http.Handler {
+func WithCORS(next http.Handler, conf config.CORSConfig) http.Handler {
 	wildcard := false
-	for _, o := range allowedOrigins {
+	for _, o := range conf.AllowedOrigins {
 		if o == "*" {
 			wildcard = true
 			break
@@ -18,16 +21,17 @@ func WithCORS(next http.Handler, allowedOrigins []string) http.Handler {
 			// Wildcard mode: allow all origins but never send credentials.
 			// Browsers refuse Access-Control-Allow-Credentials with a wildcard origin.
 			w.Header().Set("Access-Control-Allow-Origin", "*")
-		} else if isOriginAllowed(origin, allowedOrigins) {
+		} else if isOriginAllowed(origin, conf.AllowedOrigins) {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Add("Vary", "Origin")
 		}
 
-		// Allowed methods
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
+		if conf.AllowPrivateNetwork {
+			w.Header().Set("Access-Control-Allow-Private-Network", "true")
+		}
 
-		// Allowed headers
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
 		// Max age for preflight cache (48 hours)

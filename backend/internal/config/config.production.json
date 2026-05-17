@@ -1,8 +1,7 @@
 {
 	"server": {
 		"port": 8080,
-		"host": "0.0.0.0",
-		"cors_origins": []
+		"host": "0.0.0.0"
 	},
 	"database": {
 		"path": "/data/db/eros.sqlite"
