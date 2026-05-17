@@ -67,7 +67,7 @@ async function ping(): Promise<boolean> {
 		if (res.status === 401) {
 			await clearToken();
 			await goto('/login?reason=session_expired');
-			return false;
+			return true;
 		}
 
 		// Any HTTP response means the server is reachable.
