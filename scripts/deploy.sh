@@ -12,6 +12,8 @@ set -euo pipefail
 
 NAS_HOST="lounge@192.168.1.197"
 NAS_DIR="~/eros"
+CLIENT_DOMAIN="eros.jacksonc.dev"
+GH_REPO=$(git remote get-url origin)
 
 step() { printf "\n\033[1;34m==> %s\033[0m\n" "$1"; }
 
@@ -46,11 +48,24 @@ docker build --platform linux/amd64 -f Dockerfile.caddy -t eros-caddy .
 step "Transferring Docker images to NAS"
 docker save eros-backend eros-caddy | ssh "$NAS_HOST" "docker load"
 
-# 4. Sync frontend builds
-step "Syncing frontend builds to NAS"
-ssh "$NAS_HOST" "mkdir -p $NAS_DIR/admin-build $NAS_DIR/client-build"
+# 4. Sync admin build
+step "Syncing admin build to NAS"
+ssh "$NAS_HOST" "mkdir -p $NAS_DIR/admin-build"
 rsync -a --delete admin/build/ "$NAS_HOST:$NAS_DIR/admin-build/"
-rsync -a --delete client/build/ "$NAS_HOST:$NAS_DIR/client-build/"
+
+# 5. Deploy client build to GH Pages
+cp client/build/200.html client/build/404.html
+touch client/build/.nojekyll
+echo "$CLIENT_DOMAIN" > client/build/CNAME
+(
+  cd client/build
+  git init
+  git checkout -b gh-pages
+  git add .
+  git commit -m "Deploy client"
+  git remote add origin "$GH_REPO"
+  git push -f origin gh-pages
+)
 
 # 5. Copy compose + config files
 step "Copying compose and Caddy config"
