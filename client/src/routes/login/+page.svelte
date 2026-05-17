@@ -23,6 +23,8 @@
 	let busy = $state(false);
 	let error = $state<string | null>(null);
 
+	const sessionExpired = new URLSearchParams(window.location.search).get('reason') === 'session_expired';
+
 	// camera / scanning
 	let canScan = $state(false);
 	let scanning = $state(false);
@@ -236,6 +238,12 @@
 	<div style="view-transition-name: card-content">
 	<Card padded={false}>
 		<div class="card-body gap-3 sm:gap-4">
+			{#if sessionExpired}
+				<div class="alert alert-warning rounded-2xl">
+					<span class="text-sm">Your session has expired. Please log in again.</span>
+				</div>
+			{/if}
+
 			{#if error}
 				<div class="alert alert-error rounded-2xl">
 					<span class="text-sm">{error}</span>
