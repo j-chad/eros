@@ -1,14 +1,17 @@
 #!/bin/bash
 set -euo pipefail
 
-# Deploy Eros to the NAS.
+# Deploy Eros.
 # Run from the repo root on your local machine.
 #
+# Usage:
+#   ./scripts/deploy.sh          - deploy everything (server + client)
+#   ./scripts/deploy.sh server   - deploy backend + admin to NAS
+#   ./scripts/deploy.sh client   - deploy client PWA to GitHub Pages
+#
 # Prerequisites:
-#   - NAS reachable via SSH as "$NAS_HOST"
-#   - Docker Desktop running locally
-#   - Node installed (see .nvmrc)
-#   - ~/eros/ directory exists on the NAS with .env file
+#   server: NAS reachable via SSH, Docker Desktop running, ~/eros/ on NAS with .env
+#   client: Node installed (see .nvmrc), git push access to origin
 
 NAS_HOST="lounge@192.168.1.197"
 NAS_DIR="~/eros"
@@ -23,61 +26,90 @@ if [[ ! -f Dockerfile.backend ]]; then
     exit 1
 fi
 
-# Verify NAS is reachable
-step "Checking NAS connectivity"
-if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$NAS_HOST" true; then
-    echo "Error: cannot reach $NAS_HOST - check SSH key auth (ssh-copy-id $NAS_HOST)" >&2
-    exit 1
-fi
+deploy_server() {
+    # Verify NAS is reachable
+    step "Checking NAS connectivity"
+    if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$NAS_HOST" true; then
+        echo "Error: cannot reach $NAS_HOST - check SSH key auth (ssh-copy-id $NAS_HOST)" >&2
+        exit 1
+    fi
 
-# 1. Build frontends
-step "Building admin frontend"
-(cd admin && npm run build)
+    # Build admin frontend
+    step "Building admin frontend"
+    (cd admin && npm run build)
 
-step "Building client frontend"
-(cd client && npm run build)
+    # Build Docker images
+    step "Building backend Docker image (linux/amd64)"
+    docker build --platform linux/amd64 -f Dockerfile.backend -t eros-backend .
 
-# 2. Build Docker images
-step "Building backend Docker image (linux/amd64)"
-docker build --platform linux/amd64 -f Dockerfile.backend -t eros-backend .
+    step "Building Caddy Docker image (linux/amd64)"
+    docker build --platform linux/amd64 -f Dockerfile.caddy -t eros-caddy .
 
-step "Building Caddy Docker image (linux/amd64)"
-docker build --platform linux/amd64 -f Dockerfile.caddy -t eros-caddy .
+    # Transfer images to NAS
+    step "Transferring Docker images to NAS"
+    docker save eros-backend eros-caddy | ssh "$NAS_HOST" "docker load"
 
-# 3. Transfer images to NAS
-step "Transferring Docker images to NAS"
-docker save eros-backend eros-caddy | ssh "$NAS_HOST" "docker load"
+    # Sync admin build
+    step "Syncing admin build to NAS"
+    ssh "$NAS_HOST" "mkdir -p $NAS_DIR/admin-build"
+    rsync -a --delete admin/build/ "$NAS_HOST:$NAS_DIR/admin-build/"
 
-# 4. Sync admin build
-step "Syncing admin build to NAS"
-ssh "$NAS_HOST" "mkdir -p $NAS_DIR/admin-build"
-rsync -a --delete admin/build/ "$NAS_HOST:$NAS_DIR/admin-build/"
+    # Copy compose + config files
+    step "Copying compose and Caddy config"
+    scp docker-compose.yml Caddyfile "$NAS_HOST:$NAS_DIR/"
 
-# 5. Deploy client build to GH Pages
-cp client/build/200.html client/build/404.html
-touch client/build/.nojekyll
-echo "$CLIENT_DOMAIN" > client/build/CNAME
-(
-  cd client/build
-  git init
-  git checkout -b gh-pages
-  git add .
-  git commit -m "Deploy client"
-  git remote add origin "$GH_REPO"
-  git push -f origin gh-pages
-)
+    # Run database migrations
+    step "Running database migrations"
+    ssh "$NAS_HOST" "cd $NAS_DIR && docker compose stop backend"
+    ssh "$NAS_HOST" "cd $NAS_DIR && docker compose run --rm backend eros-backend migrate"
 
-# 5. Copy compose + config files
-step "Copying compose and Caddy config"
-scp docker-compose.yml Caddyfile "$NAS_HOST:$NAS_DIR/"
+    # Restart the stack
+    step "Restarting Docker Compose stack"
+    ssh "$NAS_HOST" "cd $NAS_DIR && docker compose up -d --force-recreate"
 
-# 6. Run database migrations
-step "Running database migrations"
-ssh "$NAS_HOST" "cd $NAS_DIR && docker compose stop backend"
-ssh "$NAS_HOST" "cd $NAS_DIR && docker compose run --rm backend eros-backend migrate"
+    step "Server deploy complete"
+}
 
-# 7. Restart the stack
-step "Restarting Docker Compose stack"
-ssh "$NAS_HOST" "cd $NAS_DIR && docker compose up -d --force-recreate"
+deploy_client() {
+    # Build client frontend
+    step "Building client frontend"
+    (cd client && npm run build)
+
+    # Deploy to GitHub Pages
+    step "Deploying client to GitHub Pages"
+    cp client/build/200.html client/build/404.html
+    touch client/build/.nojekyll
+    echo "$CLIENT_DOMAIN" > client/build/CNAME
+    (
+        cd client/build
+        git init
+        git checkout -b gh-pages
+        git add .
+        git commit -m "Deploy client"
+        git remote add origin "$GH_REPO"
+        git push -f origin gh-pages
+    )
+
+    step "Client deploy complete"
+}
+
+TARGET="${1:-}"
+
+case "$TARGET" in
+    server)
+        deploy_server
+        ;;
+    client)
+        deploy_client
+        ;;
+    all)
+        deploy_server
+        deploy_client
+        ;;
+    *)
+        echo "Usage: $0 {server|client|all}" >&2
+        exit 1
+        ;;
+esac
 
 step "Deploy complete"
