@@ -76,7 +76,7 @@ export async function request<T = void>(
 	// them here if the server disagrees.
 	if (auth && response.status === 401) {
 		await clearToken();
-		throw redirect(307, '/login');
+		throw redirect(307, '/login?reason=session_expired');
 	}
 
 	const contentType = response.headers.get('content-type');

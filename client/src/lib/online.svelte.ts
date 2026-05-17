@@ -1,4 +1,6 @@
 import { PUBLIC_SERVER_URL as API_BASE } from '$env/static/public';
+import { loadToken, clearToken } from '$lib/api/auth';
+import { goto } from '$app/navigation';
 
 const PING_INTERVAL = 30_000;
 const PING_TIMEOUT = 5_000;
@@ -40,23 +42,35 @@ async function ping(): Promise<boolean> {
 		return false;
 	}
 
+	// Use the authenticated /ping endpoint when we have a token, so the
+	// server can tell us if the session has been revoked. Fall back to the
+	// unauthenticated /health endpoint otherwise (e.g. on the login page).
+	const token = await loadToken();
+	const endpoint = token ? '/ping' : '/health';
+	const headers: HeadersInit = {};
+	if (token) {
+		headers['Authorization'] = `Bearer ${token}`;
+	}
+
 	try {
 		const controller = new AbortController();
 		const timeout = setTimeout(() => controller.abort(), PING_TIMEOUT);
 
-		const res = await fetch(`${API_BASE}/health`, {
+		const res = await fetch(`${API_BASE}${endpoint}`, {
 			method: 'GET',
+			headers,
 			signal: controller.signal,
 		});
 		clearTimeout(timeout);
 
-		// Any HTTP response means the server is reachable.
-		if (res.ok) {
-			setOnline();
-			return true;
+		// Session revoked — clear local state and redirect to login.
+		if (res.status === 401) {
+			await clearToken();
+			await goto('/login?reason=session_expired');
+			return false;
 		}
 
-		// Non-OK but still a response — server is reachable, don't flip offline.
+		// Any HTTP response means the server is reachable.
 		setOnline();
 		return true;
 	} catch (err) {
