@@ -29,6 +29,7 @@
 
 	onMount(() => {
 		startSync();
+		navigator.storage?.persist();
 	});
 
 	if (PUBLIC_SERVICE_WORKER == "true" && 'serviceWorker' in navigator) {
