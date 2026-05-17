@@ -1,34 +1,19 @@
-import { loginRequest, isSessionValid } from '$lib/api/auth.api';
+import { loginRequest } from '$lib/api/auth.api';
 import { setToken, loadToken, clearToken } from '$lib/api/auth';
-import { ServerUnreachableError } from '$lib/api/http';
-import { isOnline } from '$lib/online.svelte';
 import { invalidate } from '$app/navigation';
 
 export const AUTH_DEPENDENCY = 'auth:session';
 
+/**
+ * Optimistic, local-only auth check. If a token exists in IndexedDB, the user
+ * is considered authenticated immediately — no network required. Token validity
+ * is verified lazily: the HTTP layer handles 401 responses by clearing the
+ * token and redirecting to /login.
+ */
 export async function isAuthenticated(): Promise<boolean> {
 	const token = await loadToken();
 	if (!token) {
-		console.warn('No auth token found, user is not authenticated.');
 		return false;
-	}
-
-	if (!isOnline()) {
-		return true; // trust cached token when server is unreachable
-	}
-
-	try {
-		if (!(await isSessionValid())) {
-			console.warn('Auth session is not valid, user is not authenticated.');
-			return false;
-		}
-	} catch (e) {
-		if (e instanceof ServerUnreachableError) {
-			// Server went down between the isOnline() check and the ping.
-			// Trust the cached token rather than logging the user out.
-			return true;
-		}
-		throw e;
 	}
 
 	return true;

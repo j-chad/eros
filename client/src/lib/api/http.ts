@@ -1,5 +1,5 @@
-import { error } from '@sveltejs/kit';
-import { authToken, loadToken } from './auth';
+import { error, redirect } from '@sveltejs/kit';
+import { authToken, loadToken, clearToken } from './auth';
 import { get } from 'svelte/store';
 import { PUBLIC_SERVER_URL as API_BASE } from '$env/static/public';
 import { markOffline } from '$lib/online.svelte';
@@ -44,13 +44,7 @@ export async function rawRequest(
 		// with the layout load that normally does this).
 		const token = get(authToken) ?? (await loadToken());
 		if (!token) {
-			throw error(401, {
-				message: 'Unauthorized: No authentication token found',
-				base: API_BASE,
-				endpoint,
-				method: options.method ?? 'GET',
-				body: null,
-			});
+			throw redirect(307, '/login');
 		}
 
 		headers.set('Authorization', `Bearer ${token}`);
@@ -75,6 +69,15 @@ export async function request<T = void>(
 	auth = true,
 ): Promise<T> {
 	const response = await rawRequest(endpoint, options, auth);
+
+	// Token has been revoked or expired — clear local state and send the user
+	// back to login. This is the lazy counterpart to the optimistic local-only
+	// auth check: we let the user in immediately with a cached token, and boot
+	// them here if the server disagrees.
+	if (auth && response.status === 401) {
+		await clearToken();
+		throw redirect(307, '/login');
+	}
 
 	const contentType = response.headers.get('content-type');
 	const isJson = !!contentType?.includes('application/json');
