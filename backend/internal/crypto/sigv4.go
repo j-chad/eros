@@ -1,7 +1,6 @@
 package crypto
 
 import (
-	"crypto/hmac"
 	"crypto/sha256"
 	"fmt"
 	"net/http"
@@ -92,19 +91,19 @@ func (s *SigV4Signer) SignRequest(req *http.Request, payloadHash string) {
 }
 
 func (s *SigV4Signer) deriveSigningKey(t time.Time) []byte {
-	dateKey := hmacSHA256([]byte("AWS4"+s.secretKey), t.Format(dateFormat))
-	regionKey := hmacSHA256(dateKey, s.region)
-	serviceKey := hmacSHA256(regionKey, service)
-	signingKey := hmacSHA256(serviceKey, aws4Request)
+	dateKey := hmacSHA256([]byte("AWS4"+s.secretKey), []byte(t.Format(dateFormat)))
+	regionKey := hmacSHA256(dateKey, []byte(s.region))
+	serviceKey := hmacSHA256(regionKey, []byte(service))
+	signingKey := hmacSHA256(serviceKey, []byte(aws4Request))
 	return signingKey
 }
 
-func (s *SigV4Signer) buildStringToSign(canonicalReq, scope string, t time.Time) string {
+func (s *SigV4Signer) buildStringToSign(canonicalReq, scope string, t time.Time) []byte {
 	hash := fmt.Sprintf("%x", sha256.Sum256([]byte(canonicalReq)))
-	return signingAlgo + "\n" +
+	return []byte(signingAlgo + "\n" +
 		t.Format(timeFormat) + "\n" +
 		scope + "\n" +
-		hash
+		hash)
 }
 
 func (s *SigV4Signer) buildCanonicalRequest(req *http.Request, payloadHash, signedHeaders, canonicalHeaders string) string {
@@ -179,10 +178,4 @@ func (s *SigV4Signer) awsURIEncode(path string, encodeSlash bool) string {
 		}
 	}
 	return b.String()
-}
-
-func hmacSHA256(key []byte, data string) []byte {
-	mac := hmac.New(sha256.New, key)
-	mac.Write([]byte(data))
-	return mac.Sum(nil)
 }
