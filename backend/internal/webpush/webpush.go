@@ -29,7 +29,7 @@ func SendNotification(ctx context.Context, payload []byte, sub Subscription, opt
 		return fmt.Errorf("encrypting payload: %w", err)
 	}
 
-	authHeader, err := vapidAuthorization(sub.Endpoint, opts.PrivateKey, opts.PublicKey, opts.Subject)
+	authHeader, err := vapidAuthorization(sub.Endpoint, opts.PrivateKey, opts.Subject)
 	if err != nil {
 		return fmt.Errorf("building VAPID authorization: %w", err)
 	}

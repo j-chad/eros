@@ -69,7 +69,7 @@ func encrypt(plaintext, uaPublicBytes, authSecret []byte) ([]byte, error) {
 		return nil, fmt.Errorf("failed to create GCM cipher: %w", err)
 	}
 	ciphertext := gcm.Seal(nil, nonce, plaintextBuf.Bytes(), nil)
-	
+
 	return append(header, ciphertext...), nil
 }
 

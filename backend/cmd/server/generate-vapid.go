@@ -1,12 +1,12 @@
 package main
 
 import (
-	"backend/internal/crypto"
+	"backend/internal/webpush"
 	"log"
 )
 
 func runGenerateVAPIDCmd() {
-	private, public, err := crypto.GenerateVapidKeys()
+	private, public, err := webpush.GenerateVapidKeys()
 	if err != nil {
 		log.Fatal(err)
 	}
