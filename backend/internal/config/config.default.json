@@ -24,7 +24,13 @@
 			"updates.push.services.mozilla.com",
 			"wns.windows.com",
 			"push.apple.com"
-		],
-		"schedule_interval": "1m"
+		]
+	},
+	"scheduler": {
+		"tasks": {
+			"graph_notifications": {
+				"cron": "*/10 * * * *"
+			}
+		}
 	}
 }
