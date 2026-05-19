@@ -4,10 +4,21 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type CronExpression struct {
 	minute, hour, dayOfMonth, month, dayOfWeek uint64
+}
+
+func (ce *CronExpression) Matches(t time.Time) bool {
+	minuteMatch := (ce.minute & (1 << t.Minute())) != 0
+	hourMatch := (ce.hour & (1 << t.Hour())) != 0
+	dayOfMonthMatch := (ce.dayOfMonth & (1 << t.Day())) != 0
+	monthMatch := (ce.month & (1 << (t.Month()))) != 0
+	dayOfWeekMatch := (ce.dayOfWeek & (1 << t.Weekday())) != 0
+
+	return minuteMatch && hourMatch && dayOfMonthMatch && monthMatch && dayOfWeekMatch
 }
 
 func ParseCronExpression(s string) (CronExpression, error) {

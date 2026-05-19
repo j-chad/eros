@@ -4,6 +4,7 @@ import (
 	"backend/internal/testutil"
 	"fmt"
 	"testing"
+	"time"
 )
 
 // bits returns a bitfield with the given bit positions set.
@@ -314,6 +315,138 @@ func TestParseCronExpression_ErrorIdentifiesField(t *testing.T) {
 				fmt.Sprintf("error should mention %q, got: %s", tt.field, err.Error()))
 		})
 	}
+}
+
+// --- Matches ---
+
+func TestCronExpression_Matches_EveryMinute(t *testing.T) {
+	expr, err := ParseCronExpression("* * * * *")
+	testutil.NilErr(t, err)
+
+	// Should match any time
+	testutil.True(t, expr.Matches(time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)))
+	testutil.True(t, expr.Matches(time.Date(2025, 6, 15, 12, 30, 0, 0, time.UTC)))
+	testutil.True(t, expr.Matches(time.Date(2025, 12, 31, 23, 59, 0, 0, time.UTC)))
+}
+
+func TestCronExpression_Matches_ExactTime(t *testing.T) {
+	// 30 12 15 6 * = 12:30 on June 15th, any day of week
+	expr, err := ParseCronExpression("30 12 15 6 *")
+	testutil.NilErr(t, err)
+
+	testutil.True(t, expr.Matches(time.Date(2025, 6, 15, 12, 30, 0, 0, time.UTC)))
+	testutil.False(t, expr.Matches(time.Date(2025, 6, 15, 12, 31, 0, 0, time.UTC)), "wrong minute")
+	testutil.False(t, expr.Matches(time.Date(2025, 6, 15, 11, 30, 0, 0, time.UTC)), "wrong hour")
+	testutil.False(t, expr.Matches(time.Date(2025, 6, 16, 12, 30, 0, 0, time.UTC)), "wrong day")
+	testutil.False(t, expr.Matches(time.Date(2025, 7, 15, 12, 30, 0, 0, time.UTC)), "wrong month")
+}
+
+func TestCronExpression_Matches_DailyAt3AM(t *testing.T) {
+	expr, err := ParseCronExpression("0 3 * * *")
+	testutil.NilErr(t, err)
+
+	testutil.True(t, expr.Matches(time.Date(2025, 1, 1, 3, 0, 0, 0, time.UTC)))
+	testutil.True(t, expr.Matches(time.Date(2025, 6, 15, 3, 0, 0, 0, time.UTC)))
+	testutil.False(t, expr.Matches(time.Date(2025, 1, 1, 3, 1, 0, 0, time.UTC)), "minute must be 0")
+	testutil.False(t, expr.Matches(time.Date(2025, 1, 1, 4, 0, 0, 0, time.UTC)), "wrong hour")
+}
+
+func TestCronExpression_Matches_Every15Minutes(t *testing.T) {
+	expr, err := ParseCronExpression("*/15 * * * *")
+	testutil.NilErr(t, err)
+
+	testutil.True(t, expr.Matches(time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)))
+	testutil.True(t, expr.Matches(time.Date(2025, 1, 1, 0, 15, 0, 0, time.UTC)))
+	testutil.True(t, expr.Matches(time.Date(2025, 1, 1, 0, 30, 0, 0, time.UTC)))
+	testutil.True(t, expr.Matches(time.Date(2025, 1, 1, 0, 45, 0, 0, time.UTC)))
+	testutil.False(t, expr.Matches(time.Date(2025, 1, 1, 0, 10, 0, 0, time.UTC)))
+	testutil.False(t, expr.Matches(time.Date(2025, 1, 1, 0, 59, 0, 0, time.UTC)))
+}
+
+func TestCronExpression_Matches_Weekdays(t *testing.T) {
+	// 0 9 * * 1-5 = 9:00 AM on weekdays
+	expr, err := ParseCronExpression("0 9 * * 1-5")
+	testutil.NilErr(t, err)
+
+	// 2025-01-06 is a Monday
+	testutil.True(t, expr.Matches(time.Date(2025, 1, 6, 9, 0, 0, 0, time.UTC)), "Monday")
+	testutil.True(t, expr.Matches(time.Date(2025, 1, 7, 9, 0, 0, 0, time.UTC)), "Tuesday")
+	testutil.True(t, expr.Matches(time.Date(2025, 1, 8, 9, 0, 0, 0, time.UTC)), "Wednesday")
+	testutil.True(t, expr.Matches(time.Date(2025, 1, 9, 9, 0, 0, 0, time.UTC)), "Thursday")
+	testutil.True(t, expr.Matches(time.Date(2025, 1, 10, 9, 0, 0, 0, time.UTC)), "Friday")
+	testutil.False(t, expr.Matches(time.Date(2025, 1, 11, 9, 0, 0, 0, time.UTC)), "Saturday")
+	testutil.False(t, expr.Matches(time.Date(2025, 1, 12, 9, 0, 0, 0, time.UTC)), "Sunday")
+}
+
+func TestCronExpression_Matches_Sunday0(t *testing.T) {
+	// * * * * 0 = every minute on Sunday
+	expr, err := ParseCronExpression("* * * * 0")
+	testutil.NilErr(t, err)
+
+	// 2025-01-12 is a Sunday
+	testutil.True(t, expr.Matches(time.Date(2025, 1, 12, 0, 0, 0, 0, time.UTC)))
+	// 2025-01-13 is a Monday
+	testutil.False(t, expr.Matches(time.Date(2025, 1, 13, 0, 0, 0, 0, time.UTC)))
+}
+
+func TestCronExpression_Matches_Sunday7(t *testing.T) {
+	// * * * * 7 should behave identically to * * * * 0
+	expr, err := ParseCronExpression("* * * * 7")
+	testutil.NilErr(t, err)
+
+	// 2025-01-12 is a Sunday (Weekday() == 0)
+	testutil.True(t, expr.Matches(time.Date(2025, 1, 12, 0, 0, 0, 0, time.UTC)))
+	testutil.False(t, expr.Matches(time.Date(2025, 1, 13, 0, 0, 0, 0, time.UTC)))
+}
+
+func TestCronExpression_Matches_IgnoresSeconds(t *testing.T) {
+	expr, err := ParseCronExpression("30 12 * * *")
+	testutil.NilErr(t, err)
+
+	// Different seconds within the same minute should all match
+	testutil.True(t, expr.Matches(time.Date(2025, 1, 1, 12, 30, 0, 0, time.UTC)))
+	testutil.True(t, expr.Matches(time.Date(2025, 1, 1, 12, 30, 45, 0, time.UTC)))
+	testutil.True(t, expr.Matches(time.Date(2025, 1, 1, 12, 30, 59, 999999999, time.UTC)))
+}
+
+func TestCronExpression_Matches_SpecificDayOfMonth(t *testing.T) {
+	// 0 0 1 * * = midnight on the 1st of every month
+	expr, err := ParseCronExpression("0 0 1 * *")
+	testutil.NilErr(t, err)
+
+	testutil.True(t, expr.Matches(time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)))
+	testutil.True(t, expr.Matches(time.Date(2025, 6, 1, 0, 0, 0, 0, time.UTC)))
+	testutil.False(t, expr.Matches(time.Date(2025, 1, 2, 0, 0, 0, 0, time.UTC)))
+}
+
+func TestCronExpression_Matches_SpecificMonth(t *testing.T) {
+	// 0 0 25 12 * = midnight on December 25th
+	expr, err := ParseCronExpression("0 0 25 12 *")
+	testutil.NilErr(t, err)
+
+	testutil.True(t, expr.Matches(time.Date(2025, 12, 25, 0, 0, 0, 0, time.UTC)))
+	testutil.False(t, expr.Matches(time.Date(2025, 12, 24, 0, 0, 0, 0, time.UTC)))
+	testutil.False(t, expr.Matches(time.Date(2025, 11, 25, 0, 0, 0, 0, time.UTC)))
+}
+
+func TestCronExpression_Matches_RespectsTimezone(t *testing.T) {
+	// 0 9 * * * = 9:00 AM
+	expr, err := ParseCronExpression("0 9 * * *")
+	testutil.NilErr(t, err)
+
+	nzst := time.FixedZone("NZST", 12*60*60)
+
+	// 9:00 AM NZST = 21:00 UTC the previous day
+	nzTime := time.Date(2025, 1, 1, 9, 0, 0, 0, nzst)
+	utcTime := time.Date(2025, 1, 1, 9, 0, 0, 0, time.UTC)
+
+	// Matches should use the time's own timezone
+	testutil.True(t, expr.Matches(nzTime), "should match 9am NZST")
+	testutil.True(t, expr.Matches(utcTime), "should match 9am UTC")
+
+	// The same instant in different timezones may not match
+	// 9am NZST is 9pm UTC the day before — hour 21 doesn't match
+	testutil.False(t, expr.Matches(nzTime.UTC()), "9am NZST converted to UTC is 9pm, should not match")
 }
 
 func containsSubstring(s, sub string) bool {
