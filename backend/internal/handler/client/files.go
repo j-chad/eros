@@ -1,6 +1,7 @@
 package client
 
 import (
+	"backend/internal/logging"
 	"backend/pkg/apierror"
 	"backend/pkg/response"
 	"io"
@@ -57,5 +58,9 @@ func (h *Handler) GetFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "private, max-age=3600")
 	w.WriteHeader(http.StatusOK)
 
-	io.Copy(w, reader)
+	_, err = io.Copy(w, reader)
+	if err != nil {
+		logger := logging.FromContext(ctx)
+		logger.Error("error encoding response", "error", err)
+	}
 }

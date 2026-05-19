@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"backend/internal/logging"
 	"backend/pkg/apierror"
 	"backend/pkg/response"
 	"net"
@@ -51,6 +52,9 @@ func NewIPRateLimit(capacity int) *IPRateLimit {
 
 func (r *IPRateLimit) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		ctx := req.Context()
+		logger := logging.FromContext(ctx)
+
 		ip, _, _ := net.SplitHostPort(req.RemoteAddr)
 		if ip == "" {
 			ip = req.RemoteAddr
@@ -69,7 +73,8 @@ func (r *IPRateLimit) Middleware(next http.Handler) http.Handler {
 		r.mu.Unlock()
 
 		if !bucket.allow() {
-			response.Error(req.Context(), w, apierror.TooManyRequests("Too many requests. Try again shortly."))
+			logger.WarnContext(ctx, "rate limit exceeded for IP", "ip", ip)
+			response.Error(ctx, w, apierror.TooManyRequests("Too many requests. Try again shortly."))
 			return
 		}
 
@@ -92,9 +97,13 @@ func NewPerNodeRateLimit(capacity int) *PerNodeRateLimit {
 
 func (r *PerNodeRateLimit) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		ctx := req.Context()
+		logger := logging.FromContext(ctx)
+
 		nodeID := req.PathValue("id")
 		if nodeID == "" {
 			// No node ID in path, skip rate limiting
+			logger.DebugContext(ctx, "no node ID in path, skipping rate limit")
 			next.ServeHTTP(w, req)
 			return
 		}
@@ -112,7 +121,8 @@ func (r *PerNodeRateLimit) Middleware(next http.Handler) http.Handler {
 		r.mu.Unlock()
 
 		if !bucket.allow() {
-			response.Error(req.Context(), w, apierror.TooManyRequests("Too many unlock attempts. Try again shortly."))
+			logger.WarnContext(ctx, "rate limit exceeded for node ID", "nodeID", nodeID)
+			response.Error(ctx, w, apierror.TooManyRequests("Too many unlock attempts. Try again shortly."))
 			return
 		}
 

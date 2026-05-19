@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"backend/internal/logging"
 	"backend/internal/service"
 	"backend/pkg/apierror"
 	"backend/pkg/authctx"
@@ -34,10 +35,13 @@ func parseAuthHeader(header string) (authType, token string, ok bool) {
 // Admins are also allowed to access these endpoints.
 func WithClientAuth(next http.Handler, authService service.AuthService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		logger := logging.FromContext(ctx)
+
 		authHeader := r.Header.Get("Authorization")
 		authType, token, ok := parseAuthHeader(authHeader)
 		if !ok {
-			response.Error(r.Context(), w, apierror.Unauthorized("invalid authorization header"))
+			response.Error(ctx, w, apierror.Unauthorized("invalid authorization header"))
 			return
 		}
 
@@ -46,17 +50,22 @@ func WithClientAuth(next http.Handler, authService service.AuthService) http.Han
 			return
 		}
 
-		device, err := authService.ValidateDeviceToken(r.Context(), token)
+		device, err := authService.ValidateDeviceToken(ctx, token)
 		if err != nil {
 			if errors.Is(err, service.ErrInvalidClientCredentials) {
-				response.Error(r.Context(), w, apierror.Unauthorized("invalid credentials"))
+				logger.DebugContext(ctx, "invalid client token", "token", token)
+				response.Error(ctx, w, apierror.Unauthorized("invalid credentials"))
 			} else {
-				response.Error(r.Context(), w, apierror.UnknownInternalError(err))
+				logger.ErrorContext(ctx, "error validating client token", "error", err)
+				response.Error(ctx, w, apierror.UnknownInternalError(err))
 			}
 			return
 		}
 
-		r = r.WithContext(authctx.WithDeviceID(r.Context(), device.ID))
+		deviceIDLogger := logger.With("device_id", device.ID)
+		deviceIDCtx := authctx.WithDeviceID(ctx, device.ID)
+		logCtx := logging.NewContext(deviceIDCtx, deviceIDLogger)
+		r = r.WithContext(logCtx)
 
 		next.ServeHTTP(w, r)
 	})
@@ -65,18 +74,28 @@ func WithClientAuth(next http.Handler, authService service.AuthService) http.Han
 // WithAdminAuth wraps a handler with admin authentication
 func WithAdminAuth(next http.Handler, authService service.AuthService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		logger := logging.FromContext(ctx)
+
 		authHeader := r.Header.Get("Authorization")
 		authType, token, ok := parseAuthHeader(authHeader)
 		if !ok || authType != adminAuthType {
+			logger.WarnContext(ctx, "invalid admin authorization header")
 			response.Error(r.Context(), w, apierror.Unauthorized("invalid authorization header"))
 			return
 		}
 
 		if err := authService.ValidateAdminToken(token); err != nil {
+			logger.WarnContext(ctx, "invalid admin token", "token", token)
 			response.Error(r.Context(), w, apierror.Unauthorized("invalid credentials"))
 			return
 		}
 
-		next.ServeHTTP(w, r.WithContext(authctx.WithAdmin(r.Context())))
+		adminLogger := logger.With("admin", true)
+		adminCtx := authctx.WithAdmin(ctx)
+		logCtx := logging.NewContext(adminCtx, adminLogger)
+		r = r.WithContext(logCtx)
+
+		next.ServeHTTP(w, r)
 	})
 }
