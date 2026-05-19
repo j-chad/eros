@@ -21,6 +21,8 @@ type Options struct {
 	PublicKey  []byte            // the uncompressed public key bytes (65 bytes)
 	Subject    string            // "mailto:..." or "https://..." contact
 	TTL        int               // seconds the push service should retain the message
+	Urgency    string            // "very-low", "low", "normal", or "high"
+	Topic      string            // an arbitrary string to identify the message topic
 }
 
 func SendNotification(ctx context.Context, payload []byte, sub Subscription, opts Options) error {
@@ -44,6 +46,14 @@ func SendNotification(ctx context.Context, payload []byte, sub Subscription, opt
 	req.Header.Set("Content-Length", strconv.Itoa(len(body)))
 	req.Header.Set("Authorization", authHeader)
 	req.Header.Set("TTL", strconv.Itoa(opts.TTL))
+
+	if opts.Urgency != "" {
+		req.Header.Set("Urgency", opts.Urgency)
+	}
+
+	if opts.Topic != "" {
+		req.Header.Set("Topic", opts.Topic)
+	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

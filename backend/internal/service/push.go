@@ -5,6 +5,7 @@ import (
 	"backend/internal/logging"
 	"backend/internal/models"
 	"backend/internal/repository"
+	"backend/internal/webpush"
 	"context"
 	"encoding/base64"
 	"errors"
@@ -64,6 +65,21 @@ func (p *PushService) GetVAPIDPublicKey() (string, error) {
 	}
 
 	return p.config.VAPID.PublicKey, nil
+}
+
+func (p *PushService) SendMessage(ctx context.Context, request models.PushRequest) error {
+	logger := logging.FromContext(ctx)
+	logger.DebugContext(ctx, "sending push", "request", request)
+
+	subscriptions, err := p.repo.GetPushSubscriptions(ctx)
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to get push subscriptions", "error", err)
+		return err
+	}
+
+	for _, subscription := range subscriptions {
+		//webpush.SendNotification(ctx,
+	}
 }
 
 func (p *PushService) validateSubscription(sub models.PushSubscription) error {
