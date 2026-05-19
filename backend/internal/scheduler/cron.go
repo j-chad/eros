@@ -36,9 +36,14 @@ func ParseCronExpression(s string) (CronExpression, error) {
 		return CronExpression{}, fmt.Errorf("invalid month field: %w", err)
 	}
 
-	dayOfWeekBitfield, err := parseCronField(fields[4], 0, 6)
+	dayOfWeekBitfield, err := parseCronField(fields[4], 0, 7)
 	if err != nil {
 		return CronExpression{}, fmt.Errorf("invalid day of week field: %w", err)
+	}
+
+	// day of week is 0-6 where 0 and 7 both represent Sunday
+	if (dayOfWeekBitfield & 0x81) != 0 {
+		dayOfWeekBitfield |= 0x81
 	}
 
 	return CronExpression{

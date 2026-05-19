@@ -42,7 +42,8 @@ func TestParseCronExpression_Wildcard(t *testing.T) {
 	testutil.Equal(t, expr.hour, bitRange(0, 23))
 	testutil.Equal(t, expr.dayOfMonth, bitRange(1, 31))
 	testutil.Equal(t, expr.month, bitRange(1, 12))
-	testutil.Equal(t, expr.dayOfWeek, bitRange(0, 6))
+	// day-of-week wildcard expands to 0-7, with Sunday normalization setting both bits 0 and 7
+	testutil.Equal(t, expr.dayOfWeek, bitRange(0, 7))
 }
 
 func TestParseCronExpression_ExactValues(t *testing.T) {
@@ -62,7 +63,8 @@ func TestParseCronExpression_MinBoundary(t *testing.T) {
 	testutil.Equal(t, expr.hour, bits(0))
 	testutil.Equal(t, expr.dayOfMonth, bits(1))
 	testutil.Equal(t, expr.month, bits(1))
-	testutil.Equal(t, expr.dayOfWeek, bits(0))
+	// 0 is Sunday, normalization sets both bit 0 and bit 7
+	testutil.Equal(t, expr.dayOfWeek, bits(0, 7))
 }
 
 func TestParseCronExpression_MaxBoundary(t *testing.T) {
@@ -147,7 +149,7 @@ func TestParseCronExpression_DailyAt3AM(t *testing.T) {
 	testutil.Equal(t, expr.hour, bits(3))
 	testutil.Equal(t, expr.dayOfMonth, bitRange(1, 31))
 	testutil.Equal(t, expr.month, bitRange(1, 12))
-	testutil.Equal(t, expr.dayOfWeek, bitRange(0, 6))
+	testutil.Equal(t, expr.dayOfWeek, bitRange(0, 7))
 }
 
 func TestParseCronExpression_WeekdayBusinessHours(t *testing.T) {
@@ -207,8 +209,44 @@ func TestParseCronExpression_MonthOutOfRange(t *testing.T) {
 }
 
 func TestParseCronExpression_DayOfWeekOutOfRange(t *testing.T) {
-	_, err := ParseCronExpression("* * * * 7")
+	_, err := ParseCronExpression("* * * * 8")
 	testutil.NotNilErr(t, err)
+}
+
+func TestParseCronExpression_Sunday7(t *testing.T) {
+	// 7 is an alias for 0 (Sunday)
+	expr, err := ParseCronExpression("0 0 * * 7")
+	testutil.NilErr(t, err)
+	// Both bit 0 and bit 7 should be set
+	testutil.True(t, expr.dayOfWeek&(1<<0) != 0, "bit 0 (Sunday) should be set")
+	testutil.True(t, expr.dayOfWeek&(1<<7) != 0, "bit 7 (Sunday alias) should be set")
+}
+
+func TestParseCronExpression_Sunday0And7Equivalent(t *testing.T) {
+	// "* * * * 0" and "* * * * 7" should produce the same bitfield
+	expr0, err := ParseCronExpression("0 0 * * 0")
+	testutil.NilErr(t, err)
+	expr7, err := ParseCronExpression("0 0 * * 7")
+	testutil.NilErr(t, err)
+	testutil.Equal(t, expr0.dayOfWeek, expr7.dayOfWeek)
+}
+
+func TestParseCronExpression_Sunday7InRange(t *testing.T) {
+	// "5-7" in day-of-week = Friday(5), Saturday(6), Sunday(7→0)
+	expr, err := ParseCronExpression("0 0 * * 5-7")
+	testutil.NilErr(t, err)
+	testutil.True(t, expr.dayOfWeek&(1<<5) != 0, "bit 5 (Friday) should be set")
+	testutil.True(t, expr.dayOfWeek&(1<<6) != 0, "bit 6 (Saturday) should be set")
+	testutil.True(t, expr.dayOfWeek&(1<<0) != 0, "bit 0 (Sunday) should be set via 7 alias")
+}
+
+func TestParseCronExpression_Sunday7InList(t *testing.T) {
+	// "0,6,7" — Sunday(0), Saturday(6), Sunday(7) — should have both Sunday bits
+	expr, err := ParseCronExpression("0 0 * * 0,6,7")
+	testutil.NilErr(t, err)
+	testutil.True(t, expr.dayOfWeek&(1<<0) != 0, "bit 0 (Sunday) should be set")
+	testutil.True(t, expr.dayOfWeek&(1<<6) != 0, "bit 6 (Saturday) should be set")
+	testutil.True(t, expr.dayOfWeek&(1<<7) != 0, "bit 7 (Sunday alias) should be set")
 }
 
 func TestParseCronExpression_NonNumeric(t *testing.T) {
@@ -265,7 +303,7 @@ func TestParseCronExpression_ErrorIdentifiesField(t *testing.T) {
 		{"hour", "0 24 1 1 0", "hour"},
 		{"day of month", "0 0 32 1 0", "day of month"},
 		{"month", "0 0 1 13 0", "month"},
-		{"day of week", "0 0 1 1 7", "day of week"},
+		{"day of week", "0 0 1 1 8", "day of week"},
 	}
 
 	for _, tt := range tests {
