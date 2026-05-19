@@ -96,6 +96,6 @@ func ping(w http.ResponseWriter, _ *http.Request) {
 	response.NoContent(w)
 }
 
-func health(w http.ResponseWriter, _ *http.Request) {
+func health(w http.ResponseWriter, r *http.Request) {
 	response.JSON(r.Context(), w, http.StatusOK, map[string]string{"status": "ok"})
 }
