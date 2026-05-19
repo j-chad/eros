@@ -93,3 +93,14 @@ type VAPIDConfig struct {
 	PublicKey  string `json:"public_key" env:"VAPID_PUBLIC_KEY"`
 	Subject    string `json:"subject" env:"VAPID_SUBJECT"`
 }
+
+type SchedulerConfig struct {
+	Enabled bool                           `json:"enabled" env:"SCHEDULER_ENABLED"`
+	Tasks   map[string]SchedulerTaskConfig `json:"tasks"`
+}
+
+type SchedulerTaskConfig struct {
+	Enabled bool          `json:"enabled"`
+	Cron    string        `json:"cron"`
+	Timeout time.Duration `json:"timeout"`
+}

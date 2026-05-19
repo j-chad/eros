@@ -18,8 +18,14 @@ type Scheduler struct {
 	wg    sync.WaitGroup
 }
 
-func New() *Scheduler {
-	return &Scheduler{}
+func New(tasks ...Task) *Scheduler {
+	sched := &Scheduler{}
+
+	for _, task := range tasks {
+		sched.AddTask(task)
+	}
+
+	return sched
 }
 
 func (s *Scheduler) AddTask(task Task) {

@@ -6,6 +6,7 @@ import (
 	"backend/internal/handler/middleware"
 	"backend/internal/repository/sqlite"
 	"backend/internal/repository/storage"
+	"backend/internal/scheduler"
 	"backend/internal/service"
 	"fmt"
 	"log"
@@ -35,6 +36,13 @@ func runServer(conf *config.Config) {
 	fileService := service.NewFileService(database, fileStore)
 	adminService := service.NewAdminService(database, fileStore, fileService)
 	graphService := service.NewGraphService(database, fileService)
+
+	sched := scheduler.New(conf.Schedule, []scheduler.Task{
+		{
+			Name: "graph_notifications",
+			Fn:   nil,
+		},
+	}...)
 
 	h := handler.NewHandler(authService, adminService, favourService, graphService, fileService, pushService)
 
