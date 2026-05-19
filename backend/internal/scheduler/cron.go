@@ -62,14 +62,19 @@ func parseCronField(field string, min, max uint64) (uint64, error) {
 			step = "1"
 		}
 
+		// wildcard
+		if base == "*" {
+			base = fmt.Sprintf("%d-%d", min, max)
+		}
+
 		// ranges
 		minBase, maxBase, hasRange := strings.Cut(base, "-")
 		if !hasRange {
-			if minBase == "*" {
-				minBase = strconv.FormatUint(min, 10)
+			if hasStep {
+				// handle ambiguous case like "3/15" where it really means "3-59/15"
 				maxBase = strconv.FormatUint(max, 10)
 			} else {
-				maxBase = base
+				maxBase = minBase
 			}
 		}
 

@@ -232,10 +232,23 @@ func TestParseCronExpression_ReversedRange(t *testing.T) {
 }
 
 func TestParseCronExpression_StepOnExactValue(t *testing.T) {
-	// "5/2" is ambiguous but standard cron treats it as "starting at 5, every 2"
-	// through the end of the field range. Our implementation treats the base as a
-	// range, so "5" becomes range 5-5, and 5/2 just produces bit 5.
+	// "5/2" means "starting at 5, every 2nd value through end of field range"
+	// For minutes (0-59): 5, 7, 9, 11, ..., 59
 	expr, err := ParseCronExpression("5/2 * * * *")
+	testutil.NilErr(t, err)
+	testutil.Equal(t, expr.minute, bitStep(5, 59, 2))
+}
+
+func TestParseCronExpression_StepOnExactValue_Hours(t *testing.T) {
+	// "6/4" on hours means starting at 6, every 4th: 6, 10, 14, 18, 22
+	expr, err := ParseCronExpression("0 6/4 * * *")
+	testutil.NilErr(t, err)
+	testutil.Equal(t, expr.hour, bits(6, 10, 14, 18, 22))
+}
+
+func TestParseCronExpression_StepOnExactValue_NoStep(t *testing.T) {
+	// Plain "5" without a step should still be just bit 5
+	expr, err := ParseCronExpression("5 * * * *")
 	testutil.NilErr(t, err)
 	testutil.Equal(t, expr.minute, bits(5))
 }
