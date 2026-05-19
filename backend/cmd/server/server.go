@@ -8,13 +8,21 @@ import (
 	"backend/internal/repository/storage"
 	"backend/internal/scheduler"
 	"backend/internal/service"
+	"context"
 	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func runServer(conf *config.Config) {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+
 	if conf == nil {
 		log.Fatal("config is nil")
 	}
@@ -37,14 +45,17 @@ func runServer(conf *config.Config) {
 	adminService := service.NewAdminService(database, fileStore, fileService)
 	graphService := service.NewGraphService(database, fileService)
 
-	sched, err := scheduler.New(conf.Scheduler, []scheduler.Task{
-		{
-			Name: "graph_notifications",
-			Fn:   nil,
-		},
-	}...)
-	if err != nil {
-		log.Fatalf("error initializing scheduler: %v", err)
+	if !conf.Scheduler.Disabled {
+		sched, err := scheduler.New(conf.Scheduler, []scheduler.Task{
+			{
+				Name: "graph_notifications",
+				Fn:   nil,
+			},
+		}...)
+		if err != nil {
+			log.Fatalf("error initializing scheduler: %v", err)
+		}
+		go sched.Run(ctx)
 	}
 
 	h := handler.NewHandler(authService, adminService, favourService, graphService, fileService, pushService)
@@ -61,8 +72,19 @@ func runServer(conf *config.Config) {
 		IdleTimeout:  conf.Server.IdleTimeout,
 	}
 
-	slog.Default().Info("starting server", "address", serverAddr)
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatalf("error starting server: %v", err)
+	go func() {
+		slog.Default().Info("starting server", "address", serverAddr)
+		if err := server.ListenAndServe(); err != nil {
+			log.Fatalf("error starting server: %v", err)
+		}
+	}()
+
+	<-ctx.Done()
+	log.Println("shutting down server...")
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("error shutting down server: %v", err)
 	}
+	log.Println("server gracefully stopped")
 }
