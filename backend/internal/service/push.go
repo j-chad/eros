@@ -2,6 +2,7 @@ package service
 
 import (
 	"backend/internal/config"
+	"backend/internal/logging"
 	"backend/internal/models"
 	"backend/internal/repository"
 	"context"
@@ -25,15 +26,36 @@ func NewPushService(config config.PushConfig, repo repository.Repository) *PushS
 }
 
 func (p *PushService) Register(ctx context.Context, deviceID string, sub models.PushSubscription) error {
+	logger := logging.FromContext(ctx)
+
+	logger.DebugContext(ctx, "registering push subscription", "device_id", deviceID)
+
 	if err := p.validateSubscription(sub); err != nil {
+		logger.WarnContext(ctx, "invalid push subscription", "error", err)
 		return err
 	}
 
-	return p.repo.CreatePushSubscription(ctx, deviceID, sub)
+	err := p.repo.CreatePushSubscription(ctx, deviceID, sub)
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to create push subscription", "error", err)
+		return err
+	}
+
+	return nil
 }
 
 func (p *PushService) Unregister(ctx context.Context, deviceID string) error {
-	return p.repo.DeletePushSubscriptions(ctx, deviceID)
+	logger := logging.FromContext(ctx)
+
+	logger.DebugContext(ctx, "removing push subscription", "device_id", deviceID)
+
+	err := p.repo.DeletePushSubscriptions(ctx, deviceID)
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to delete push subscriptions", "error", err)
+		return err
+	}
+
+	return nil
 }
 
 func (p *PushService) GetVAPIDPublicKey() (string, error) {

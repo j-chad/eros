@@ -1,6 +1,7 @@
 package service
 
 import (
+	"backend/internal/logging"
 	"backend/internal/models"
 	"backend/internal/repository"
 	"context"
@@ -89,12 +90,16 @@ func sanitizeLocationData(graph *models.Graph) {
 }
 
 func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload string) (*models.UnlockResult, error) {
+	logger := logging.FromContext(ctx)
+
 	node, err := s.repo.GetAccessibleNode(ctx, nodeID)
 	if err != nil {
+		logger.ErrorContext(ctx, "failed to get node for unlocking", "node_id", nodeID, "error", err)
 		return nil, err
 	}
 
 	if err := validateUnlockPayload(node, payload); err != nil {
+		logger.DebugContext(ctx, "node unlock validation failed", "node_id", nodeID, "error", err)
 		return nil, err
 	}
 
@@ -182,8 +187,12 @@ func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload st
 
 		return nil
 	})
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to unlock node", "node_id", nodeID, "error", err)
+		return nil, err
+	}
 
-	if err == nil && result != nil {
+	if result != nil {
 		sanitizeNodeLocationData(&result.UnlockedNode)
 		for i := range result.NewNodes {
 			sanitizeNodeLocationData(&result.NewNodes[i])
@@ -192,6 +201,7 @@ func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload st
 		// Attach file metadata to any reward nodes in the result.
 		allNodes := append(result.NewNodes, result.UnlockedNode)
 		if err := s.files.AttachFileMetadataToNodes(ctx, allNodes); err != nil {
+			logger.ErrorContext(ctx, "failed to attach file metadata to nodes", "node_id", nodeID, "error", err)
 			return nil, fmt.Errorf("failed to attach file metadata: %w", err)
 		}
 		// Copy back - UnlockedNode is the last element.
@@ -199,6 +209,7 @@ func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload st
 		result.NewNodes = allNodes[:len(allNodes)-1]
 	}
 
+	logger.DebugContext(ctx, "successfully unlocked node", "node_id", nodeID)
 	return result, err
 }
 
