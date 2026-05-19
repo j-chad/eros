@@ -12,7 +12,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -32,14 +31,14 @@ func runServer(conf *config.Config) {
 
 	database, err := sqlite.NewSQLiteDB(conf.Database)
 	if err != nil {
-		fatal("error opening repository: %v", err)
+		fatal("error opening repository", "error", err)
 		return
 	}
 	defer database.Close()
 
 	fileStore, err := storage.NewFileStore(conf.FileStorage)
 	if err != nil {
-		fatal("error initializing file storage: %v", err)
+		fatal("error initializing file storage", "error", err)
 		return
 	}
 
@@ -61,7 +60,7 @@ func runServer(conf *config.Config) {
 			},
 		}...)
 		if err != nil {
-			log.Fatalf("error initializing scheduler: %v", err)
+			fatal("error initializing scheduler", "error", err)
 		}
 		go sched.Run(logging.NewContext(ctx, logger))
 	}
@@ -87,18 +86,18 @@ func runServer(conf *config.Config) {
 				return
 			}
 
-			log.Fatalf("error starting server: %v", err)
+			fatal("error starting server", "error", err)
 		}
 	}()
 
 	<-ctx.Done()
-	log.Println("shutting down server...")
+	slog.Default().Info("shutting down server")
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer shutdownCancel()
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Fatalf("error shutting down server: %v", err)
+		fatal("error shutting down server", "error", err)
 	}
-	log.Println("server gracefully stopped")
+	slog.Default().Info("server gracefully stopped")
 }
 
 func fatal(format string, args ...interface{}) {
