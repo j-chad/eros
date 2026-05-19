@@ -14,7 +14,7 @@ import (
 
 func TestJSON_StatusAndContentType(t *testing.T) {
 	w := httptest.NewRecorder()
-	JSON(w, http.StatusCreated, map[string]string{"id": "123"})
+	JSON(context.Background(), w, http.StatusCreated, map[string]string{"id": "123"})
 
 	testutil.Equal(t, w.Code, http.StatusCreated)
 	testutil.Equal(t, w.Header().Get("Content-Type"), "application/json")
@@ -22,7 +22,7 @@ func TestJSON_StatusAndContentType(t *testing.T) {
 
 func TestJSON_Body(t *testing.T) {
 	w := httptest.NewRecorder()
-	JSON(w, http.StatusOK, map[string]int{"count": 42})
+	JSON(context.Background(), w, http.StatusOK, map[string]int{"count": 42})
 
 	var body map[string]int
 	testutil.NilErr(t, json.NewDecoder(w.Body).Decode(&body))

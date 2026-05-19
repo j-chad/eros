@@ -16,7 +16,7 @@ func (h *Handler) ListGraphs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, graphs)
+	response.JSON(r.Context(), w, http.StatusOK, graphs)
 }
 
 func (h *Handler) GetGraph(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +31,7 @@ func (h *Handler) GetGraph(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, graph)
+	response.JSON(r.Context(), w, http.StatusOK, graph)
 }
 
 func (h *Handler) UnlockNode(w http.ResponseWriter, r *http.Request) {
@@ -52,5 +52,5 @@ func (h *Handler) UnlockNode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, result)
+	response.JSON(r.Context(), w, http.StatusOK, result)
 }

@@ -18,7 +18,7 @@ func (h *Handler) ListStartNodes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, nodes)
+	response.JSON(r.Context(), w, http.StatusOK, nodes)
 }
 
 func (h *Handler) DeleteGraph(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +54,7 @@ func (h *Handler) CreateGraph(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusCreated, createdGraphID)
+	response.JSON(r.Context(), w, http.StatusCreated, createdGraphID)
 }
 
 func (h *Handler) GetGraph(w http.ResponseWriter, r *http.Request) {
@@ -75,7 +75,7 @@ func (h *Handler) GetGraph(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, graph)
+	response.JSON(r.Context(), w, http.StatusOK, graph)
 }
 
 func (h *Handler) UnlockNode(w http.ResponseWriter, r *http.Request) {

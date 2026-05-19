@@ -34,7 +34,7 @@ func (h *Handler) CreateFavourChoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusCreated, choice)
+	response.JSON(r.Context(), w, http.StatusCreated, choice)
 }
 
 func (h *Handler) UpdateFavourChoice(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +67,7 @@ func (h *Handler) UpdateFavourChoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, choice)
+	response.JSON(r.Context(), w, http.StatusOK, choice)
 }
 
 func (h *Handler) DeleteFavourChoice(w http.ResponseWriter, r *http.Request) {

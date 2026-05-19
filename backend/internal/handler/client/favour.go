@@ -15,7 +15,7 @@ func (h *Handler) ListFavourChoices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, choices)
+	response.JSON(r.Context(), w, http.StatusOK, choices)
 }
 
 func (h *Handler) GetFavourCount(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +25,7 @@ func (h *Handler) GetFavourCount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, count)
+	response.JSON(r.Context(), w, http.StatusOK, count)
 }
 
 func (h *Handler) RequestFavour(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +46,7 @@ func (h *Handler) RequestFavour(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusCreated, favour)
+	response.JSON(r.Context(), w, http.StatusCreated, favour)
 }
 
 func (h *Handler) ListFavourRequests(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +56,7 @@ func (h *Handler) ListFavourRequests(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, requests)
+	response.JSON(r.Context(), w, http.StatusOK, requests)
 }
 
 func (h *Handler) DeleteFavourRequest(w http.ResponseWriter, r *http.Request) {

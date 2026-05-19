@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -75,7 +76,7 @@ type sqliteDB struct {
 
 func (s *sqliteDB) Close() {
 	if err := s.db.Close(); err != nil {
-		fmt.Printf("error closing database: %v\n", err)
+		slog.Default().Error("error closing database", "error", err)
 	}
 }
 

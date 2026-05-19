@@ -10,12 +10,12 @@ import (
 )
 
 // JSON writes a JSON response with the given status code
-func JSON(w http.ResponseWriter, status int, data any) {
+func JSON(ctx context.Context, w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		logger := logging.FromContext(context.Background())
+		logger := logging.FromContext(ctx)
 		logger.Error("error encoding JSON response", "error", err)
 	}
 }
@@ -45,7 +45,7 @@ func Error(ctx context.Context, w http.ResponseWriter, err *apierror.APIError) {
 		errorResponse["error"].(map[string]any)["internal"] = err.Err.Error()
 	}
 
-	JSON(w, err.StatusCode, errorResponse)
+	JSON(ctx, w, err.StatusCode, errorResponse)
 }
 
 func NoContent(w http.ResponseWriter) {

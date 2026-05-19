@@ -60,5 +60,5 @@ func (h *Handler) GetVAPIDPublicKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, pubKey)
+	response.JSON(r.Context(), w, http.StatusOK, pubKey)
 }

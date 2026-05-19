@@ -97,5 +97,5 @@ func ping(w http.ResponseWriter, _ *http.Request) {
 }
 
 func health(w http.ResponseWriter, _ *http.Request) {
-	response.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	response.JSON(r.Context(), w, http.StatusOK, map[string]string{"status": "ok"})
 }

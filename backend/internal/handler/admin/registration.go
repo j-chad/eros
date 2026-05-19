@@ -13,7 +13,7 @@ func (h *Handler) CreateRegistrationCode(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	response.JSON(w, http.StatusCreated, registrationCode)
+	response.JSON(r.Context(), w, http.StatusCreated, registrationCode)
 }
 
 func (h *Handler) InvalidateRegistrationCode(w http.ResponseWriter, r *http.Request) {
@@ -37,5 +37,5 @@ func (h *Handler) GetRegistrationCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, registrationCode)
+	response.JSON(r.Context(), w, http.StatusOK, registrationCode)
 }

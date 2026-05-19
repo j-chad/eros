@@ -15,7 +15,7 @@ func (h *Handler) ListDevices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, devices)
+	response.JSON(r.Context(), w, http.StatusOK, devices)
 }
 
 func (h *Handler) RevokeDevice(w http.ResponseWriter, r *http.Request) {

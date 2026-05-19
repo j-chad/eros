@@ -41,5 +41,5 @@ func (h *Handler) RegisterDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusCreated, map[string]string{"token": token})
+	response.JSON(r.Context(), w, http.StatusCreated, map[string]string{"token": token})
 }

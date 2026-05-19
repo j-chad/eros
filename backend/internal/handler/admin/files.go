@@ -1,9 +1,11 @@
 package admin
 
 import (
+	"backend/internal/logging"
 	"backend/pkg/apierror"
 	"backend/pkg/response"
 	"mime"
+	"mime/multipart"
 	"net/http"
 	"path/filepath"
 )
@@ -22,7 +24,13 @@ func (h *Handler) UploadFiles(w http.ResponseWriter, r *http.Request) {
 		response.Error(r.Context(), w, apierror.BadRequest("file is required"))
 		return
 	}
-	defer file.Close()
+	defer func(file multipart.File) {
+		err := file.Close()
+		if err != nil {
+			logger := logging.FromContext(r.Context())
+			logger.Warn("error closing file", "error", err)
+		}
+	}(file)
 
 	if header.Size == 0 {
 		response.Error(r.Context(), w, apierror.BadRequest("file cannot be empty"))
@@ -54,7 +62,7 @@ func (h *Handler) UploadFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusCreated, fileModel)
+	response.JSON(r.Context(), w, http.StatusCreated, fileModel)
 }
 
 func (h *Handler) ListFiles(w http.ResponseWriter, r *http.Request) {
@@ -70,5 +78,5 @@ func (h *Handler) ListFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, files)
+	response.JSON(r.Context(), w, http.StatusOK, files)
 }
