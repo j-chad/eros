@@ -18,17 +18,9 @@ type Config struct {
 
 // LoggingConfig contains logging settings
 type LoggingConfig struct {
-	Level     slog.Level      `json:"level" env:"LOG_LEVEL"`
-	JSON      bool            `json:"json" env:"LOG_JSON"`
-	AddSource bool            `json:"add_source" env:"LOG_ADD_SOURCE"`
-	Collector CollectorConfig `json:"collector"`
-}
-
-// CollectorConfig contains settings for the log collector
-type CollectorConfig struct {
-	Enabled     bool   `json:"enabled" env:"COLLECTOR_ENABLED"`
-	MaxSpans    int    `json:"max_spans" env:"LOG_COLLECTOR_MAX_SPANS"`
-	TraceHeader string `json:"trace_header" env:"LOG_COLLECTOR_TRACE_HEADER"`
+	Level     slog.Level `json:"level" env:"LOG_LEVEL"`
+	JSON      bool       `json:"json" env:"LOG_JSON"`
+	AddSource bool       `json:"add_source" env:"LOG_ADD_SOURCE"`
 }
 
 // ServerConfig contains HTTP server settings

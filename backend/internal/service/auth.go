@@ -74,12 +74,7 @@ func (s *AuthService) RegisterDevice(ctx context.Context, registrationCode strin
 		return "", ErrInvalidRegistrationCode
 	}
 
-	secureToken, err := crypto.GenerateSecureToken(32)
-	if err != nil {
-		logger.ErrorContext(ctx, "failed to generate secure token", "error", err)
-		return "", err
-	}
-
+	secureToken := crypto.GenerateSecureToken(32)
 	tokenHash := crypto.HashToken(secureToken)
 
 	expiry := time.Now().Add(TokenExpiry)

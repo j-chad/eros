@@ -34,11 +34,7 @@ func encrypt(plaintext, uaPublicBytes, authSecret []byte) ([]byte, error) {
 		return nil, fmt.Errorf("failed to compute ECDH secret: %w", err)
 	}
 
-	salt, err := crypto.RandomBytes(16)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate salt: %w", err)
-	}
-
+	salt := crypto.RandomBytes(16)
 	cek, nonce, err := deriveKeys(ecdhSecret, authSecret, uaPublic.Bytes(), asPrivate.PublicKey().Bytes(), salt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to derive keys: %w", err)

@@ -27,18 +27,15 @@ func GenerateHumanReadableCode() (string, error) {
 	return fmt.Sprintf("%s-%s-%s", string(result[0:4]), string(result[4:8]), string(result[8:12])), nil
 }
 
-func RandomBytes(n int) ([]byte, error) {
+func RandomBytes(n int) []byte {
 	result := make([]byte, n)
-	_, err := rand.Read(result)
-	return result, err
+	_, _ = rand.Read(result)
+	return result
 }
 
-func GenerateSecureToken(n int) (string, error) {
-	bytes, err := RandomBytes(n)
-	if err != nil {
-		return "", err
-	}
-	return base64.RawURLEncoding.EncodeToString(bytes), nil
+func GenerateSecureToken(n int) string {
+	bytes := RandomBytes(n)
+	return base64.RawURLEncoding.EncodeToString(bytes)
 }
 
 // HashToken returns the SHA-256 hex digest of a token.

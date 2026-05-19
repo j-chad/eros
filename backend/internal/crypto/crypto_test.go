@@ -56,22 +56,19 @@ func TestGenerateHumanReadableCode_Unique(t *testing.T) {
 }
 
 func TestGenerateSecureToken_Length(t *testing.T) {
-	token, err := GenerateSecureToken(32)
-	testutil.NilErr(t, err)
+	token := GenerateSecureToken(32)
 	// 32 bytes base64url-encoded without padding = 43 chars
 	testutil.Equal(t, len(token), 43)
 }
 
 func TestGenerateSecureToken_NoPadding(t *testing.T) {
-	token, err := GenerateSecureToken(32)
-	testutil.NilErr(t, err)
+	token := GenerateSecureToken(32)
 	testutil.False(t, strings.Contains(token, "="), "should not contain padding")
 }
 
 func TestGenerateSecureToken_URLSafe(t *testing.T) {
 	for i := 0; i < 100; i++ {
-		token, err := GenerateSecureToken(32)
-		testutil.NilErr(t, err)
+		token := GenerateSecureToken(32)
 		testutil.False(t, strings.ContainsAny(token, "+/"), "should be URL-safe: "+token)
 	}
 }
