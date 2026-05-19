@@ -49,7 +49,7 @@ func (s *AuthService) ValidateDeviceToken(ctx context.Context, token string) (mo
 		return models.Device{}, err
 	}
 
-	if device.IsExpired() {
+	if device == nil || device.IsExpired() {
 		return models.Device{}, ErrInvalidClientCredentials
 	}
 

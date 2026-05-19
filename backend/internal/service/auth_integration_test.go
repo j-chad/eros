@@ -15,20 +15,29 @@ func TestValidateDeviceToken_Valid(t *testing.T) {
 	svc := NewAuthService(config.AuthConfig{AdminAPIKey: "key"}, repo)
 	ctx := context.Background()
 
+	// Seed a registration code
+	err := repo.RefreshRegistrationCode(ctx, models.RegistrationCode{
+		Code:      "CODE",
+		ExpiresAt: time.Now().Add(time.Hour),
+		CreatedAt: time.Now(),
+	})
+	testutil.NilErr(t, err)
+
 	// Register a device to get a token
 	token, err := svc.RegisterDevice(ctx, "CODE", "iPhone")
 	testutil.NilErr(t, err)
 	testutil.True(t, len(token) > 0, "token should not be empty")
 
 	// Validate the token
-	testutil.NilErr(t, svc.ValidateDeviceToken(context.Background(), token))
+	_, err = svc.ValidateDeviceToken(ctx, token)
+	testutil.NilErr(t, err)
 }
 
 func TestValidateDeviceToken_Invalid(t *testing.T) {
 	repo := testdb.New(t)
 	svc := NewAuthService(config.AuthConfig{AdminAPIKey: "key"}, repo)
 
-	err := svc.ValidateDeviceToken(context.Background(), "nonexistent-token")
+	_, err := svc.ValidateDeviceToken(context.Background(), "nonexistent-token")
 	// nil expiry returns ErrInvalidClientCredentials
 	testutil.ErrorIs(t, err, ErrInvalidClientCredentials)
 }
@@ -39,9 +48,10 @@ func TestValidateDeviceToken_Expired(t *testing.T) {
 	ctx := context.Background()
 
 	// Register a device with a past expiry directly via repo
-	repo.RegisterDevice(ctx, "expired-token", "old phone", time.Now().Add(-time.Hour))
+	err := repo.RegisterDevice(ctx, "expired-token", "old phone", time.Now().Add(-time.Hour))
+	testutil.NilErr(t, err)
 
-	err := svc.ValidateDeviceToken(context.Background(), "expired-token")
+	_, err = svc.ValidateDeviceToken(context.Background(), "expired-token")
 	testutil.ErrorIs(t, err, ErrInvalidClientCredentials)
 }
 
@@ -50,12 +60,22 @@ func TestValidateDeviceToken_UpdatesLastSeen(t *testing.T) {
 	svc := NewAuthService(config.AuthConfig{AdminAPIKey: "key"}, repo)
 	ctx := context.Background()
 
+	err := repo.RefreshRegistrationCode(ctx, models.RegistrationCode{
+		Code:      "CODE",
+		ExpiresAt: time.Now().Add(time.Hour),
+		CreatedAt: time.Now(),
+	})
+	testutil.NilErr(t, err)
+
 	token, err := svc.RegisterDevice(ctx, "CODE", "iPhone")
 	testutil.NilErr(t, err)
 
 	// Validate twice - should not error (last seen gets updated)
-	testutil.NilErr(t, svc.ValidateDeviceToken(context.Background(), token))
-	testutil.NilErr(t, svc.ValidateDeviceToken(context.Background(), token))
+	_, err = svc.ValidateDeviceToken(ctx, token)
+	testutil.NilErr(t, err)
+
+	_, err = svc.ValidateDeviceToken(ctx, token)
+	testutil.NilErr(t, err)
 }
 
 func TestRegisterDevice_CreatesDevice(t *testing.T) {
@@ -64,18 +84,20 @@ func TestRegisterDevice_CreatesDevice(t *testing.T) {
 	ctx := context.Background()
 
 	// Seed a registration code (RegisterDevice deletes it)
-	repo.RefreshRegistrationCode(ctx, models.RegistrationCode{
+	err := repo.RefreshRegistrationCode(ctx, models.RegistrationCode{
 		Code:      "TEST-CODE-1234",
 		ExpiresAt: time.Now().Add(time.Hour),
 		CreatedAt: time.Now(),
 	})
+	testutil.NilErr(t, err)
 
 	token, err := svc.RegisterDevice(ctx, "TEST-CODE-1234", "Pixel 7")
 	testutil.NilErr(t, err)
 	testutil.True(t, len(token) > 0, "should return a token")
 
 	// Verify device exists via token validation
-	testutil.NilErr(t, svc.ValidateDeviceToken(context.Background(), token))
+	_, err = svc.ValidateDeviceToken(ctx, token)
+	testutil.NilErr(t, err)
 
 	// Verify registration code was deleted
 	code, err := repo.GetRegistrationCode(ctx)
@@ -88,13 +110,14 @@ func TestRegisterDevice_DeletesRegistrationCode(t *testing.T) {
 	svc := NewAuthService(config.AuthConfig{AdminAPIKey: "key"}, repo)
 	ctx := context.Background()
 
-	repo.RefreshRegistrationCode(ctx, models.RegistrationCode{
+	err := repo.RefreshRegistrationCode(ctx, models.RegistrationCode{
 		Code:      "WILL-BE-GONE",
 		ExpiresAt: time.Now().Add(time.Hour),
 		CreatedAt: time.Now(),
 	})
+	testutil.NilErr(t, err)
 
-	_, err := svc.RegisterDevice(ctx, "WILL-BE-GONE", "device")
+	_, err = svc.RegisterDevice(ctx, "WILL-BE-GONE", "device")
 	testutil.NilErr(t, err)
 
 	code, _ := repo.GetRegistrationCode(ctx)

@@ -40,9 +40,9 @@ func TestMergeFromJSON_StringSlice(t *testing.T) {
 
 func TestMergeFromJSON_NestedStruct(t *testing.T) {
 	cfg := &Config{}
-	testutil.NilErr(t, mergeFromJSON(cfg, []byte(`{"logging": {"collector": {"enabled": true, "max_spans": 100}}}`)))
-	testutil.Equal(t, cfg.Logging.Collector.Enabled, true)
-	testutil.Equal(t, cfg.Logging.Collector.MaxSpans, 100)
+	testutil.NilErr(t, mergeFromJSON(cfg, []byte(`{"push": {"vapid": {"private_key": "abc", "subject": "bob"}}}`)))
+	testutil.Equal(t, cfg.Push.VAPID.PrivateKey, "abc")
+	testutil.Equal(t, cfg.Push.VAPID.Subject, "bob")
 }
 
 func TestMergeFromJSON_InvalidJSON(t *testing.T) {

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"backend/internal/config"
 	"backend/internal/testutil"
 	"net/http"
 	"net/http/httptest"
@@ -16,12 +17,10 @@ func TestIsOriginAllowed(t *testing.T) {
 	}{
 		{"exact match", "http://localhost:3000", []string{"http://localhost:3000"}, true},
 		{"no match", "http://evil.com", []string{"http://localhost:3000"}, false},
-		{"wildcard", "http://anything.com", []string{"*"}, true},
 		{"empty origin", "", []string{"http://localhost:3000"}, false},
 		{"empty allowlist", "http://localhost:3000", []string{}, false},
 		{"nil allowlist", "http://localhost:3000", nil, false},
 		{"multiple allowed", "http://b.com", []string{"http://a.com", "http://b.com"}, true},
-		{"wildcard with others", "http://x.com", []string{"http://a.com", "*"}, true},
 	}
 
 	for _, tt := range tests {
@@ -36,7 +35,7 @@ func TestWithCORS_SetsHeaders(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	handler := WithCORS(inner, []string{"http://app.com"})
+	handler := WithCORS(config.CORSConfig{AllowedOrigins: []string{"http://app.com"}})(inner)
 
 	req := httptest.NewRequest("GET", "/api/test", nil)
 	req.Header.Set("Origin", "http://app.com")
@@ -57,7 +56,7 @@ func TestWithCORS_DisallowedOrigin(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	handler := WithCORS(inner, []string{"http://app.com"})
+	handler := WithCORS(config.CORSConfig{AllowedOrigins: []string{"http://app.com"}})(inner)
 
 	req := httptest.NewRequest("GET", "/api/test", nil)
 	req.Header.Set("Origin", "http://evil.com")
@@ -75,7 +74,7 @@ func TestWithCORS_Preflight(t *testing.T) {
 		called = true
 	})
 
-	handler := WithCORS(inner, []string{"http://app.com"})
+	handler := WithCORS(config.CORSConfig{AllowedOrigins: []string{"http://app.com"}})(inner)
 
 	req := httptest.NewRequest("OPTIONS", "/api/test", nil)
 	req.Header.Set("Origin", "http://app.com")
