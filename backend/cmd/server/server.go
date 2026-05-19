@@ -37,12 +37,15 @@ func runServer(conf *config.Config) {
 	adminService := service.NewAdminService(database, fileStore, fileService)
 	graphService := service.NewGraphService(database, fileService)
 
-	sched := scheduler.New(conf.Schedule, []scheduler.Task{
+	sched, err := scheduler.New(conf.Scheduler, []scheduler.Task{
 		{
 			Name: "graph_notifications",
 			Fn:   nil,
 		},
 	}...)
+	if err != nil {
+		log.Fatalf("error initializing scheduler: %v", err)
+	}
 
 	h := handler.NewHandler(authService, adminService, favourService, graphService, fileService, pushService)
 

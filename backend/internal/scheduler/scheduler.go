@@ -16,12 +16,12 @@ type internalTask struct {
 }
 
 type Scheduler struct {
-	config *config.SchedulerConfig
+	config config.SchedulerConfig
 	tasks  []internalTask
 	wg     sync.WaitGroup
 }
 
-func New(conf *config.SchedulerConfig, tasks ...Task) (*Scheduler, error) {
+func New(conf config.SchedulerConfig, tasks ...Task) (*Scheduler, error) {
 	sched := &Scheduler{config: conf}
 
 	for _, task := range tasks {
@@ -36,15 +36,17 @@ func New(conf *config.SchedulerConfig, tasks ...Task) (*Scheduler, error) {
 
 func (s *Scheduler) AddTask(task Task) error {
 	name := task.Name
-	taskConfig, _ := s.config.Tasks[name]
+	taskConfig, hasConfig := s.config.Tasks[name]
 
-	if taskConfig.Disabled {
-		return nil
-	}
+	if hasConfig {
+		if taskConfig.Disabled {
+			return nil
+		}
 
-	err := task.inheritConfig(taskConfig)
-	if err != nil {
-		return err
+		err := task.inheritConfig(taskConfig)
+		if err != nil {
+			return err
+		}
 	}
 
 	if task.Cron.IsZero() {

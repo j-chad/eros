@@ -13,6 +13,7 @@ type Config struct {
 	Auth        AuthConfig        `json:"auth"`
 	FileStorage FileStorageConfig `json:"file_storage"`
 	Push        PushConfig        `json:"push"`
+	Scheduler   SchedulerConfig   `json:"scheduler"`
 }
 
 // LoggingConfig contains logging settings
