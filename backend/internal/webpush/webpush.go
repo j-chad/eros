@@ -18,7 +18,6 @@ type Subscription struct {
 
 type Options struct {
 	PrivateKey *ecdsa.PrivateKey // server's VAPID signing key
-	PublicKey  []byte            // the uncompressed public key bytes (65 bytes)
 	Subject    string            // "mailto:..." or "https://..." contact
 	TTL        int               // seconds the push service should retain the message
 	Urgency    string            // "very-low", "low", "normal", or "high"

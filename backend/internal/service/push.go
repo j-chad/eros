@@ -7,7 +7,10 @@ import (
 	"backend/internal/repository"
 	"backend/internal/webpush"
 	"context"
+	"crypto/ecdsa"
+	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -74,12 +77,56 @@ func (p *PushService) SendMessage(ctx context.Context, request models.PushReques
 	subscriptions, err := p.repo.GetPushSubscriptions(ctx)
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to get push subscriptions", "error", err)
-		return err
+		return fmt.Errorf("failed to get push subscriptions: %w", err)
 	}
 
-	for _, subscription := range subscriptions {
-		//webpush.SendNotification(ctx,
+	payload, err := json.Marshal(request.Message)
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to marshal push message", "error", err)
+		return fmt.Errorf("failed to marshal push message: %w", err)
 	}
+
+	privateKey, err := p.decodePrivateKey()
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to decode private key", "error", err)
+		return fmt.Errorf("failed to decode private key: %w", err)
+	}
+
+	options := webpush.Options{
+		PrivateKey: privateKey,
+		Subject:    p.config.VAPID.Subject,
+		TTL:        int(request.TTL.Seconds()),
+		Urgency:    string(request.Urgency),
+		Topic:      request.Topic,
+	}
+
+	// TODO: concurrently send notifications to multiple subscriptions
+	for _, subscription := range subscriptions {
+		p256dh, err := decodeSubscriptionKey(subscription.Keys.P256dh)
+		if err != nil {
+			logger.ErrorContext(ctx, "failed to decode subscription key", "error", err)
+			continue
+		}
+
+		auth, err := decodeSubscriptionKey(subscription.Keys.Auth)
+		if err != nil {
+			logger.ErrorContext(ctx, "failed to decode subscription key", "error", err)
+			continue
+		}
+
+		err = webpush.SendNotification(ctx, payload, webpush.Subscription{
+			Endpoint: subscription.Endpoint,
+			P256dh:   p256dh,
+			Auth:     auth,
+		}, options)
+
+		if err != nil {
+			logger.ErrorContext(ctx, "failed to send push notification", "error", err)
+			continue
+		}
+	}
+
+	return nil
 }
 
 func (p *PushService) validateSubscription(sub models.PushSubscription) error {
@@ -126,4 +173,26 @@ func (p *PushService) validateKeys(keys models.PushKeys) error {
 		return fmt.Errorf("invalid auth key")
 	}
 	return nil
+}
+
+func (p *PushService) decodePrivateKey() (*ecdsa.PrivateKey, error) {
+	privateKeyString := p.config.VAPID.PrivateKey
+	if privateKeyString == "" {
+		return nil, fmt.Errorf("missing private key")
+	}
+	privateKeyBytes, err := base64.RawURLEncoding.DecodeString(privateKeyString)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode private key: %w", err)
+	}
+
+	privateKey, err := x509.ParseECPrivateKey(privateKeyBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse private key: %w", err)
+	}
+
+	return privateKey, nil
+}
+
+func decodeSubscriptionKey(key string) ([]byte, error) {
+	return base64.RawURLEncoding.DecodeString(key)
 }
