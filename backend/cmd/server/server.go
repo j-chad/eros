@@ -4,6 +4,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/handler"
 	"backend/internal/handler/middleware"
+	"backend/internal/logging"
 	"backend/internal/repository/sqlite"
 	"backend/internal/repository/storage"
 	"backend/internal/scheduler"
@@ -25,18 +26,21 @@ func runServer(conf *config.Config) {
 	defer cancel()
 
 	if conf == nil {
-		log.Fatal("config is nil")
+		fatal("config is nil")
+		return
 	}
 
 	database, err := sqlite.NewSQLiteDB(conf.Database)
 	if err != nil {
-		log.Fatalf("error opening repository: %v", err)
+		fatal("error opening repository: %v", err)
+		return
 	}
 	defer database.Close()
 
 	fileStore, err := storage.NewFileStore(conf.FileStorage)
 	if err != nil {
-		log.Fatalf("error initializing file storage: %v", err)
+		fatal("error initializing file storage: %v", err)
+		return
 	}
 
 	authService := service.NewAuthService(conf.Auth, database)
@@ -47,16 +51,19 @@ func runServer(conf *config.Config) {
 	graphService := service.NewGraphService(database, fileService)
 
 	if !conf.Scheduler.Disabled {
+		logger := slog.Default().With("component", "scheduler")
 		sched, err := scheduler.New(conf.Scheduler, []scheduler.Task{
 			{
 				Name: "graph_notifications",
-				Fn:   nil,
+				Fn: func(_ context.Context) error {
+					return fmt.Errorf("graph_notifications task not implemented")
+				},
 			},
 		}...)
 		if err != nil {
 			log.Fatalf("error initializing scheduler: %v", err)
 		}
-		go sched.Run(ctx)
+		go sched.Run(logging.NewContext(ctx, logger))
 	}
 
 	h := handler.NewHandler(authService, adminService, favourService, graphService, fileService, pushService)
@@ -79,7 +86,7 @@ func runServer(conf *config.Config) {
 			if errors.Is(err, http.ErrServerClosed) {
 				return
 			}
-			
+
 			log.Fatalf("error starting server: %v", err)
 		}
 	}()
@@ -92,4 +99,9 @@ func runServer(conf *config.Config) {
 		log.Fatalf("error shutting down server: %v", err)
 	}
 	log.Println("server gracefully stopped")
+}
+
+func fatal(format string, args ...interface{}) {
+	slog.Error(format, args...)
+	os.Exit(1)
 }

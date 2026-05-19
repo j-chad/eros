@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"backend/internal/config"
+	"backend/internal/logging"
 	"context"
 	"fmt"
 	"sync"
@@ -65,6 +66,9 @@ func (s *Scheduler) Run(ctx context.Context) {
 		return
 	}
 
+	logger := logging.FromContext(ctx)
+	logger.InfoContext(ctx, "starting scheduler", "task_count", len(s.tasks))
+
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
 
@@ -76,6 +80,7 @@ func (s *Scheduler) Run(ctx context.Context) {
 		case <-ticker.C:
 			s.check(ctx, time.Now())
 		case <-ctx.Done():
+			logger.DebugContext(ctx, "stopping scheduler", "task_count", len(s.tasks))
 			s.waitForRunningTasks()
 			return
 		}
@@ -83,6 +88,8 @@ func (s *Scheduler) Run(ctx context.Context) {
 }
 
 func (s *Scheduler) check(ctx context.Context, now time.Time) {
+	logger := logging.FromContext(ctx)
+
 	nowMinute := now.Truncate(time.Minute)
 	for i, _ := range s.tasks {
 		task := &s.tasks[i]
@@ -92,11 +99,12 @@ func (s *Scheduler) check(ctx context.Context, now time.Time) {
 		}
 
 		if task.lastRunMinute.Equal(nowMinute) {
+			logger.DebugContext(ctx, "skipping task because it has already run this minute", "task", task.Name)
 			continue
 		}
 
 		if !task.running.CompareAndSwap(false, true) {
-			// todo: log that the task is still running and will be skipped this time.
+			logger.WarnContext(ctx, "skipping task because previous run is still in progress", "task", task.Name)
 			continue
 		}
 
@@ -106,14 +114,20 @@ func (s *Scheduler) check(ctx context.Context, now time.Time) {
 }
 
 func (s *Scheduler) runTask(ctx context.Context, task *internalTask) {
+	logger := logging.FromContext(ctx)
+
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
 		defer task.running.Store(false)
 
+		logger.DebugContext(ctx, "running scheduled task", "task", task.Name)
 		if err := task.Run(ctx); err != nil {
-			// TODO: log the error.
+			logger.WarnContext(ctx, "error running scheduled task", "task", task.Name, "error", err)
+			return
 		}
+
+		logger.DebugContext(ctx, "completed running scheduled task", "task", task.Name)
 	}()
 }
 

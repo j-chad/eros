@@ -11,8 +11,8 @@ type CronExpression struct {
 	minute, hour, dayOfMonth, month, dayOfWeek uint64
 }
 
-func (e *CronExpression) IsZero() bool {
-	return e.minute == 0 && e.hour == 0 && e.dayOfMonth == 0 && e.month == 0 && e.dayOfWeek == 0
+func (ce *CronExpression) IsZero() bool {
+	return ce.minute == 0 && ce.hour == 0 && ce.dayOfMonth == 0 && ce.month == 0 && ce.dayOfWeek == 0
 }
 
 func (ce *CronExpression) Matches(t time.Time) bool {
@@ -23,6 +23,15 @@ func (ce *CronExpression) Matches(t time.Time) bool {
 	dayOfWeekMatch := (ce.dayOfWeek & (1 << t.Weekday())) != 0
 
 	return minuteMatch && hourMatch && dayOfMonthMatch && monthMatch && dayOfWeekMatch
+}
+
+func MustParseCronExpression(s string) CronExpression {
+	cron, err := ParseCronExpression(s)
+	if err != nil {
+		panic(err)
+	}
+
+	return cron
 }
 
 func ParseCronExpression(s string) (CronExpression, error) {
