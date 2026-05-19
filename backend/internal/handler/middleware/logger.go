@@ -40,7 +40,7 @@ func WithLogging(next http.Handler) http.Handler {
 			slog.Duration("duration", time.Since(start)),
 		}
 
-		if sw.status >= 500 {
+		if sw.status >= 500 || sw.status == http.StatusBadRequest {
 			logger.Warn("request", args...)
 		} else {
 			logger.Info("request", args...)

@@ -114,20 +114,21 @@ func (s *Scheduler) check(ctx context.Context, now time.Time) {
 }
 
 func (s *Scheduler) runTask(ctx context.Context, task *internalTask) {
-	logger := logging.FromContext(ctx)
+	logger := logging.FromContext(ctx).With("task", task.Name)
+	logCtx := logging.NewContext(ctx, logger)
 
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
 		defer task.running.Store(false)
 
-		logger.DebugContext(ctx, "running scheduled task", "task", task.Name)
-		if err := task.Run(ctx); err != nil {
-			logger.WarnContext(ctx, "error running scheduled task", "task", task.Name, "error", err)
+		logger.DebugContext(ctx, "running scheduled task")
+		if err := task.Run(logCtx); err != nil {
+			logger.WarnContext(ctx, "error running scheduled task", "error", err)
 			return
 		}
 
-		logger.DebugContext(ctx, "completed running scheduled task", "task", task.Name)
+		logger.DebugContext(ctx, "completed running scheduled task")
 	}()
 }
 
