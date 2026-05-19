@@ -3,6 +3,7 @@ package service
 import (
 	"backend/internal/config"
 	"backend/internal/crypto"
+	"backend/internal/logging"
 	"backend/internal/models"
 	"backend/internal/repository"
 	"context"
@@ -61,17 +62,21 @@ func (s *AuthService) ValidateDeviceToken(ctx context.Context, token string) (mo
 }
 
 func (s *AuthService) RegisterDevice(ctx context.Context, registrationCode string, deviceInfo string) (string, error) {
+	logger := logging.FromContext(ctx)
+
 	code, err := s.repo.GetRegistrationCode(ctx)
 	if err != nil {
 		return "", err
 	}
 
 	if code == nil || code.IsExpired() || subtle.ConstantTimeCompare([]byte(registrationCode), []byte(code.Code)) != 1 {
+		logger.DebugContext(ctx, "invalid registration code attempt", "provided_code", registrationCode)
 		return "", ErrInvalidRegistrationCode
 	}
 
 	secureToken, err := crypto.GenerateSecureToken(32)
 	if err != nil {
+		logger.ErrorContext(ctx, "failed to generate secure token", "error", err)
 		return "", err
 	}
 
@@ -91,8 +96,10 @@ func (s *AuthService) RegisterDevice(ctx context.Context, registrationCode strin
 	})
 
 	if err != nil {
+		logger.ErrorContext(ctx, "failed to register device", "error", err)
 		return "", err
 	}
 
+	logger.InfoContext(ctx, "successfully registered device", "device_info", deviceInfo)
 	return secureToken, nil
 }
