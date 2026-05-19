@@ -9,8 +9,8 @@ import (
 
 type internalTask struct {
 	Task
-	running atomic.Bool
-	lastRun time.Time
+	running       atomic.Bool
+	lastRunMinute time.Time
 }
 
 type Scheduler struct {
@@ -46,7 +46,28 @@ func (s *Scheduler) Run(ctx context.Context) error {
 	}
 }
 
-func (s *Scheduler) check(ctx context.Context, now time.Time) {}
+func (s *Scheduler) check(ctx context.Context, now time.Time) {
+	nowMinute := now.Truncate(time.Minute)
+	for i, _ := range s.tasks {
+		task := &s.tasks[i]
+
+		if !task.Cron.Matches(now) {
+			continue
+		}
+
+		if task.lastRunMinute.Equal(nowMinute) {
+			continue
+		}
+
+		if !task.running.CompareAndSwap(false, true) {
+			// todo: log that the task is still running and will be skipped this time.
+			continue
+		}
+
+		task.lastRunMinute = nowMinute
+		s.runTask(ctx, task)
+	}
+}
 
 func (s *Scheduler) runTask(ctx context.Context, task *internalTask) {
 	s.wg.Add(1)
