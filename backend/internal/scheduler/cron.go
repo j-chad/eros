@@ -1,0 +1,98 @@
+package scheduler
+
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
+
+type CronExpression struct {
+	minute, hour, dayOfMonth, month, dayOfWeek uint64
+}
+
+func ParseCronExpression(s string) (CronExpression, error) {
+	fields := strings.Fields(s)
+	if len(fields) != 5 {
+		return CronExpression{}, fmt.Errorf("expected 5 fields, got %d", len(fields))
+	}
+
+	minuteBitfield, err := parseCronField(fields[0], 0, 59)
+	if err != nil {
+		return CronExpression{}, fmt.Errorf("invalid minute field: %w", err)
+	}
+
+	hourBitfield, err := parseCronField(fields[1], 0, 23)
+	if err != nil {
+		return CronExpression{}, fmt.Errorf("invalid hour field: %w", err)
+	}
+
+	dayOfMonthBitfield, err := parseCronField(fields[2], 1, 31)
+	if err != nil {
+		return CronExpression{}, fmt.Errorf("invalid day of month field: %w", err)
+	}
+
+	monthBitfield, err := parseCronField(fields[3], 1, 12)
+	if err != nil {
+		return CronExpression{}, fmt.Errorf("invalid month field: %w", err)
+	}
+
+	dayOfWeekBitfield, err := parseCronField(fields[4], 0, 6)
+	if err != nil {
+		return CronExpression{}, fmt.Errorf("invalid day of week field: %w", err)
+	}
+
+	return CronExpression{
+		minute:     minuteBitfield,
+		hour:       hourBitfield,
+		dayOfMonth: dayOfMonthBitfield,
+		month:      monthBitfield,
+		dayOfWeek:  dayOfWeekBitfield,
+	}, nil
+}
+
+func parseCronField(field string, min, max uint64) (uint64, error) {
+	bitfield := uint64(0)
+
+	// lists
+	parts := strings.Split(field, ",")
+	for _, part := range parts {
+		// steps
+		base, step, hasStep := strings.Cut(part, "/")
+		if !hasStep {
+			step = "1"
+		}
+
+		// ranges
+		minBase, maxBase, hasRange := strings.Cut(base, "-")
+		if !hasRange {
+			maxBase = base
+		}
+
+		// convert to integer
+		minBaseInt, err := strconv.ParseUint(minBase, 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("invalid number: %w", err)
+		}
+		maxBaseInt, err := strconv.ParseUint(maxBase, 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("invalid number: %w", err)
+		}
+		stepInt, err := strconv.ParseUint(step, 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("invalid number: %w", err)
+		}
+
+		// generate part bitfield
+		partBitfield := uint64(0)
+		for i := minBaseInt; i <= maxBaseInt; i += stepInt {
+			if i < min || i > max {
+				return 0, fmt.Errorf("value %d out of range [%d-%d]", i, min, max)
+			}
+			partBitfield |= 1 << i
+		}
+
+		bitfield |= partBitfield
+	}
+
+	return bitfield, nil
+}

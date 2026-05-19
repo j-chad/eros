@@ -4,6 +4,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/models"
 	"backend/internal/repository"
+	"backend/internal/webpush"
 	"context"
 	"encoding/base64"
 	"errors"
@@ -24,7 +25,7 @@ func NewPushService(config config.PushConfig, repo repository.Repository) *PushS
 	return &PushService{config: config, repo: repo}
 }
 
-func (p *PushService) Register(ctx context.Context, deviceID string, sub models.PushSubscription) error {
+func (p *PushService) Register(ctx context.Context, deviceID string, sub webpush.Subscription) error {
 	if err := p.validateSubscription(sub); err != nil {
 		return err
 	}
@@ -44,7 +45,7 @@ func (p *PushService) GetVAPIDPublicKey() (string, error) {
 	return p.config.VAPID.PublicKey, nil
 }
 
-func (p *PushService) validateSubscription(sub models.PushSubscription) error {
+func (p *PushService) validateSubscription(sub webpush.Subscription) error {
 	err := p.validateEndpoint(sub.Endpoint)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrSubValidationFailed, err)
@@ -77,7 +78,7 @@ func (p *PushService) validateEndpoint(endpoint string) error {
 	return fmt.Errorf("endpoint '%s' is not whitelisted", endpoint)
 }
 
-func (p *PushService) validateKeys(keys models.PushSubscriptionKeys) error {
+func (p *PushService) validateKeys(keys webpush.Subscription) error {
 	if len(keys.P256dh) == 0 || len(keys.Auth) == 0 {
 		return fmt.Errorf("missing subscription keys")
 	}
