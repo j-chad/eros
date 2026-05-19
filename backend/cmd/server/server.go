@@ -9,6 +9,7 @@ import (
 	"backend/internal/scheduler"
 	"backend/internal/service"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"log/slog"
@@ -75,6 +76,10 @@ func runServer(conf *config.Config) {
 	go func() {
 		slog.Default().Info("starting server", "address", serverAddr)
 		if err := server.ListenAndServe(); err != nil {
+			if errors.Is(err, http.ErrServerClosed) {
+				return
+			}
+			
 			log.Fatalf("error starting server: %v", err)
 		}
 	}()

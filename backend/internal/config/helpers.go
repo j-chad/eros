@@ -154,7 +154,29 @@ func setField(field reflect.Value, val any) error {
 			}
 			field.Set(reflect.ValueOf(strs))
 		}
+	case reflect.Map:
+		if field.Type().Key().Kind() != reflect.String {
+			return fmt.Errorf("expected map[string], got %T", val)
+		}
+		m, ok := val.(map[string]any)
+		if !ok {
+			return fmt.Errorf("expected object, got %T", val)
+		}
 
+		mapVal := field
+		if mapVal.IsNil() {
+			mapVal = reflect.MakeMap(field.Type())
+		}
+
+		for k, v := range m {
+			key := reflect.ValueOf(k)
+			value := reflect.New(field.Type().Elem()).Elem()
+			if err := setField(value, v); err != nil {
+				return fmt.Errorf("map value for key %s: %w", k, err)
+			}
+			mapVal.SetMapIndex(key, value)
+		}
+		field.Set(mapVal)
 	default:
 		return fmt.Errorf("unsupported field kind %s", field.Kind())
 	}
