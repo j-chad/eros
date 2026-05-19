@@ -95,12 +95,12 @@ type VAPIDConfig struct {
 }
 
 type SchedulerConfig struct {
-	Enabled bool                           `json:"enabled" env:"SCHEDULER_ENABLED"`
-	Tasks   map[string]SchedulerTaskConfig `json:"tasks"`
+	Disabled bool                           `json:"disabled" env:"SCHEDULER_DISABLED"`
+	Tasks    map[string]SchedulerTaskConfig `json:"tasks"`
 }
 
 type SchedulerTaskConfig struct {
-	Enabled bool          `json:"enabled"`
-	Cron    string        `json:"cron"`
-	Timeout time.Duration `json:"timeout"`
+	Disabled bool          `json:"disabled"`
+	Cron     string        `json:"cron"`
+	Timeout  time.Duration `json:"timeout"`
 }

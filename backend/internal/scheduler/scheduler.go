@@ -1,7 +1,9 @@
 package scheduler
 
 import (
+	"backend/internal/config"
 	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -14,27 +16,53 @@ type internalTask struct {
 }
 
 type Scheduler struct {
-	tasks []internalTask
-	wg    sync.WaitGroup
+	config *config.SchedulerConfig
+	tasks  []internalTask
+	wg     sync.WaitGroup
 }
 
-func New(tasks ...Task) *Scheduler {
-	sched := &Scheduler{}
+func New(conf *config.SchedulerConfig, tasks ...Task) (*Scheduler, error) {
+	sched := &Scheduler{config: conf}
 
 	for _, task := range tasks {
-		sched.AddTask(task)
+		err := sched.AddTask(task)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return sched
+	return sched, nil
 }
 
-func (s *Scheduler) AddTask(task Task) {
+func (s *Scheduler) AddTask(task Task) error {
+	name := task.Name
+	taskConfig, _ := s.config.Tasks[name]
+
+	if taskConfig.Disabled {
+		return nil
+	}
+
+	err := task.inheritConfig(taskConfig)
+	if err != nil {
+		return err
+	}
+
+	if task.Cron.IsZero() {
+		return fmt.Errorf("task %s has no cron expression", name)
+	}
+
 	s.tasks = append(s.tasks, internalTask{
 		Task: task,
 	})
+
+	return nil
 }
 
-func (s *Scheduler) Run(ctx context.Context) error {
+func (s *Scheduler) Run(ctx context.Context) {
+	if s.config.Disabled {
+		return
+	}
+
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
 
@@ -47,7 +75,7 @@ func (s *Scheduler) Run(ctx context.Context) error {
 			s.check(ctx, time.Now())
 		case <-ctx.Done():
 			s.waitForRunningTasks()
-			return nil
+			return
 		}
 	}
 }

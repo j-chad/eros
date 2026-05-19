@@ -11,6 +11,10 @@ type CronExpression struct {
 	minute, hour, dayOfMonth, month, dayOfWeek uint64
 }
 
+func (e *CronExpression) IsZero() bool {
+	return e.minute == 0 && e.hour == 0 && e.dayOfMonth == 0 && e.month == 0 && e.dayOfWeek == 0
+}
+
 func (ce *CronExpression) Matches(t time.Time) bool {
 	minuteMatch := (ce.minute & (1 << t.Minute())) != 0
 	hourMatch := (ce.hour & (1 << t.Hour())) != 0
