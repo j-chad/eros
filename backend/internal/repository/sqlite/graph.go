@@ -300,7 +300,7 @@ func (s *sqliteDB) MarkGraphNotified(ctx context.Context, graphID string) error 
 	//language=sqlite
 	_, err := s.executor().ExecContext(ctx, `
 		UPDATE graph SET notified_at = CURRENT_TIMESTAMP WHERE id = ? AND notified_at IS NULL
-	`)
+	`, graphID)
 	if err != nil {
 		return fmt.Errorf("failed to mark graph notified %s: %w", graphID, err)
 	}
