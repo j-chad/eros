@@ -65,7 +65,12 @@ func parseCronField(field string, min, max uint64) (uint64, error) {
 		// ranges
 		minBase, maxBase, hasRange := strings.Cut(base, "-")
 		if !hasRange {
-			maxBase = base
+			if minBase == "*" {
+				minBase = strconv.FormatUint(min, 10)
+				maxBase = strconv.FormatUint(max, 10)
+			} else {
+				maxBase = base
+			}
 		}
 
 		// convert to integer
@@ -80,6 +85,15 @@ func parseCronField(field string, min, max uint64) (uint64, error) {
 		stepInt, err := strconv.ParseUint(step, 10, 64)
 		if err != nil {
 			return 0, fmt.Errorf("invalid number: %w", err)
+		}
+
+		// validity checks
+		if stepInt == 0 {
+			return 0, fmt.Errorf("step cannot be zero")
+		}
+
+		if minBaseInt > maxBaseInt {
+			return 0, fmt.Errorf("min base must be less than max base number")
 		}
 
 		// generate part bitfield
