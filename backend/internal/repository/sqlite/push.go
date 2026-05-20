@@ -19,7 +19,8 @@ func (s *sqliteDB) DeletePushSubscriptions(ctx context.Context, deviceID string)
 }
 
 func (s *sqliteDB) GetPushSubscriptions(ctx context.Context) ([]models.PushSubscription, error) {
-	rows, err := s.executor().QueryContext(ctx, `SELECT endpoint, p256dh, auth FROM push_subscription`)
+	//language=sqlite
+	rows, err := s.executor().QueryContext(ctx, `SELECT device_id, endpoint, p256dh, auth FROM push_subscription`)
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +29,7 @@ func (s *sqliteDB) GetPushSubscriptions(ctx context.Context) ([]models.PushSubsc
 	var subs []models.PushSubscription
 	for rows.Next() {
 		var sub models.PushSubscription
-		if err := rows.Scan(&sub.Endpoint, &sub.Keys.P256dh, &sub.Keys.Auth); err != nil {
+		if err := rows.Scan(&sub.DeviceID, &sub.Endpoint, &sub.Keys.P256dh, &sub.Keys.Auth); err != nil {
 			return nil, err
 		}
 		subs = append(subs, sub)

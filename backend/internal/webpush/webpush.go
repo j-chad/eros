@@ -4,10 +4,15 @@ import (
 	"bytes"
 	"context"
 	"crypto/ecdsa"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strconv"
+)
+
+var (
+	ErrSubscriptionInvalid = errors.New("subscription is no longer valid")
 )
 
 type Subscription struct {
@@ -60,9 +65,14 @@ func SendNotification(ctx context.Context, payload []byte, sub Subscription, opt
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusCreated {
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("sending request: %d %s", resp.StatusCode, string(body))
+
+		if resp.StatusCode == http.StatusGone || resp.StatusCode == http.StatusNotFound {
+			return fmt.Errorf("%w (%d): %s", ErrSubscriptionInvalid, resp.StatusCode, string(body))
+		}
+
+		return fmt.Errorf("sending request (%d): %s", resp.StatusCode, string(body))
 	}
 
 	return nil

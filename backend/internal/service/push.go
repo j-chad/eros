@@ -29,8 +29,13 @@ func NewPushService(config config.PushConfig, repo repository.Repository) *PushS
 	return &PushService{config: config, repo: repo}
 }
 
-func (p *PushService) Register(ctx context.Context, deviceID string, sub models.PushSubscription) error {
+func (p *PushService) Register(ctx context.Context, sub models.PushSubscription) error {
 	logger := logging.FromContext(ctx)
+
+	deviceID := sub.DeviceID
+	if deviceID == "" {
+		return fmt.Errorf("missing device ID in push subscription")
+	}
 
 	logger.DebugContext(ctx, "registering push subscription", "device_id", deviceID)
 
@@ -70,26 +75,28 @@ func (p *PushService) GetVAPIDPublicKey() (string, error) {
 	return p.config.VAPID.PublicKey, nil
 }
 
-func (p *PushService) SendMessage(ctx context.Context, request models.PushRequest) error {
+func (p *PushService) SendMessage(ctx context.Context, request models.PushRequest) (models.PushSendResult, error) {
 	logger := logging.FromContext(ctx)
 	logger.DebugContext(ctx, "sending push", "request", request)
+
+	result := models.PushSendResult{}
 
 	subscriptions, err := p.repo.GetPushSubscriptions(ctx)
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to get push subscriptions", "error", err)
-		return fmt.Errorf("failed to get push subscriptions: %w", err)
+		return result, fmt.Errorf("failed to get push subscriptions: %w", err)
 	}
 
 	payload, err := json.Marshal(request.Message)
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to marshal push message", "error", err)
-		return fmt.Errorf("failed to marshal push message: %w", err)
+		return result, fmt.Errorf("failed to marshal push message: %w", err)
 	}
 
 	privateKey, err := p.decodePrivateKey()
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to decode private key", "error", err)
-		return fmt.Errorf("failed to decode private key: %w", err)
+		return result, fmt.Errorf("failed to decode private key: %w", err)
 	}
 
 	options := webpush.Options{
@@ -100,17 +107,20 @@ func (p *PushService) SendMessage(ctx context.Context, request models.PushReques
 		Topic:      request.Topic,
 	}
 
-	// TODO: concurrently send notifications to multiple subscriptions
 	for _, subscription := range subscriptions {
 		p256dh, err := decodeSubscriptionKey(subscription.Keys.P256dh)
 		if err != nil {
 			logger.ErrorContext(ctx, "failed to decode subscription key", "error", err)
+			_ = p.Unregister(ctx, subscription.DeviceID)
+			result.Cleaned += 1
 			continue
 		}
 
 		auth, err := decodeSubscriptionKey(subscription.Keys.Auth)
 		if err != nil {
 			logger.ErrorContext(ctx, "failed to decode subscription key", "error", err)
+			_ = p.Unregister(ctx, subscription.DeviceID)
+			result.Cleaned += 1
 			continue
 		}
 
@@ -122,11 +132,14 @@ func (p *PushService) SendMessage(ctx context.Context, request models.PushReques
 
 		if err != nil {
 			logger.ErrorContext(ctx, "failed to send push notification", "error", err)
+			result.Failed += 1
 			continue
 		}
+
+		result.Sent += 1
 	}
 
-	return nil
+	return result, nil
 }
 
 func (p *PushService) validateSubscription(sub models.PushSubscription) error {

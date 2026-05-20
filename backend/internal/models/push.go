@@ -3,6 +3,7 @@ package models
 import "time"
 
 type PushSubscription struct {
+	DeviceID string   `json:"-"`
 	Endpoint string   `json:"endpoint"`
 	Keys     PushKeys `json:"keys"`
 }
@@ -41,4 +42,10 @@ type PushMessage struct {
 
 type PushData struct {
 	URL string `json:"url"`
+}
+
+type PushSendResult struct {
+	Sent    int `json:"sent"`
+	Failed  int `json:"failed"`
+	Cleaned int `json:"cleaned"`
 }

@@ -23,8 +23,9 @@ func (h *Handler) SubscribePush(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		response.Error(r.Context(), w, apierror.BadRequest("invalid device id"))
 	}
+	subscription.DeviceID = deviceID
 
-	err := h.pushService.Register(r.Context(), deviceID, subscription)
+	err := h.pushService.Register(r.Context(), subscription)
 	if err != nil {
 		if errors.Is(err, service.ErrSubValidationFailed) {
 			response.Error(r.Context(), w, apierror.BadRequest(err.Error()))
