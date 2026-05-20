@@ -323,6 +323,85 @@ func Apply(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
+// Rollback rolls back applied migrations from the current version down to (but not including)
+// targetVersion. Migrations are rolled back in descending order. Each rollback runs in its own
+// transaction: the down SQL is executed and the tracking row is deleted.
+//
+// The confirm callback is called before each rollback with the migration about to be rolled back.
+// If confirm returns false, the rollback is aborted and Rollback returns nil (no error).
+//
+// Returns an error if a migration to roll back has no down section.
+func Rollback(ctx context.Context, db *sql.DB, targetVersion int, confirm func(m Migration) bool) error {
+	if targetVersion < 0 {
+		return fmt.Errorf("target version must be >= 0, got %d", targetVersion)
+	}
+
+	err := bootstrapMigrations(ctx, db)
+	if err != nil {
+		return err
+	}
+
+	currentVersion, err := getCurrentVersion(ctx, db)
+	if err != nil {
+		return err
+	}
+
+	if currentVersion <= targetVersion {
+		slog.Info("already at version or below target", "current", currentVersion, "target", targetVersion)
+		return nil
+	}
+
+	allMigrations := getMigrations()
+
+	// Build the list to roll back: current down to target+1, in descending order.
+	var toRollback []Migration
+	for i := len(allMigrations) - 1; i >= 0; i-- {
+		m := allMigrations[i]
+		if m.Version > targetVersion && m.Version <= currentVersion {
+			toRollback = append(toRollback, m)
+		}
+	}
+
+	for _, m := range toRollback {
+		downSQL, hasDown, err := contentsDown(m)
+		if err != nil {
+			return fmt.Errorf("error reading down migration %03d_%s: %w", m.Version, m.Name, err)
+		}
+		if !hasDown {
+			return fmt.Errorf("migration %03d_%s has no down migration; cannot roll back past version %d", m.Version, m.Name, m.Version)
+		}
+
+		if !confirm(m) {
+			slog.Info("rollback aborted by user")
+			return nil
+		}
+
+		tx, err := db.BeginTx(ctx, nil)
+		if err != nil {
+			return fmt.Errorf("error beginning transaction for rollback %03d_%s: %w", m.Version, m.Name, err)
+		}
+
+		if _, err := tx.ExecContext(ctx, downSQL); err != nil {
+			_ = tx.Rollback()
+			return fmt.Errorf("error executing down migration %03d_%s: %w", m.Version, m.Name, err)
+		}
+
+		// language=sqlite
+		if _, err := tx.ExecContext(ctx, "DELETE FROM migrations WHERE version = ?;", m.Version); err != nil {
+			_ = tx.Rollback()
+			return fmt.Errorf("error removing migration record %03d_%s: %w", m.Version, m.Name, err)
+		}
+
+		if err := tx.Commit(); err != nil {
+			return fmt.Errorf("error committing rollback %03d_%s: %w", m.Version, m.Name, err)
+		}
+
+		slog.Info("rolled back migration", "migration", fmt.Sprintf("%03d_%s", m.Version, m.Name))
+	}
+
+	return nil
+}
+
 // Status returns the status of all known migrations: applied (with timestamp) or pending.
 func Status(ctx context.Context, db *sql.DB) ([]MigrationStatus, error) {
 	err := bootstrapMigrations(ctx, db)
