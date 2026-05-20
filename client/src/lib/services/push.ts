@@ -1,3 +1,7 @@
+import {cached} from "$lib/services/cached";
+import {fetchVapidKey} from "$lib/api/push.api";
+import {KVKey, KVStore} from "$lib/db/stores/kv";
+
 export function isPushSupported() {
   return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 }
@@ -14,4 +18,28 @@ export async function isPushSubscribed() {
     }
 
     return subscription.expirationTime > Date.now()
+}
+
+export async function subscribe() {
+    if (!isPushSupported()) return;
+    if (await isPushSubscribed()) return;
+
+    const key = await getVAPIDPublicKey();
+    if (key === null) return;
+
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: key
+    })
+
+    subscription.options
+}
+
+async function getVAPIDPublicKey() {
+    return cached(async () => {
+        const key = await fetchVapidKey();
+        await KVStore.set(KVKey.PushVAPIDKey, key);
+        return key
+    }, () => KVStore.get(KVKey.PushVAPIDKey))
 }

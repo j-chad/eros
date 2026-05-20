@@ -6,6 +6,7 @@ export enum KVKey {
 	CalendarTipSeen = 'tutorial:calendar-tip',
 	FavourTipSeen = 'tutorial:favour-tip',
 	FavourCount = 'favour:count',
+	PushVAPIDKey = 'push:vapid-key'
 }
 
 interface KVValue {
@@ -13,6 +14,7 @@ interface KVValue {
 	[KVKey.CalendarTipSeen]: boolean;
 	[KVKey.FavourTipSeen]: boolean;
 	[KVKey.FavourCount]: FavourCount;
+	[KVKey.PushVAPIDKey]: string;
 }
 
 export type KVSchema = {
