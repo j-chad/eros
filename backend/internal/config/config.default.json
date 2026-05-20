@@ -29,7 +29,7 @@
 	"scheduler": {
 		"tasks": {
 			"graph_notifications": {
-				"cron": "* * * * *"
+				"cron": "*/10 * * * *"
 			}
 		}
 	}
