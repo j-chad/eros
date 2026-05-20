@@ -217,24 +217,3 @@ func (s *AdminService) ListFiles(ctx context.Context, nodeID string) ([]models.F
 func (s *AdminService) ListPushSubscriptions(ctx context.Context) ([]models.PushSubscription, error) {
 	return s.repo.GetPushSubscriptions(ctx)
 }
-
-//func (s *AdminService) CleanupOrphanedFiles(ctx context.Context) error {
-//	allKeys, err := s.files.List(ctx)
-//	if err != nil {
-//		return fmt.Errorf("failed to list files in store: %w", err)
-//	}
-//
-//	for _, key := range allKeys {
-//		referenced, err := s.db.FileExists(ctx, key)
-//		if err != nil {
-//			return fmt.Errorf("failed to check db for key %s: %w", key, err)
-//		}
-//		if !referenced {
-//			if err := s.fileStore.Delete(ctx, key); err != nil {
-//				// log and continue rather than aborting the whole sweep
-//				slog.Error("failed to delete orphaned file", "key", key, "err", err)
-//			}
-//		}
-//	}
-//	return nil
-//}

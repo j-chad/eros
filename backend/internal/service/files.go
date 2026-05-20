@@ -1,9 +1,11 @@
 package service
 
 import (
+	"backend/internal/logging"
 	"backend/internal/models"
 	"backend/internal/repository"
 	"backend/internal/repository/storage"
+	"backend/internal/scheduler"
 	"context"
 	"fmt"
 	"io"
@@ -17,8 +19,17 @@ type FileService struct {
 	files storage.FileStore
 }
 
-func NewFileService(repo repository.Repository, files storage.FileStore) *FileService {
-	return &FileService{repo: repo, files: files}
+func NewFileService(sched *scheduler.Scheduler, repo repository.Repository, files storage.FileStore) *FileService {
+	service := &FileService{repo: repo, files: files}
+
+	sched.MustAddTask(scheduler.Task{
+		Name:    "clean_orphaned_files",
+		Fn:      service.CleanOrphanedFiles,
+		Timeout: 2 * time.Minute,
+		Cron:    scheduler.MustParseCronExpression("0 12 * * *"), // every day at midday
+	})
+
+	return service
 }
 
 // GetFile fetches file metadata from the database.
@@ -136,4 +147,34 @@ func (s *FileService) PresignURL(ctx context.Context, storageKey string) (string
 		return "", fmt.Errorf("storage backend does not support presigned URLs")
 	}
 	return ps.PresignGet(ctx, storageKey, presignTTL)
+}
+
+// CleanOrphanedFiles deletes files from storage that are not referenced by any nodes in the database.
+// This can be used as a periodic clean-up task to prevent orphaned files from accumulating in storage.
+func (s *FileService) CleanOrphanedFiles(ctx context.Context) error {
+	logger := logging.FromContext(ctx)
+
+	files := s.files.List(ctx)
+	for key, err := range files {
+		if err != nil {
+			return fmt.Errorf("failed to list files from storage: %w", err)
+		}
+
+		fileModel, err := s.repo.GetFile(ctx, key)
+		if err != nil {
+			return fmt.Errorf("failed to get file metadata for key %s: %w", key, err)
+		}
+
+		if fileModel != nil {
+			continue
+		}
+
+		logger.InfoContext(ctx, "deleting orphaned file from storage", "key", key)
+		err = s.files.Delete(ctx, key)
+		if err != nil {
+			return fmt.Errorf("failed to delete orphaned file from storage: %w", err)
+		}
+	}
+
+	return nil
 }

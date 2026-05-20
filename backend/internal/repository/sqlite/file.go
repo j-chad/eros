@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 )
 
@@ -78,7 +79,7 @@ func (s *sqliteDB) GetFile(ctx context.Context, fileID string) (*models.File, er
 	`, fileID)
 
 	file, err := s.scanFile(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
@@ -95,7 +96,7 @@ func (s *sqliteDB) GetFileByNodeID(ctx context.Context, nodeID string) (*models.
 	`, nodeID)
 
 	file, err := s.scanFile(row)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {

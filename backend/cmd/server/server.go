@@ -42,13 +42,6 @@ func runServer(conf *config.Config) {
 		return
 	}
 
-	authService := service.NewAuthService(conf.Auth, database)
-	pushService := service.NewPushService(conf.Push, database)
-	favourService := service.NewFavourService(database)
-	fileService := service.NewFileService(database, fileStore)
-	adminService := service.NewAdminService(database, fileStore, fileService)
-	graphService := service.NewGraphService(database, fileService)
-
 	logger := slog.Default().With("component", "scheduler")
 	sched, err := scheduler.New(conf.Scheduler, []scheduler.Task{
 		{
@@ -61,6 +54,13 @@ func runServer(conf *config.Config) {
 	if err != nil {
 		fatal("error initializing scheduler", "error", err)
 	}
+
+	authService := service.NewAuthService(conf.Auth, database)
+	pushService := service.NewPushService(conf.Push, database)
+	favourService := service.NewFavourService(database)
+	fileService := service.NewFileService(sched, database, fileStore)
+	adminService := service.NewAdminService(database, fileStore, fileService)
+	graphService := service.NewGraphService(database, fileService)
 
 	h := handler.NewHandler(authService, adminService, favourService, graphService, fileService, pushService)
 
