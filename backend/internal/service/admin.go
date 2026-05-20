@@ -214,6 +214,10 @@ func (s *AdminService) ListFiles(ctx context.Context, nodeID string) ([]models.F
 	return s.repo.ListFiles(ctx, nodeID)
 }
 
+func (s *AdminService) ListPushSubscriptions(ctx context.Context) ([]models.PushSubscription, error) {
+	return s.repo.GetPushSubscriptions(ctx)
+}
+
 //func (s *AdminService) CleanupOrphanedFiles(ctx context.Context) error {
 //	allKeys, err := s.files.List(ctx)
 //	if err != nil {

@@ -26,7 +26,7 @@ func NewHandler(
 ) *Handler {
 	handler := &Handler{
 		auth:   authService,
-		admin:  admin.NewHandler(adminService),
+		admin:  admin.NewHandler(adminService, pushService),
 		client: client.NewHandler(authService, favourService, graphService, fileService, pushService),
 	}
 	return handler
@@ -62,6 +62,9 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	adminMux.HandleFunc("DELETE /api/admin/nodes/{node_id}/unlock", h.admin.LockNode)
 	adminMux.HandleFunc("PUT /api/admin/nodes/{node_id}/files", h.admin.UploadFiles)
 	adminMux.HandleFunc("GET /api/admin/nodes/{node_id}/files", h.admin.ListFiles)
+	adminMux.HandleFunc("POST /api/admin/push/message", h.admin.SendPushMessage)
+	adminMux.HandleFunc("GET /api/admin/push/subscriptions", h.admin.ListPushSubscriptions)
+	adminMux.HandleFunc("DELETE /api/admin/push/subscriptions/{device_id}", h.admin.DeletePushSubscription)
 	adminMux.HandleFunc("/", routeNotFound)
 	mux.Handle("/api/admin/", middleware.WithAdminAuth(adminMux, *h.auth))
 

@@ -3,7 +3,7 @@ package models
 import "time"
 
 type PushSubscription struct {
-	DeviceID string   `json:"-"`
+	DeviceID string   `json:"device_id"`
 	Endpoint string   `json:"endpoint"`
 	Keys     PushKeys `json:"keys"`
 }
