@@ -3,7 +3,8 @@ import {fetchVapidKey} from "$lib/api/push.api";
 import {KVKey, KVStore} from "$lib/db/stores/kv";
 
 export function isPushSupported() {
-  return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  if (!('serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window)) return false;
+  if (Notification?.permission === 'denied') return false;
 }
 
 export async function isPushSubscribed() {
