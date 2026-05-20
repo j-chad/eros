@@ -109,6 +109,13 @@ func (p *PushService) SendMessage(ctx context.Context, request models.PushReques
 	}
 
 	for _, subscription := range subscriptions {
+		if subscription.ExpirationTime != nil && subscription.ExpirationTime.Before(time.Now()) {
+			logger.DebugContext(ctx, "skipping expired push subscription", "device_id", subscription.DeviceID)
+			_ = p.Unregister(ctx, subscription.DeviceID)
+			result.Cleaned += 1
+			continue
+		}
+
 		p256dh, err := decodeSubscriptionKey(subscription.Keys.P256dh)
 		if err != nil {
 			logger.ErrorContext(ctx, "failed to decode subscription key", "error", err)
