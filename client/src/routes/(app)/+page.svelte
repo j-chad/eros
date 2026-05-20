@@ -8,7 +8,7 @@
 	import type { FavourCount, FavourRequest } from '$lib/types/favour';
 	import {goto} from "$app/navigation";
 	import {BellOff} from "lucide-svelte";
-	import {isPushSupported} from "$lib/services/push";
+	import {isPushSupported, subscribe} from "$lib/services/push";
 
 	const { data }: { data: { graphs: GraphSummary[]; favourCount: FavourCount; favourRequests: FavourRequest[] } } = $props();
 
@@ -39,6 +39,20 @@
 			return () => clearInterval(id);
 		}
 	});
+
+	function subscribeToNotifications() {
+		if (!supportsNotifications) return;
+		Notification.requestPermission().then((permission) => {
+			if (permission === "granted") {
+				subscribe().then(() => {
+					alert("Subscribed to notifications!");
+				}).catch((err) => {
+					console.error("Failed to subscribe to notifications", err);
+					alert("Failed to subscribe to notifications");
+				});
+			}
+		})
+	}
 </script>
 
 <svelte:head>
@@ -50,7 +64,7 @@
 	<BrandHeader subtitle={hasUnlocked ? undefined : "Something's coming"}>
 		{#snippet rightContent()}
 			{#if supportsNotifications}
-				<button class="btn btn-circle btn-secondary">
+				<button class="btn btn-circle btn-secondary" onclick={subscribeToNotifications}>
 					<BellOff class="h-4 w-4" />
 				</button>
 			{/if}

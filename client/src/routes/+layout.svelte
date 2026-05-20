@@ -14,7 +14,7 @@
 
 	const s3Origin = PUBLIC_S3_ORIGIN ?? '';
 	const s3Csp = s3Origin ? ` ${s3Origin}` : '';
-	const csp = `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.tile.openstreetmap.org${s3Csp}; connect-src 'self' http://localhost:* https://*; media-src 'self' blob:${s3Csp}; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'`;
+	const csp = `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.tile.openstreetmap.org${s3Csp}; connect-src 'self' http://localhost:* https://*; media-src 'self' blob:${s3Csp}; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'`;
 
 	// Detect iOS edge-swipe-back so we can skip the View Transition for it —
 	// iOS provides its own slide animation and layering ours on top causes a

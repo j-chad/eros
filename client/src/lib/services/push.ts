@@ -4,8 +4,12 @@ import {KVKey, KVStore} from "$lib/db/stores/kv";
 
 export function isPushSupported() {
   if (!('serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window)) return false;
-  if (Notification?.permission === 'denied') return false;
-  return true
+  return Notification?.permission !== 'denied';
+}
+
+export function isPushEnabled() {
+    if (!isPushSupported()) return false;
+    return Notification?.permission === "granted";
 }
 
 export async function isPushSubscribed() {
