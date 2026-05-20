@@ -4,6 +4,8 @@
 /// <reference types="@sveltejs/kit" />
 /// <reference types="../.svelte-kit/ambient.d.ts" />
 
+import type {PushMessage} from "./lib/types/push";
+
 declare const self: ServiceWorkerGlobalScope;
 
 import { build, files, prerendered, version } from '$service-worker';
@@ -79,3 +81,28 @@ self.addEventListener('fetch', (event) => {
 		})
 	);
 });
+
+self.addEventListener('push', async (event) => {
+	const {title, ...options} = event.data.json() as PushMessage
+	await self.registration.showNotification(title, options)
+})
+
+self.addEventListener('notificationclick', (event) => {
+	event.notification.close()
+
+	if (event.notification.data?.url) {
+		event.waitUntil(
+			self.clients.matchAll({ type: 'window' }).then((clients) => {
+				for (const client of clients) {
+					if ('focus' in client) {
+						client.focus();
+						client.navigate(event.notification.data.url);
+						return;
+					}
+				}
+
+				self.clients.openWindow?.(event.notification.data.url);
+			})
+		);
+	}
+})

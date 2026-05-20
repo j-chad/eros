@@ -36,12 +36,12 @@ type PushRequest struct {
 type PushMessage struct {
 	Title string   `json:"title"`
 	Body  string   `json:"body"`
-	Tag   string   `json:"tag"`
-	Data  PushData `json:"data"`
+	Tag   string   `json:"tag,omitempty"`
+	Data  PushData `json:"data,omitempty"`
 }
 
 type PushData struct {
-	URL string `json:"url"`
+	URL string `json:"url,omitempty"`
 }
 
 type PushSendResult struct {
