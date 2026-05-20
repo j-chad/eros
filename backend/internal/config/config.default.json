@@ -11,12 +11,7 @@
 	"logging": {
 		"level": 0,
 		"json": true,
-		"add_source": false,
-		"collector": {
-			"enabled": true,
-			"max_spans": 10000,
-			"trace_header": "X-Trace-Id"
-		}
+		"add_source": false
 	},
 	"push": {
 		"allowed_hosts": [
