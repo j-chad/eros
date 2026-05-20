@@ -7,6 +7,8 @@
 	import type { GraphSummary } from '$lib/types/graph';
 	import type { FavourCount, FavourRequest } from '$lib/types/favour';
 	import {goto} from "$app/navigation";
+	import {BellOff} from "lucide-svelte";
+	import {isPushSupported} from "$lib/services/push";
 
 	const { data }: { data: { graphs: GraphSummary[]; favourCount: FavourCount; favourRequests: FavourRequest[] } } = $props();
 
@@ -22,6 +24,8 @@
 
 	const pastGraphs = $derived(data.graphs.filter((g) => g.starting_at.getTime() <= tick));
 	const hasUnlocked = $derived(pastGraphs.length > 0);
+
+	const supportsNotifications = isPushSupported();
 
 	const nextGraph = $derived(
 		data.graphs
@@ -43,7 +47,15 @@
 </svelte:head>
 
 <div class="mx-auto min-h-dvh max-w-md px-4 py-6 flex flex-col justify-between gap-8">
-	<BrandHeader subtitle={hasUnlocked ? undefined : "Something's coming"} />
+	<BrandHeader subtitle={hasUnlocked ? undefined : "Something's coming"}>
+		{#snippet rightContent()}
+			{#if supportsNotifications}
+				<button class="btn btn-circle btn-secondary">
+					<BellOff class="h-4 w-4" />
+				</button>
+			{/if}
+		{/snippet}
+	</BrandHeader>
 
 	<div class="flex-1 flex flex-col justify-center gap-6" style="view-transition-name: card-content">
 		{#if hasUnlocked}
