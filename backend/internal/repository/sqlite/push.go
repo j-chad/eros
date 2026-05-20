@@ -7,9 +7,14 @@ import (
 
 func (s *sqliteDB) CreatePushSubscription(ctx context.Context, deviceID string, sub models.PushSubscription) error {
 	_, err := s.executor().ExecContext(ctx, `
-		INSERT INTO push_subscription (device_id, endpoint, p256dh, auth) VALUES (?, ?, ?, ?) 
-		ON CONFLICT(device_id) DO UPDATE SET endpoint = excluded.endpoint, p256dh = excluded.p256dh, auth = excluded.auth
-	`, deviceID, sub.Endpoint, sub.Keys.P256dh, sub.Keys.Auth)
+		INSERT INTO push_subscription (device_id, endpoint, p256dh, auth, expires_at) VALUES (?, ?, ?, ?, ?) 
+		ON CONFLICT(device_id) 
+		    DO UPDATE SET 
+		    	endpoint = excluded.endpoint, 
+		    	p256dh = excluded.p256dh, 
+		    	auth = excluded.auth, 
+		    	expires_at = excluded.expires_at
+	`, deviceID, sub.Endpoint, sub.Keys.P256dh, sub.Keys.Auth, sub.ExpirationTime)
 	return err
 }
 

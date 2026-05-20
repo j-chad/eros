@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 )
 
 var ErrSubValidationFailed = errors.New("subscription validation failed")
@@ -151,6 +152,10 @@ func (p *PushService) validateSubscription(sub models.PushSubscription) error {
 	err = p.validateKeys(sub.Keys)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrSubValidationFailed, err)
+	}
+
+	if sub.ExpirationTime != nil && sub.ExpirationTime.Before(time.Now()) {
+		return fmt.Errorf("push subscription expired")
 	}
 
 	return nil

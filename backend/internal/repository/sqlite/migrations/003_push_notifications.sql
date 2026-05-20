@@ -4,6 +4,7 @@ CREATE TABLE push_subscription (
     endpoint TEXT NOT NULL UNIQUE,
     p256dh TEXT NOT NULL,
     auth TEXT NOT NULL,
+    expires_at DATETIME,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (device_id) REFERENCES device(id) ON DELETE CASCADE

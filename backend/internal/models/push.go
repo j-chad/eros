@@ -3,10 +3,10 @@ package models
 import "time"
 
 type PushSubscription struct {
-	DeviceID       string    `json:"deviceID"`
-	Endpoint       string    `json:"endpoint"`
-	ExpirationTime time.Time `json:"expirationTime"`
-	Keys           PushKeys  `json:"keys"`
+	DeviceID       string     `json:"deviceID"`
+	Endpoint       string     `json:"endpoint"`
+	ExpirationTime *time.Time `json:"expirationTime"`
+	Keys           PushKeys   `json:"keys"`
 }
 
 type PushKeys struct {
