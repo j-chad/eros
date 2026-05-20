@@ -19,7 +19,7 @@ func MustRegisterTasks(sched *scheduler.Scheduler, repo repository.Repository, p
 func notifyUnlockedGraphs(repo repository.Repository, push *service.PushService) scheduler.Task {
 	return scheduler.Task{
 		Name:    "notify_unlocked_graphs",
-		Cron:    scheduler.MustParseCronExpression("*/1 * * * *"),
+		Cron:    scheduler.MustParseCronExpression("*/5 * * * *"),
 		Timeout: 30 * time.Second,
 		Fn: func(ctx context.Context) error {
 			logger := logging.FromContext(ctx)
@@ -61,7 +61,7 @@ func notifyUnlockedGraphs(repo repository.Repository, push *service.PushService)
 					continue
 				}
 
-				logger.DebugContext(ctx, "successfully sent push notification for graph", "graph_id", graph.ID, "push_result", result)
+				logger.DebugContext(ctx, "successfully sent push notification for graph", "graph_id", graph.ID, "sent", result.Sent, "cleaned", result.Cleaned, "failed", result.Failed)
 			}
 
 			return nil

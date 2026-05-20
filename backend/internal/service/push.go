@@ -8,7 +8,7 @@ import (
 	"backend/internal/webpush"
 	"context"
 	"crypto/ecdsa"
-	"crypto/x509"
+	"crypto/elliptic"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -82,25 +82,21 @@ func (p *PushService) GetVAPIDPublicKey() (string, error) {
 
 func (p *PushService) SendMessage(ctx context.Context, request models.PushRequest) (models.PushSendResult, error) {
 	logger := logging.FromContext(ctx)
-	logger.DebugContext(ctx, "sending push", "request", request)
 
 	result := models.PushSendResult{}
 
 	subscriptions, err := p.repo.GetPushSubscriptions(ctx)
 	if err != nil {
-		logger.ErrorContext(ctx, "failed to get push subscriptions", "error", err)
 		return result, fmt.Errorf("failed to get push subscriptions: %w", err)
 	}
 
 	payload, err := json.Marshal(request.Message)
 	if err != nil {
-		logger.ErrorContext(ctx, "failed to marshal push message", "error", err)
 		return result, fmt.Errorf("failed to marshal push message: %w", err)
 	}
 
 	privateKey, err := p.decodePrivateKey()
 	if err != nil {
-		logger.ErrorContext(ctx, "failed to decode private key", "error", err)
 		return result, fmt.Errorf("failed to decode private key: %w", err)
 	}
 
@@ -214,7 +210,7 @@ func (p *PushService) decodePrivateKey() (*ecdsa.PrivateKey, error) {
 		return nil, fmt.Errorf("failed to decode private key: %w", err)
 	}
 
-	privateKey, err := x509.ParseECPrivateKey(privateKeyBytes)
+	privateKey, err := ecdsa.ParseRawPrivateKey(elliptic.P256(), privateKeyBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse private key: %w", err)
 	}
