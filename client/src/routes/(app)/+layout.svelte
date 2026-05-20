@@ -1,10 +1,7 @@
 <script lang="ts">
 	import { navigating } from '$app/state';
-	import {teaseCTF} from "$lib/ctf";
 
 	let { children } = $props();
-
-	teaseCTF();
 </script>
 
 {#if navigating.to}
