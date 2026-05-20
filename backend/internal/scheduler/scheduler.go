@@ -17,9 +17,10 @@ type internalTask struct {
 }
 
 type Scheduler struct {
-	config config.SchedulerConfig
-	tasks  []internalTask
-	wg     sync.WaitGroup
+	config  config.SchedulerConfig
+	tasks   []internalTask
+	running atomic.Bool
+	wg      sync.WaitGroup
 }
 
 func New(conf config.SchedulerConfig, tasks ...Task) (*Scheduler, error) {
@@ -43,6 +44,10 @@ func (s *Scheduler) MustAddTask(task Task) {
 }
 
 func (s *Scheduler) AddTask(task Task) error {
+	if s.running.Load() {
+		return fmt.Errorf("cannot add task %s: scheduler is already running", task.Name)
+	}
+
 	name := task.Name
 	taskConfig, hasConfig := s.config.Tasks[name]
 
@@ -74,6 +79,10 @@ func (s *Scheduler) Run(ctx context.Context) {
 	if s.config.Disabled {
 		logger.Warn("scheduler disabled")
 		return
+	}
+
+	if !s.running.CompareAndSwap(false, true) {
+		logger.WarnContext(ctx, "scheduler is already running")
 	}
 
 	logger.InfoContext(ctx, "starting scheduler", "task_count", len(s.tasks))
