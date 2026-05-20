@@ -49,26 +49,25 @@ func runServer(conf *config.Config) {
 	adminService := service.NewAdminService(database, fileStore, fileService)
 	graphService := service.NewGraphService(database, fileService)
 
-	if !conf.Scheduler.Disabled {
-		logger := slog.Default().With("component", "scheduler")
-		sched, err := scheduler.New(conf.Scheduler, []scheduler.Task{
-			{
-				Name: "graph_notifications",
-				Fn: func(_ context.Context) error {
-					return fmt.Errorf("graph_notifications task not implemented")
-				},
+	logger := slog.Default().With("component", "scheduler")
+	sched, err := scheduler.New(conf.Scheduler, []scheduler.Task{
+		{
+			Name: "graph_notifications",
+			Fn: func(_ context.Context) error {
+				return fmt.Errorf("graph_notifications task not implemented")
 			},
-		}...)
-		if err != nil {
-			fatal("error initializing scheduler", "error", err)
-		}
-		go sched.Run(logging.NewContext(ctx, logger))
+		},
+	}...)
+	if err != nil {
+		fatal("error initializing scheduler", "error", err)
 	}
 
 	h := handler.NewHandler(authService, adminService, favourService, graphService, fileService, pushService)
 
 	mux := http.NewServeMux()
-	h.RegisterRoutes(mux)
+	h.RegisterRoutes(sched, mux)
+
+	go sched.Run(logging.NewContext(ctx, logger))
 
 	serverAddr := fmt.Sprintf("%s:%d", conf.Server.Host, conf.Server.Port)
 	server := &http.Server{

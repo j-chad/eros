@@ -2,8 +2,10 @@ package middleware
 
 import (
 	"backend/internal/logging"
+	"backend/internal/scheduler"
 	"backend/pkg/apierror"
 	"backend/pkg/response"
+	"context"
 	"net"
 	"net/http"
 	"sync"
@@ -43,11 +45,20 @@ type IPRateLimit struct {
 	mu       sync.RWMutex
 }
 
-func NewIPRateLimit(capacity int) *IPRateLimit {
-	return &IPRateLimit{
+func NewIPRateLimit(sched *scheduler.Scheduler, capacity int) *IPRateLimit {
+	limiter := &IPRateLimit{
 		buckets:  make(map[string]*tokenBucket),
 		capacity: capacity,
 	}
+
+	sched.MustAddTask(scheduler.Task{
+		Name:    "rate_limit_cleanup",
+		Fn:      limiter.clean,
+		Timeout: 10 * time.Second,
+		Cron:    scheduler.MustParseCronExpression("0 * * * *"), // every hour
+	})
+
+	return limiter
 }
 
 func (r *IPRateLimit) Middleware(next http.Handler) http.Handler {
@@ -82,17 +93,45 @@ func (r *IPRateLimit) Middleware(next http.Handler) http.Handler {
 	})
 }
 
+// clean removes expired token buckets to prevent unbounded memory growth.
+// It should be run periodically by the scheduler.
+func (r *IPRateLimit) clean(ctx context.Context) error {
+	logger := logging.FromContext(ctx)
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	now := time.Now()
+	for ip, bucket := range r.buckets {
+		if now.After(bucket.refillAt) {
+			logger.DebugContext(ctx, "removing expired token bucket for IP", "ip", ip)
+			delete(r.buckets, ip)
+		}
+	}
+
+	return nil
+}
+
 type PerNodeRateLimit struct {
 	buckets  map[string]*tokenBucket
 	capacity int
 	mu       sync.RWMutex
 }
 
-func NewPerNodeRateLimit(capacity int) *PerNodeRateLimit {
-	return &PerNodeRateLimit{
+func NewPerNodeRateLimit(sched *scheduler.Scheduler, capacity int) *PerNodeRateLimit {
+	limiter := &PerNodeRateLimit{
 		buckets:  make(map[string]*tokenBucket),
 		capacity: capacity,
 	}
+
+	sched.MustAddTask(scheduler.Task{
+		Name:    "rate_limit_cleanup",
+		Fn:      limiter.clean,
+		Timeout: 10 * time.Second,
+		Cron:    scheduler.MustParseCronExpression("0 * * * *"), // every hour
+	})
+
+	return limiter
 }
 
 func (r *PerNodeRateLimit) Middleware(next http.Handler) http.Handler {
@@ -128,4 +167,21 @@ func (r *PerNodeRateLimit) Middleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, req)
 	})
+}
+
+func (r *PerNodeRateLimit) clean(ctx context.Context) error {
+	logger := logging.FromContext(ctx)
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	now := time.Now()
+	for nodeID, bucket := range r.buckets {
+		if now.After(bucket.refillAt) {
+			logger.DebugContext(ctx, "removing expired token bucket for node ID", "nodeID", nodeID)
+			delete(r.buckets, nodeID)
+		}
+	}
+
+	return nil
 }

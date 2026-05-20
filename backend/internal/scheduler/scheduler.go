@@ -35,6 +35,13 @@ func New(conf config.SchedulerConfig, tasks ...Task) (*Scheduler, error) {
 	return sched, nil
 }
 
+func (s *Scheduler) MustAddTask(task Task) {
+	err := s.AddTask(task)
+	if err != nil {
+		panic(fmt.Sprintf("failed to add task %s: %v", task.Name, err))
+	}
+}
+
 func (s *Scheduler) AddTask(task Task) error {
 	name := task.Name
 	taskConfig, hasConfig := s.config.Tasks[name]
@@ -62,11 +69,13 @@ func (s *Scheduler) AddTask(task Task) error {
 }
 
 func (s *Scheduler) Run(ctx context.Context) {
+	logger := logging.FromContext(ctx)
+
 	if s.config.Disabled {
+		logger.Warn("scheduler disabled")
 		return
 	}
 
-	logger := logging.FromContext(ctx)
 	logger.InfoContext(ctx, "starting scheduler", "task_count", len(s.tasks))
 
 	ticker := time.NewTicker(1 * time.Minute)

@@ -4,6 +4,7 @@ import (
 	"backend/internal/handler/admin"
 	"backend/internal/handler/client"
 	"backend/internal/handler/middleware"
+	"backend/internal/scheduler"
 	"backend/internal/service"
 	"backend/pkg/apierror"
 	"backend/pkg/response"
@@ -32,12 +33,12 @@ func NewHandler(
 	return handler
 }
 
-func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
+func (h *Handler) RegisterRoutes(sched *scheduler.Scheduler, mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/health", health)
 	mux.HandleFunc("GET /api/push/vapid-key", h.client.GetVAPIDPublicKey)
 
 	// Rate limiter for registration endpoint (5 attempts per minute per IP)
-	registrationLimiter := middleware.NewIPRateLimit(5)
+	registrationLimiter := middleware.NewIPRateLimit(sched, 5)
 	mux.Handle("POST /api/device", registrationLimiter.Middleware(http.HandlerFunc(h.client.RegisterDevice)))
 
 	adminMux := http.NewServeMux()
@@ -69,7 +70,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.Handle("/api/admin/", middleware.WithAdminAuth(adminMux, *h.auth))
 
 	// Rate limiter for unlock endpoint (10 attempts per minute per node)
-	nodeRateLimiter := middleware.NewPerNodeRateLimit(10)
+	nodeRateLimiter := middleware.NewPerNodeRateLimit(sched, 10)
 
 	clientMux := http.NewServeMux()
 	clientMux.HandleFunc("GET /api/ping", ping)
