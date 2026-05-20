@@ -30,6 +30,10 @@ func NewPushService(config config.PushConfig, repo repository.Repository) *PushS
 	return &PushService{config: config, repo: repo}
 }
 
+func (p *PushService) IsEnabled() bool {
+	return len(p.config.VAPID.PublicKey) > 0 && len(p.config.VAPID.PrivateKey) > 0 && len(p.config.AllowedHosts) > 0
+}
+
 func (p *PushService) Register(ctx context.Context, sub models.PushSubscription) error {
 	logger := logging.FromContext(ctx)
 

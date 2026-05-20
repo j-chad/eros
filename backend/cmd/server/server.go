@@ -43,14 +43,7 @@ func runServer(conf *config.Config) {
 	}
 
 	logger := slog.Default().With("component", "scheduler")
-	sched, err := scheduler.New(conf.Scheduler, []scheduler.Task{
-		{
-			Name: "graph_notifications",
-			Fn: func(_ context.Context) error {
-				return fmt.Errorf("graph_notifications task not implemented")
-			},
-		},
-	}...)
+	sched, err := scheduler.New(conf.Scheduler)
 	if err != nil {
 		fatal("error initializing scheduler", "error", err)
 	}
@@ -66,6 +59,8 @@ func runServer(conf *config.Config) {
 
 	mux := http.NewServeMux()
 	h.RegisterRoutes(sched, mux)
+
+	MustRegisterTasks(sched, database, pushService)
 
 	go sched.Run(logging.NewContext(ctx, logger))
 

@@ -17,14 +17,14 @@ type PushKeys struct {
 type PushUrgency string
 
 const (
-	// UrgencyVeryLow requires device state: on power and Wi-Fi
-	UrgencyVeryLow PushUrgency = "very-low"
-	// UrgencyLow requires device state: on either power or Wi-Fi
-	UrgencyLow PushUrgency = "low"
-	// UrgencyNormal excludes device state: low battery
-	UrgencyNormal PushUrgency = "normal"
-	// UrgencyHigh admits device state: low battery
-	UrgencyHigh PushUrgency = "high"
+	// PushUrgencyVeryLow requires device state: on power and Wi-Fi
+	PushUrgencyVeryLow PushUrgency = "very-low"
+	// PushUrgencyLow requires device state: on either power or Wi-Fi
+	PushUrgencyLow PushUrgency = "low"
+	// PushUrgencyNormal excludes device state: low battery
+	PushUrgencyNormal PushUrgency = "normal"
+	// PushUrgencyHigh admits device state: low battery
+	PushUrgencyHigh PushUrgency = "high"
 )
 
 type PushRequest struct {
