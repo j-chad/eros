@@ -10,3 +10,7 @@ CREATE TABLE push_subscription (
 );
 
 ALTER TABLE graph ADD COLUMN notified_at DATETIME; -- when the user was last notified about this graph, used to avoid sending multiple notifications for the same graph
+
+-- +down
+DROP TABLE push_subscription;
+ALTER TABLE graph DROP COLUMN notified_at;

@@ -4,3 +4,9 @@
 UPDATE graph
 SET starting_at = datetime(starting_at, '+8 hours')
 WHERE time(starting_at) = '12:00:00';
+
+-- +down
+-- Revert the starting_at times back to midnight UTC by subtracting 8 hours from any starting_at stored at 08:00 UTC.
+UPDATE graph
+SET starting_at = datetime(starting_at, '-8 hours')
+WHERE time(starting_at) = '20:00:00';

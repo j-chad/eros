@@ -55,12 +55,75 @@ func migrationFromFilename(filename string) (Migration, error) {
 	}, nil
 }
 
-func contents(m Migration) (string, error) {
+const (
+	markerUp   = "-- +up"
+	markerDown = "-- +down"
+)
+
+// parseUpDown splits raw migration file content into up and down sections
+// based on marker lines. Returns (up, down, hasDown).
+//
+// Parsing rules:
+//   - If neither marker is present, the entire content is the up migration with no down.
+//   - If only -- +down is present, everything before it is up, everything after is down.
+//   - If -- +up is present, content before it is ignored. Content after it (up to -- +down) is up.
+//   - If -- +up is present but -- +down is not, there is no down migration.
+func parseUpDown(raw string) (up string, down string, hasDown bool) {
+	lines := strings.Split(raw, "\n")
+
+	upIdx := -1
+	downIdx := -1
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == markerUp && upIdx == -1 {
+			upIdx = i
+		} else if trimmed == markerDown && downIdx == -1 {
+			downIdx = i
+		}
+	}
+
+	switch {
+	case upIdx == -1 && downIdx == -1:
+		// No markers: entire file is up, no down.
+		return raw, "", false
+
+	case upIdx == -1 && downIdx >= 0:
+		// Only -- +down: before is up, after is down.
+		return strings.Join(lines[:downIdx], "\n"),
+			strings.Join(lines[downIdx+1:], "\n"),
+			true
+
+	case upIdx >= 0 && downIdx == -1:
+		// Only -- +up: after marker is up, no down.
+		return strings.Join(lines[upIdx+1:], "\n"), "", false
+
+	default:
+		// Both markers present.
+		return strings.Join(lines[upIdx+1:downIdx], "\n"),
+			strings.Join(lines[downIdx+1:], "\n"),
+			true
+	}
+}
+
+// contentsUp returns the up (forward) SQL for a migration.
+func contentsUp(m Migration) (string, error) {
 	data, err := migrationFiles.ReadFile(m.filename)
 	if err != nil {
 		return "", fmt.Errorf("error reading migration file: %w", err)
 	}
-	return string(data), nil
+	up, _, _ := parseUpDown(string(data))
+	return up, nil
+}
+
+// contentsDown returns the down (rollback) SQL for a migration.
+// If the migration has no down section, returns ("", false, nil).
+func contentsDown(m Migration) (string, bool, error) {
+	data, err := migrationFiles.ReadFile(m.filename)
+	if err != nil {
+		return "", false, fmt.Errorf("error reading migration file: %w", err)
+	}
+	_, down, hasDown := parseUpDown(string(data))
+	return down, hasDown, nil
 }
 
 // getCurrentVersion returns the version that the sqlite db has been migrated to.
@@ -229,7 +292,7 @@ func Apply(ctx context.Context, db *sql.DB) error {
 	}
 
 	for _, m := range remaining {
-		sqlContent, err := contents(m)
+		sqlContent, err := contentsUp(m)
 		if err != nil {
 			return fmt.Errorf("error reading migration %03d_%s: %w", m.Version, m.Name, err)
 		}
