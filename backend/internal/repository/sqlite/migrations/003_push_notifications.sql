@@ -1,6 +1,6 @@
 CREATE TABLE push_subscription (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    device_id TEXT NOT NULL,
+    device_id TEXT NOT NULL UNIQUE,
     endpoint TEXT NOT NULL UNIQUE,
     p256dh TEXT NOT NULL,
     auth TEXT NOT NULL,

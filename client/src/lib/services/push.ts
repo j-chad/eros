@@ -1,5 +1,5 @@
 import {cached} from "$lib/services/cached";
-import {fetchVapidKey} from "$lib/api/push.api";
+import {fetchVapidKey, subscribePush} from "$lib/api/push.api";
 import {KVKey, KVStore} from "$lib/db/stores/kv";
 
 export function isPushSupported() {
@@ -39,7 +39,8 @@ export async function subscribe() {
         applicationServerKey: key
     })
 
-    subscription.options
+    const payload = subscription.toJSON();
+    await subscribePush(payload)
 }
 
 async function getVAPIDPublicKey() {

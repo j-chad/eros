@@ -1,9 +1,7 @@
 import {request} from "$lib/api/http";
-import {base64URLDecode} from "$lib/utils/base64";
 
 export async function fetchVapidKey(): Promise<string> {
-    const encoded = await request<string>(`/push/vapid-key`, undefined, false);
-    return base64URLDecode(encoded);
+    return await request<string>(`/push/vapid-key`, undefined, false);
 }
 
 export async function subscribePush(subscription: PushSubscriptionJSON): Promise<void> {

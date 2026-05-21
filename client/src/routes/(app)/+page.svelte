@@ -8,9 +8,12 @@
 	import type { FavourCount, FavourRequest } from '$lib/types/favour';
 	import {goto} from "$app/navigation";
 	import {BellOff} from "lucide-svelte";
-	import {isPushSupported, subscribe} from "$lib/services/push";
+	import {isPushSubscribed, isPushSupported, subscribe} from "$lib/services/push";
+	import {isOnline} from "$lib/online.svelte";
 
 	const { data }: { data: { graphs: GraphSummary[]; favourCount: FavourCount; favourRequests: FavourRequest[] } } = $props();
+
+	const online = $derived(isOnline());
 
 	// FAB is visible once the user is "in the favour system":
 	// they have remaining balance, or they've made at least one request.
@@ -25,7 +28,15 @@
 	const pastGraphs = $derived(data.graphs.filter((g) => g.starting_at.getTime() <= tick));
 	const hasUnlocked = $derived(pastGraphs.length > 0);
 
-	const supportsNotifications = isPushSupported();
+	let notificationsSupported = $state(isPushSupported());
+	let notificationsSubscribed = $state(true)
+
+	$effect(() => {
+		isPushSubscribed().then((subscribed) => {
+			console.debug("Push subscription status:", { subscribed, online, notificationsSupported });
+			notificationsSubscribed = subscribed;
+		});
+	})
 
 	const nextGraph = $derived(
 		data.graphs
@@ -40,18 +51,17 @@
 		}
 	});
 
-	function subscribeToNotifications() {
-		if (!supportsNotifications) return;
-		Notification.requestPermission().then((permission) => {
-			if (permission === "granted") {
-				subscribe().then(() => {
-					alert("Subscribed to notifications!");
-				}).catch((err) => {
-					console.error("Failed to subscribe to notifications", err);
-					alert("Failed to subscribe to notifications");
-				});
-			}
-		})
+	async function subscribeToNotifications() {
+		if (!isPushSupported()) return;
+
+		const permission = await Notification.requestPermission();
+		if (permission !== 'granted') {
+			notificationsSupported = isPushSupported();
+			return;
+		}
+
+		await subscribe();
+		notificationsSubscribed = true;
 	}
 </script>
 
@@ -63,7 +73,7 @@
 <div class="mx-auto min-h-dvh max-w-md px-4 py-6 flex flex-col justify-between gap-8">
 	<BrandHeader subtitle={hasUnlocked ? undefined : "Something's coming"}>
 		{#snippet rightContent()}
-			{#if supportsNotifications}
+			{#if notificationsSupported && !notificationsSubscribed && online}
 				<button class="btn btn-circle btn-secondary" onclick={subscribeToNotifications}>
 					<BellOff class="h-4 w-4" />
 				</button>
