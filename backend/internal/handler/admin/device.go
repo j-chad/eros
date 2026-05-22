@@ -9,7 +9,7 @@ import (
 )
 
 func (h *Handler) ListDevices(w http.ResponseWriter, r *http.Request) {
-	devices, err := h.adminService.ListDevices(r.Context())
+	devices, err := h.authService.ListDevices(r.Context())
 	if err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
@@ -25,7 +25,7 @@ func (h *Handler) RevokeDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.adminService.RevokeDevice(r.Context(), deviceID); err != nil {
+	if err := h.authService.RevokeDevice(r.Context(), deviceID); err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
@@ -49,7 +49,7 @@ func (h *Handler) UpdateDeviceInfo(w http.ResponseWriter, r *http.Request) {
 	}
 	deviceInfo := string(buffer)
 
-	if err := h.adminService.UpdateDeviceInfo(r.Context(), deviceID, deviceInfo); err != nil {
+	if err := h.authService.UpdateDeviceInfo(r.Context(), deviceID, deviceInfo); err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}

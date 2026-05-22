@@ -12,7 +12,7 @@ import (
 )
 
 func (h *Handler) ListStartNodes(w http.ResponseWriter, r *http.Request) {
-	nodes, err := h.adminService.ListGraphs(r.Context())
+	nodes, err := h.graphService.ListGraphs(r.Context())
 	if err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(fmt.Errorf("failed to list start nodes: %w", err)))
 		return
@@ -28,7 +28,7 @@ func (h *Handler) DeleteGraph(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.adminService.DeleteGraph(r.Context(), graphID); err != nil {
+	if err := h.graphService.DeleteGraph(r.Context(), graphID); err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
@@ -48,7 +48,7 @@ func (h *Handler) CreateGraph(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createdGraphID, err := h.adminService.CreateGraph(r.Context(), newGraphRequest)
+	createdGraphID, err := h.graphService.CreateGraph(r.Context(), newGraphRequest)
 	if err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
@@ -64,7 +64,7 @@ func (h *Handler) GetGraph(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	graph, err := h.adminService.GetGraph(r.Context(), graphID)
+	graph, err := h.graphService.GetGraphAdmin(r.Context(), graphID)
 	if err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
@@ -85,7 +85,7 @@ func (h *Handler) UnlockNode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.adminService.AdminUnlockNode(r.Context(), nodeID); err != nil {
+	if err := h.graphService.AdminUnlockNode(r.Context(), nodeID); err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
@@ -100,7 +100,7 @@ func (h *Handler) LockNode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.adminService.AdminLockNode(r.Context(), nodeID); err != nil {
+	if err := h.graphService.AdminLockNode(r.Context(), nodeID); err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
@@ -123,7 +123,7 @@ func (h *Handler) UpdateGraph(w http.ResponseWriter, r *http.Request) {
 
 	graph.ID = graphID
 
-	err := h.adminService.UpdateGraph(r.Context(), graph)
+	err := h.graphService.UpdateGraph(r.Context(), graph)
 	if err != nil {
 		if errors.Is(err, service.ErrInvalidGraph) {
 			response.Error(r.Context(), w, apierror.BadRequest("invalid graph data"))

@@ -178,3 +178,57 @@ func (s *FileService) CleanOrphanedFiles(ctx context.Context) error {
 
 	return nil
 }
+
+func (s *FileService) UploadFile(ctx context.Context, nodeID, filename, mime string, size int64, reader io.ReadSeeker) (*models.File, error) {
+	logger := logging.FromContext(ctx)
+
+	// Upload the new file to storage first (before touching the DB).
+	storageKey, err := s.files.Put(ctx, filename, mime, reader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to upload file to storage: %w", err)
+	}
+
+	file := models.File{
+		NodeID:     nodeID,
+		Filename:   filename,
+		MimeType:   mime,
+		SizeBytes:  size,
+		StorageKey: storageKey,
+		CreatedAt:  time.Now(),
+	}
+
+	// Within a transaction: delete old file row (if any), insert new one.
+	var oldStorageKeys []string
+	err = s.repo.WithTx(ctx, nil, func(txRepo repository.Repository) error {
+		keys, err := txRepo.DeleteFilesByNodeID(ctx, nodeID)
+		if err != nil {
+			return fmt.Errorf("failed to delete existing files: %w", err)
+		}
+		oldStorageKeys = keys
+
+		if err := txRepo.CreateFile(ctx, &file); err != nil {
+			return fmt.Errorf("failed to create file record: %w", err)
+		}
+		return nil
+	})
+	if err != nil {
+		// DB failed - clean up the newly uploaded file from storage.
+		if delErr := s.files.Delete(ctx, storageKey); delErr != nil {
+			logger.ErrorContext(ctx, "failed to clean up uploaded file after database error", "storageKey", storageKey, "err", delErr)
+		}
+		return nil, fmt.Errorf("failed to replace file in database: %w", err)
+	}
+
+	// Transaction succeeded - clean up old storage files (best-effort).
+	for _, key := range oldStorageKeys {
+		if delErr := s.files.Delete(ctx, key); delErr != nil {
+			logger.ErrorContext(ctx, "failed to delete old file from storage", "storageKey", key, "err", delErr)
+		}
+	}
+
+	return &file, nil
+}
+
+func (s *FileService) ListFiles(ctx context.Context, nodeID string) ([]models.File, error) {
+	return s.repo.ListFiles(ctx, nodeID)
+}

@@ -17,7 +17,10 @@ type GraphService struct {
 	files *FileService
 }
 
-var ErrNodeUnlockIncorrect = errors.New("node unlock incorrect")
+var (
+	ErrInvalidGraph        = errors.New("invalid graph data")
+	ErrNodeUnlockIncorrect = errors.New("node unlock incorrect")
+)
 
 func NewGraphService(repo repository.Repository, files *FileService) *GraphService {
 	return &GraphService{repo: repo, files: files}
@@ -75,18 +78,6 @@ func (s *GraphService) GetGraph(ctx context.Context, graphID string) (*models.Gr
 // GetAccessibleNode returns the node if it is in the client's accessible set, or nil otherwise.
 func (s *GraphService) GetAccessibleNode(ctx context.Context, nodeID string) (*models.Node, error) {
 	return s.repo.GetAccessibleNode(ctx, nodeID)
-}
-
-// sanitizeLocationData strips exact coordinates from location gate nodes
-// so the client never learns the real lat/lng. Only the hint (if enabled)
-// and unlock radius are sent.
-func sanitizeLocationData(graph *models.Graph) {
-	if graph.Nodes == nil {
-		return
-	}
-	for i := range *graph.Nodes {
-		sanitizeNodeLocationData(&(*graph.Nodes)[i])
-	}
 }
 
 func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload string) (*models.UnlockResult, error) {
@@ -213,12 +204,88 @@ func (s *GraphService) UnlockNode(ctx context.Context, nodeID string, payload st
 	return result, err
 }
 
+func (s *GraphService) ListGraphsAdmin(ctx context.Context) ([]models.Graph, error) {
+	return s.repo.ListGraphs(ctx)
+}
+
+func (s *GraphService) CreateGraph(ctx context.Context, req models.NewGraphRequest) (string, error) {
+	return s.repo.CreateGraph(ctx, req)
+}
+
+func (s *GraphService) DeleteGraph(ctx context.Context, graphID string) error {
+	return s.repo.DeleteGraph(ctx, graphID)
+}
+
+func (s *GraphService) GetGraphAdmin(ctx context.Context, graphID string) (*models.Graph, error) {
+	graph, err := s.repo.GetGraph(ctx, graphID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.attachFileMetadata(ctx, graph); err != nil {
+		return nil, fmt.Errorf("failed to attach file metadata: %w", err)
+	}
+
+	return graph, nil
+}
+
+func (s *GraphService) UpdateGraph(ctx context.Context, graph models.Graph) error {
+	nodes := graph.Nodes
+	if nodes != nil {
+		startNodeSeen := false
+		for _, node := range *nodes {
+			if node.GraphID != "" && node.GraphID != graph.ID {
+				return ErrInvalidGraph
+			}
+
+			if node.Type == models.StartNode {
+				if startNodeSeen {
+					return ErrInvalidGraph
+				} else {
+					startNodeSeen = true
+				}
+			}
+		}
+	}
+
+	edges := graph.Edges
+	if edges != nil {
+		for _, edge := range *edges {
+			if edge.GraphID != "" && edge.GraphID != graph.ID {
+				return ErrInvalidGraph
+			}
+		}
+	}
+
+	return s.repo.UpdateGraph(ctx, graph)
+}
+
+func (s *GraphService) AdminUnlockNode(ctx context.Context, nodeID string) error {
+	return s.repo.UnlockNode(ctx, nodeID)
+}
+
+func (s *GraphService) AdminLockNode(ctx context.Context, nodeID string) error {
+	return s.repo.LockNode(ctx, nodeID)
+}
+
 // attachFileMetadata enriches reward nodes in a graph with file info.
 func (s *GraphService) attachFileMetadata(ctx context.Context, graph *models.Graph) error {
 	if graph == nil || graph.Nodes == nil {
 		return nil
 	}
 	return s.files.AttachFileMetadataToNodes(ctx, *graph.Nodes)
+}
+
+// sanitizeLocationData strips exact coordinates from location gate nodes
+// so the client never learns the real lat/lng. Only the hint (if enabled)
+// and unlock radius are sent.
+func sanitizeLocationData(graph *models.Graph) {
+	if graph.Nodes == nil {
+		return
+	}
+	for i := range *graph.Nodes {
+		sanitizeNodeLocationData(&(*graph.Nodes)[i])
+	}
 }
 
 func sanitizeNodeLocationData(node *models.Node) {

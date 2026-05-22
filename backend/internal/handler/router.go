@@ -19,7 +19,6 @@ type Handler struct {
 
 func NewHandler(
 	authService *service.AuthService,
-	adminService *service.AdminService,
 	favourService *service.FavourService,
 	graphService *service.GraphService,
 	fileService *service.FileService,
@@ -27,7 +26,7 @@ func NewHandler(
 ) *Handler {
 	handler := &Handler{
 		auth:   authService,
-		admin:  admin.NewHandler(adminService, pushService),
+		admin:  admin.NewHandler(authService, favourService, graphService, fileService, pushService),
 		client: client.NewHandler(authService, favourService, graphService, fileService, pushService),
 	}
 	return handler

@@ -5,10 +5,25 @@ import (
 )
 
 type Handler struct {
-	adminService *service.AdminService
-	pushService  *service.PushService
+	authService   *service.AuthService
+	favourService *service.FavourService
+	fileService   *service.FileService
+	graphService  *service.GraphService
+	pushService   *service.PushService
 }
 
-func NewHandler(adminService *service.AdminService, pushService *service.PushService) *Handler {
-	return &Handler{adminService: adminService, pushService: pushService}
+func NewHandler(
+	authService *service.AuthService,
+	favourService *service.FavourService,
+	graphService *service.GraphService,
+	fileService *service.FileService,
+	pushService *service.PushService,
+) *Handler {
+	return &Handler{
+		authService:   authService,
+		favourService: favourService,
+		fileService:   fileService,
+		graphService:  graphService,
+		pushService:   pushService,
+	}
 }

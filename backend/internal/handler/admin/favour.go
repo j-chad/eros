@@ -29,7 +29,7 @@ func (h *Handler) CreateFavourChoice(w http.ResponseWriter, r *http.Request) {
 	choice.CreatedAt = time.Now()
 	choice.UpdatedAt = time.Now()
 
-	if err := h.adminService.CreateFavourChoice(r.Context(), &choice); err != nil {
+	if err := h.favourService.CreateFavourChoice(r.Context(), &choice); err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
@@ -62,7 +62,7 @@ func (h *Handler) UpdateFavourChoice(w http.ResponseWriter, r *http.Request) {
 	choice.ID = choiceID
 	choice.UpdatedAt = time.Now()
 
-	if err := h.adminService.UpdateFavourChoice(r.Context(), choice); err != nil {
+	if err := h.favourService.UpdateFavourChoice(r.Context(), choice); err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
@@ -77,7 +77,7 @@ func (h *Handler) DeleteFavourChoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.adminService.DeleteFavourChoice(r.Context(), choiceID); err != nil {
+	if err := h.favourService.DeleteFavourChoice(r.Context(), choiceID); err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
@@ -97,7 +97,7 @@ func (h *Handler) UpdateFavourCount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.adminService.UpdateFavourCount(r.Context(), count); err != nil {
+	if err := h.favourService.UpdateFavourCount(r.Context(), count); err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
@@ -122,9 +122,9 @@ func (h *Handler) UpdateFavourRequestStatus(w http.ResponseWriter, r *http.Reque
 
 	var err error
 	if model.Fulfilled {
-		err = h.adminService.FulfilFavourRequest(r.Context(), requestID)
+		err = h.favourService.FulfilFavourRequest(r.Context(), requestID)
 	} else {
-		err = h.adminService.UnfulfilFavourRequest(r.Context(), requestID)
+		err = h.favourService.UnfulfilFavourRequest(r.Context(), requestID)
 	}
 
 	if err != nil {

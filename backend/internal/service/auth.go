@@ -18,7 +18,10 @@ var (
 	ErrInvalidRegistrationCode  = errors.New("invalid registration code")
 )
 
-const TokenExpiry = 40 * 24 * time.Hour
+const (
+	RegistrationExpiryDuration = 10 * time.Minute
+	TokenExpiry                = 40 * 24 * time.Hour
+)
 
 type AuthService struct {
 	config config.AuthConfig
@@ -97,4 +100,46 @@ func (s *AuthService) RegisterDevice(ctx context.Context, registrationCode strin
 
 	logger.InfoContext(ctx, "successfully registered device", "device_info", deviceInfo)
 	return secureToken, nil
+}
+
+func (s *AuthService) CreateRegistrationCode(ctx context.Context) (models.RegistrationCode, error) {
+	createdAt := time.Now()
+	expiry := createdAt.Add(RegistrationExpiryDuration)
+
+	code, err := crypto.GenerateHumanReadableCode()
+	if err != nil {
+		return models.RegistrationCode{}, err
+	}
+
+	model := models.RegistrationCode{
+		Code:      code,
+		ExpiresAt: expiry,
+		CreatedAt: createdAt,
+	}
+
+	if err := s.repo.RefreshRegistrationCode(ctx, model); err != nil {
+		return model, err
+	}
+
+	return model, nil
+}
+
+func (s *AuthService) InvalidateRegistrationCode(ctx context.Context) error {
+	return s.repo.DeleteRegistrationCode(ctx)
+}
+
+func (s *AuthService) GetRegistrationCode(ctx context.Context) (*models.RegistrationCode, error) {
+	return s.repo.GetRegistrationCode(ctx)
+}
+
+func (s *AuthService) ListDevices(ctx context.Context) ([]models.Device, error) {
+	return s.repo.ListDevices(ctx)
+}
+
+func (s *AuthService) RevokeDevice(ctx context.Context, deviceID string) error {
+	return s.repo.DeleteDevice(ctx, deviceID)
+}
+
+func (s *AuthService) UpdateDeviceInfo(ctx context.Context, deviceID string, deviceInfo string) error {
+	return s.repo.UpdateDeviceInfo(ctx, deviceID, deviceInfo)
 }

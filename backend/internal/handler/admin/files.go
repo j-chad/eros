@@ -56,7 +56,7 @@ func (h *Handler) UploadFiles(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fileModel, err := h.adminService.UploadFile(r.Context(), nodeID, header.Filename, mimeType, header.Size, file)
+	fileModel, err := h.fileService.UploadFile(r.Context(), nodeID, header.Filename, mimeType, header.Size, file)
 	if err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
@@ -72,7 +72,7 @@ func (h *Handler) ListFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	files, err := h.adminService.ListFiles(r.Context(), nodeID)
+	files, err := h.fileService.ListFiles(r.Context(), nodeID)
 	if err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return

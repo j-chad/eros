@@ -150,6 +150,10 @@ func (p *PushService) SendMessage(ctx context.Context, request models.PushReques
 	return result, nil
 }
 
+func (s *PushService) ListSubscriptions(ctx context.Context) ([]models.PushSubscription, error) {
+	return s.repo.GetPushSubscriptions(ctx)
+}
+
 func (p *PushService) validateSubscription(sub models.PushSubscription) error {
 	err := p.validateEndpoint(sub.Endpoint)
 	if err != nil {

@@ -7,7 +7,7 @@ import (
 )
 
 func (h *Handler) CreateRegistrationCode(w http.ResponseWriter, r *http.Request) {
-	registrationCode, err := h.adminService.CreateRegistrationCode(r.Context())
+	registrationCode, err := h.authService.CreateRegistrationCode(r.Context())
 	if err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
@@ -17,7 +17,7 @@ func (h *Handler) CreateRegistrationCode(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *Handler) InvalidateRegistrationCode(w http.ResponseWriter, r *http.Request) {
-	if err := h.adminService.InvalidateRegistrationCode(r.Context()); err != nil {
+	if err := h.authService.InvalidateRegistrationCode(r.Context()); err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
@@ -26,7 +26,7 @@ func (h *Handler) InvalidateRegistrationCode(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *Handler) GetRegistrationCode(w http.ResponseWriter, r *http.Request) {
-	registrationCode, err := h.adminService.GetRegistrationCode(r.Context())
+	registrationCode, err := h.authService.GetRegistrationCode(r.Context())
 	if err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return

@@ -32,7 +32,7 @@ func (h *Handler) SendPushMessage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListPushSubscriptions(w http.ResponseWriter, r *http.Request) {
-	subs, err := h.adminService.ListPushSubscriptions(r.Context())
+	subs, err := h.pushService.ListSubscriptions(r.Context())
 	if err != nil {
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
