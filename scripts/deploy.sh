@@ -61,7 +61,7 @@ deploy_server() {
     # Run database migrations
     step "Running database migrations"
     ssh "$NAS_HOST" "cd $NAS_DIR && docker compose stop backend"
-    ssh "$NAS_HOST" "cd $NAS_DIR && docker compose run --rm backend eros-backend migrate"
+    ssh "$NAS_HOST" "cd $NAS_DIR && docker compose run --rm backend eros-backend migrate up"
 
     # Restart the stack
     step "Restarting Docker Compose stack"
