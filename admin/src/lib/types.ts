@@ -179,3 +179,36 @@ export interface NewGraph {
     description?: string | null;
     starting_at: string; // ISO 8601 date string
 }
+
+export interface PushSendRequest {
+    message: {
+        title: string;
+        body: string;
+        tag?: string;
+        data?: {
+            url?: string;
+        };
+    };
+    topic?: string;
+    ttl?: string;
+    urgency?: 'very-low' | 'low' | 'normal' | 'high';
+}
+
+export interface PushSendResult {
+    sent: number;
+    failed: number;
+    cleaned: number;
+}
+
+export interface PushSubscription {
+    deviceID: string;
+    device_name: string;
+    endpoint: string;
+    expirationTime: string | null;
+    keys: {
+        p256dh: string;
+        auth: string;
+    };
+    created_at: string;
+    updated_at: string;
+}

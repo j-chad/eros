@@ -36,6 +36,7 @@
                     <a href="/" class:active={page.url.pathname === '/'}>Registration</a>
                     <a href="/favours" class:active={page.url.pathname === '/favours'}>Favours</a>
                     <a href="/graphs" class:active={page.url.pathname.startsWith('/graphs')}>Graphs</a>
+                    <a href="/notifications" class:active={page.url.pathname === '/notifications'}>Notifications</a>
                     <button onclick={handleLogout} class="logout">Logout</button>
                 </div>
             </div>

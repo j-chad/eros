@@ -5,6 +5,9 @@ import type {
     Favour,
     FavourChoice,
     FavourCount, Graph, NewGraph,
+    PushSendRequest,
+    PushSendResult,
+    PushSubscription,
     RegistrationToken,
     RewardFile
 } from "$lib/types";
@@ -150,5 +153,16 @@ export const api = {
         },
         list: async (nodeId: string) =>
             request<RewardFile[]>(`/admin/nodes/${nodeId}/files`, {method: 'GET'}),
-    }
+    },
+    push: {
+        send: async (payload: PushSendRequest) =>
+            request<PushSendResult>('/admin/push/message', {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            }),
+        listSubscriptions: async () =>
+            request<PushSubscription[]>('/admin/push/subscriptions', {method: 'GET'}),
+        deleteSubscription: async (deviceId: string) =>
+            request(`/admin/push/subscriptions/${deviceId}`, {method: 'DELETE'}),
+    },
 }
