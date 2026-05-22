@@ -4,9 +4,12 @@ import "time"
 
 type PushSubscription struct {
 	DeviceID       string     `json:"deviceID"`
+	DeviceName     string     `json:"device_name,omitempty"`
 	Endpoint       string     `json:"endpoint"`
 	ExpirationTime *time.Time `json:"expirationTime"`
 	Keys           PushKeys   `json:"keys"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
 }
 
 type PushKeys struct {

@@ -57,6 +57,11 @@ func (h *Handler) UnsubscribePush(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetVAPIDPublicKey(w http.ResponseWriter, r *http.Request) {
 	pubKey, err := h.pushService.GetVAPIDPublicKey()
 	if err != nil {
+		if errors.Is(err, service.ErrPushNotConfigured) {
+			response.Error(r.Context(), w, apierror.NotFound("push notifications not configured"))
+			return
+		}
+
 		response.Error(r.Context(), w, apierror.UnknownInternalError(err))
 		return
 	}
