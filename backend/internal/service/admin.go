@@ -23,10 +23,11 @@ type AdminService struct {
 	repo    repository.Repository
 	files   storage.FileStore
 	fileSvc *FileService
+	pushSvc *PushService
 }
 
-func NewAdminService(repo repository.Repository, fileStore storage.FileStore, fileSvc *FileService) *AdminService {
-	return &AdminService{repo: repo, files: fileStore, fileSvc: fileSvc}
+func NewAdminService(repo repository.Repository, fileStore storage.FileStore, fileSvc *FileService, pushSvc *PushService) *AdminService {
+	return &AdminService{repo: repo, files: fileStore, fileSvc: fileSvc, pushSvc: pushSvc}
 }
 
 func (s *AdminService) CreateRegistrationCode(ctx context.Context) (models.RegistrationCode, error) {
@@ -84,6 +85,37 @@ func (s *AdminService) DeleteFavourChoice(ctx context.Context, choiceID string) 
 }
 
 func (s *AdminService) UpdateFavourCount(ctx context.Context, count int) error {
+	logger := logging.FromContext(ctx)
+
+	prev, err := s.repo.GetFavourCount(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get existing favour count: %w", err)
+	}
+
+	deltaTotal := count - prev.Total
+	newRemaining := prev.Remaining + deltaTotal
+	if newRemaining < 0 {
+		return fmt.Errorf("negative favour count: %d", newRemaining)
+	}
+
+	logger.DebugContext(ctx, "updating favour count", "prevTotal", prev.Total, "newTotal", count, "deltaTotal", deltaTotal, "prevRemaining", prev.Remaining, "newRemaining", newRemaining)
+	if deltaTotal > 0 {
+		logger.DebugContext(ctx, "favour count increased, sending push notification to users")
+		_, _ = s.pushSvc.SendMessage(ctx, models.PushRequest{
+			Message: models.PushMessage{
+				Title: "Favour Granted",
+				Body:  fmt.Sprintf("Your favour count has increased! You now have %d favours.", newRemaining),
+				Tag:   "favour-count-updated",
+				Data: models.PushData{
+					URL: "/favours",
+				},
+			},
+			Topic:   "favour-count-updated",
+			TTL:     5 * time.Hour,
+			Urgency: models.PushUrgencyNormal,
+		})
+	}
+
 	return s.repo.UpdateFavourCount(ctx, count)
 }
 

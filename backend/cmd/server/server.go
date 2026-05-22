@@ -52,7 +52,7 @@ func runServer(conf *config.Config) {
 	pushService := service.NewPushService(conf.Push, database)
 	favourService := service.NewFavourService(database)
 	fileService := service.NewFileService(sched, database, fileStore)
-	adminService := service.NewAdminService(database, fileStore, fileService)
+	adminService := service.NewAdminService(database, fileStore, fileService, pushService)
 	graphService := service.NewGraphService(database, fileService)
 
 	h := handler.NewHandler(authService, adminService, favourService, graphService, fileService, pushService)

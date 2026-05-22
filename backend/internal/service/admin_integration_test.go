@@ -2,6 +2,7 @@ package service
 
 import (
 	"backend/internal/models"
+	"backend/internal/scheduler"
 	"backend/internal/testutil"
 	"backend/internal/testutil/testdb"
 	"context"
@@ -13,7 +14,7 @@ import (
 func TestUpdateGraph_HappyPath(t *testing.T) {
 	repo := testdb.New(t)
 	store := testdb.NewFileStore(t)
-	svc := NewAdminService(repo, store, NewFileService(repo, store))
+	svc := NewAdminService(repo, store, NewFileService(&scheduler.Scheduler{}, repo, store), nil)
 	ctx := context.Background()
 
 	graphID, err := repo.CreateGraph(ctx, models.NewGraphRequest{
@@ -50,7 +51,7 @@ func TestUpdateGraph_HappyPath(t *testing.T) {
 func TestUploadFile_HappyPath(t *testing.T) {
 	repo := testdb.New(t)
 	store := testdb.NewFileStore(t)
-	svc := NewAdminService(repo, store, NewFileService(repo, store))
+	svc := NewAdminService(repo, store, NewFileService(&scheduler.Scheduler{}, repo, store), nil)
 	ctx := context.Background()
 
 	graphID, _ := repo.CreateGraph(ctx, models.NewGraphRequest{
@@ -90,7 +91,7 @@ func TestUploadFile_HappyPath(t *testing.T) {
 
 func TestListGraphs_Sanitization(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo, NewFileService(repo, testdb.NewFileStore(t)))
+	svc := NewGraphService(repo, NewFileService(&scheduler.Scheduler{}, repo, testdb.NewFileStore(t)))
 	ctx := context.Background()
 
 	repo.CreateGraph(ctx, models.NewGraphRequest{
@@ -122,7 +123,7 @@ func TestListGraphs_Sanitization(t *testing.T) {
 
 func TestGetGraph_StripsViewport(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo, NewFileService(repo, testdb.NewFileStore(t)))
+	svc := NewGraphService(repo, NewFileService(&scheduler.Scheduler{}, repo, testdb.NewFileStore(t)))
 	ctx := context.Background()
 
 	graphID, _ := repo.CreateGraph(ctx, models.NewGraphRequest{
