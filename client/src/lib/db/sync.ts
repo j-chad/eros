@@ -1,6 +1,7 @@
 import { listGraphs, getGraph } from '$lib/services/graph';
 import { listChoices, getCount, listRequests } from '$lib/services/favour';
 import { isOnline } from '$lib/online.svelte';
+import {isPushSubscribed, republishSubscription} from "$lib/services/push";
 
 const SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -22,6 +23,12 @@ export async function syncAll(logger?: SyncLogger): Promise<void> {
 	if (!isOnline()) return;
 
 	try {
+		if (await isPushSubscribed()) {
+			logger?.step('republishing push subscription')
+			await republishSubscription()
+			logger?.result('ok');
+		}
+
 		logger?.step('fetch graphs');
 		const graphs = await listGraphs();
 		logger?.result(`${graphs.length} graph(s)`);

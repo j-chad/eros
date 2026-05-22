@@ -43,6 +43,17 @@ export async function subscribe() {
     await subscribePush(payload)
 }
 
+export async function republishSubscription() {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription()
+    if (subscription === null) {
+        return
+    }
+
+    const payload = subscription.toJSON();
+    await subscribePush(payload)
+}
+
 async function getVAPIDPublicKey() {
     return cached(async () => {
         const key = await fetchVapidKey();

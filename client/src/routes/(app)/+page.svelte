@@ -33,7 +33,6 @@
 
 	$effect(() => {
 		isPushSubscribed().then((subscribed) => {
-			console.debug("Push subscription status:", { subscribed, online, notificationsSupported });
 			notificationsSubscribed = subscribed;
 		});
 	})

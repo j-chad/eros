@@ -398,7 +398,7 @@
 		try {
 			await syncAll({ step: append, result: appendResult, error: appendError });
 			appendSummary('sync complete');
-			loadDiagnostics();
+			await loadDiagnostics();
 		} catch {
 			// error already logged to terminal by syncAll
 		} finally {
