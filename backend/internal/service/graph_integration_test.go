@@ -4,6 +4,7 @@ package service
 
 import (
 	"backend/internal/models"
+	"backend/internal/scheduler"
 	"backend/internal/testutil"
 	"backend/internal/testutil/testdb"
 	"context"
@@ -74,7 +75,7 @@ func nodeIDs(nodes []models.Node) []string {
 
 func TestUnlockNode_AutoUnlocksRewardNode(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo, NewFileService(repo, testdb.NewFileStore(t)))
+	svc := NewGraphService(repo, NewFileService(&scheduler.Scheduler{}, repo, testdb.NewFileStore(t)))
 	ctx := context.Background()
 
 	// Graph: Start → LocationGate → Reward
@@ -100,7 +101,7 @@ func TestUnlockNode_AutoUnlocksRewardNode(t *testing.T) {
 
 func TestUnlockNode_AutoUnlocksChainedRewards(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo, NewFileService(repo, testdb.NewFileStore(t)))
+	svc := NewGraphService(repo, NewFileService(&scheduler.Scheduler{}, repo, testdb.NewFileStore(t)))
 	ctx := context.Background()
 
 	// Graph: Start → LocationGate → Reward1 → Reward2 → Reward3
@@ -132,7 +133,7 @@ func TestUnlockNode_AutoUnlocksChainedRewards(t *testing.T) {
 
 func TestUnlockNode_ChainedRewardThenGate(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo, NewFileService(repo, testdb.NewFileStore(t)))
+	svc := NewGraphService(repo, NewFileService(&scheduler.Scheduler{}, repo, testdb.NewFileStore(t)))
 	ctx := context.Background()
 
 	// Graph: Start → LocationGate1 → Reward → LocationGate2
@@ -166,7 +167,7 @@ func TestUnlockNode_ChainedRewardThenGate(t *testing.T) {
 
 func TestUnlockNode_NoReward_NoAutoUnlock(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo, NewFileService(repo, testdb.NewFileStore(t)))
+	svc := NewGraphService(repo, NewFileService(&scheduler.Scheduler{}, repo, testdb.NewFileStore(t)))
 	ctx := context.Background()
 
 	// Graph: Start → LocationGate1 → LocationGate2
@@ -192,7 +193,7 @@ func TestUnlockNode_NoReward_NoAutoUnlock(t *testing.T) {
 
 func TestUnlockNode_GrantsFavourPoints(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo, NewFileService(repo, testdb.NewFileStore(t)))
+	svc := NewGraphService(repo, NewFileService(&scheduler.Scheduler{}, repo, testdb.NewFileStore(t)))
 	ctx := context.Background()
 
 	// Graph: Start → Gate → Reward (give_favours: 3)
@@ -224,7 +225,7 @@ func TestUnlockNode_GrantsFavourPoints(t *testing.T) {
 
 func TestUnlockNode_GrantsFavoursFromChainedRewards(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo, NewFileService(repo, testdb.NewFileStore(t)))
+	svc := NewGraphService(repo, NewFileService(&scheduler.Scheduler{}, repo, testdb.NewFileStore(t)))
 	ctx := context.Background()
 
 	// Graph: Start → Gate → Reward1 (2pts) → Reward2 (5pts)
@@ -253,7 +254,7 @@ func TestUnlockNode_GrantsFavoursFromChainedRewards(t *testing.T) {
 
 func TestUnlockNode_NoFavoursWhenGiveFavoursZero(t *testing.T) {
 	repo := testdb.New(t)
-	svc := NewGraphService(repo, NewFileService(repo, testdb.NewFileStore(t)))
+	svc := NewGraphService(repo, NewFileService(&scheduler.Scheduler{}, repo, testdb.NewFileStore(t)))
 	ctx := context.Background()
 
 	// Graph: Start → Gate → Reward (give_favours: 0)
@@ -275,4 +276,88 @@ func TestUnlockNode_NoFavoursWhenGiveFavoursZero(t *testing.T) {
 	count, err := repo.GetFavourCount(ctx)
 	testutil.NilErr(t, err)
 	testutil.Equal(t, count.Total, 0)
+}
+
+func TestUpdateGraph_HappyPath(t *testing.T) {
+	repo := testdb.New(t)
+	store := testdb.NewFileStore(t)
+	svc := NewGraphService(repo, NewFileService(&scheduler.Scheduler{}, repo, store))
+	ctx := context.Background()
+
+	graphID, err := repo.CreateGraph(ctx, models.NewGraphRequest{
+		Title:      "Test Graph",
+		StartingAt: time.Now(),
+	})
+	testutil.NilErr(t, err)
+
+	graph, err := repo.GetGraph(ctx, graphID)
+	testutil.NilErr(t, err)
+	startNodeID := (*graph.Nodes)[0].ID
+
+	nodes := []models.Node{
+		{ID: startNodeID, Type: models.StartNode, Title: "Start"},
+		{ID: "new-node", Type: models.CodeGateNode, Title: "Code Gate"},
+	}
+	edges := []models.Edge{
+		{ID: "e1", From: startNodeID, To: "new-node"},
+	}
+	updated := models.Graph{
+		ID:    graphID,
+		Title: "Updated",
+		Nodes: &nodes,
+		Edges: &edges,
+	}
+
+	testutil.NilErr(t, svc.UpdateGraph(ctx, updated))
+
+	got, err := svc.GetGraph(ctx, graphID)
+	testutil.NilErr(t, err)
+	testutil.Equal(t, got.Title, "Updated")
+}
+
+func TestListGraphs_Sanitization(t *testing.T) {
+	repo := testdb.New(t)
+	svc := NewGraphService(repo, NewFileService(&scheduler.Scheduler{}, repo, testdb.NewFileStore(t)))
+	ctx := context.Background()
+
+	repo.CreateGraph(ctx, models.NewGraphRequest{
+		Title:       "Past Graph",
+		Description: "should be visible",
+		StartingAt:  time.Now().Add(-24 * time.Hour),
+	})
+
+	repo.CreateGraph(ctx, models.NewGraphRequest{
+		Title:       "Future Graph",
+		Description: "should be hidden",
+		StartingAt:  time.Now().Add(24 * time.Hour),
+	})
+
+	graphs, err := svc.ListGraphs(ctx)
+	testutil.NilErr(t, err)
+	testutil.Equal(t, len(graphs), 2)
+
+	for _, g := range graphs {
+		if g.StartingAt.After(time.Now()) {
+			testutil.Equal(t, g.Title, "")
+			testutil.Equal(t, g.Description, "")
+		} else {
+			testutil.Equal(t, g.Title, "Past Graph")
+			testutil.Equal(t, g.Description, "should be visible")
+		}
+	}
+}
+
+func TestGetGraph_StripsViewport(t *testing.T) {
+	repo := testdb.New(t)
+	svc := NewGraphService(repo, NewFileService(&scheduler.Scheduler{}, repo, testdb.NewFileStore(t)))
+	ctx := context.Background()
+
+	graphID, _ := repo.CreateGraph(ctx, models.NewGraphRequest{
+		Title:      "Graph",
+		StartingAt: time.Now().Add(-time.Hour),
+	})
+
+	graph, err := svc.GetGraph(ctx, graphID)
+	testutil.NilErr(t, err)
+	testutil.Nil(t, graph.Viewport)
 }

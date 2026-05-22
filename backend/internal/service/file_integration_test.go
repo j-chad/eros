@@ -4,6 +4,7 @@ package service
 
 import (
 	"backend/internal/models"
+	"backend/internal/scheduler"
 	"backend/internal/testutil"
 	"backend/internal/testutil/testdb"
 	"context"
@@ -12,10 +13,51 @@ import (
 	"time"
 )
 
+func TestUploadFile_HappyPath(t *testing.T) {
+	repo := testdb.New(t)
+	store := testdb.NewFileStore(t)
+	svc := NewFileService(&scheduler.Scheduler{}, repo, store)
+	ctx := context.Background()
+
+	graphID, _ := repo.CreateGraph(ctx, models.NewGraphRequest{
+		Title:      "Graph",
+		StartingAt: time.Now(),
+	})
+	graph, _ := repo.GetGraph(ctx, graphID)
+	startNodeID := (*graph.Nodes)[0].ID
+
+	rewardNodeID := "reward-node-1"
+	nodes := []models.Node{
+		{ID: startNodeID, Type: models.StartNode, Title: "Start"},
+		{ID: rewardNodeID, Type: models.RewardNode, Title: "Reward"},
+	}
+	edges := []models.Edge{
+		{ID: "e1", From: startNodeID, To: rewardNodeID},
+	}
+	repo.UpdateGraph(ctx, models.Graph{ID: graphID, Nodes: &nodes, Edges: &edges})
+
+	file, err := svc.UploadFile(ctx, rewardNodeID, "photo.jpg", "image/jpeg", 1024, strings.NewReader("image data"))
+	testutil.NilErr(t, err)
+	testutil.Equal(t, file.Filename, "photo.jpg")
+	testutil.Equal(t, file.MimeType, "image/jpeg")
+	testutil.Equal(t, file.SizeBytes, int64(1024))
+	testutil.True(t, file.ID != "", "file should get an ID")
+
+	// Verify file on disk
+	reader, err := store.Get(ctx, file.StorageKey)
+	testutil.NilErr(t, err)
+	reader.Close()
+
+	// Verify DB record
+	files, err := repo.ListFiles(ctx, rewardNodeID)
+	testutil.NilErr(t, err)
+	testutil.Equal(t, len(files), 1)
+}
+
 func TestUploadFile_ReplacesExisting(t *testing.T) {
 	repo := testdb.New(t)
 	store := testdb.NewFileStore(t)
-	svc := NewAdminService(repo, store, NewFileService(repo, store))
+	svc := NewFileService(&scheduler.Scheduler{}, repo, store)
 	ctx := context.Background()
 
 	graphID, _ := repo.CreateGraph(ctx, models.NewGraphRequest{
@@ -57,7 +99,7 @@ func TestUploadFile_ReplacesExisting(t *testing.T) {
 func TestGetFile_ByID(t *testing.T) {
 	repo := testdb.New(t)
 	store := testdb.NewFileStore(t)
-	svc := NewAdminService(repo, store, NewFileService(repo, store))
+	svc := NewFileService(&scheduler.Scheduler{}, repo, store)
 	ctx := context.Background()
 
 	graphID, _ := repo.CreateGraph(ctx, models.NewGraphRequest{
@@ -99,8 +141,7 @@ func TestGetFile_ByID(t *testing.T) {
 func TestGetGraph_IncludesFileMetadata(t *testing.T) {
 	repo := testdb.New(t)
 	store := testdb.NewFileStore(t)
-	adminSvc := NewAdminService(repo, store, NewFileService(repo, store))
-	fileSvc := NewFileService(repo, store)
+	fileSvc := NewFileService(&scheduler.Scheduler{}, repo, store)
 	graphSvc := NewGraphService(repo, fileSvc)
 	ctx := context.Background()
 
@@ -123,7 +164,7 @@ func TestGetGraph_IncludesFileMetadata(t *testing.T) {
 	repo.UnlockNode(ctx, rewardNodeID)
 
 	// Upload a file to the reward node.
-	_, err := adminSvc.UploadFile(ctx, rewardNodeID, "sunset.jpg", "image/jpeg", 2048, strings.NewReader("image"))
+	_, err := fileSvc.UploadFile(ctx, rewardNodeID, "sunset.jpg", "image/jpeg", 2048, strings.NewReader("image"))
 	testutil.NilErr(t, err)
 
 	// Get graph via the client-facing service.
@@ -152,7 +193,7 @@ func TestGetGraph_IncludesFileMetadata(t *testing.T) {
 func TestDeleteFilesByNodeID(t *testing.T) {
 	repo := testdb.New(t)
 	store := testdb.NewFileStore(t)
-	svc := NewAdminService(repo, store, NewFileService(repo, store))
+	svc := NewFileService(&scheduler.Scheduler{}, repo, store)
 	ctx := context.Background()
 
 	graphID, _ := repo.CreateGraph(ctx, models.NewGraphRequest{
@@ -187,7 +228,7 @@ func TestDeleteFilesByNodeID(t *testing.T) {
 func TestGetFilesByNodeIDs(t *testing.T) {
 	repo := testdb.New(t)
 	store := testdb.NewFileStore(t)
-	svc := NewAdminService(repo, store, NewFileService(repo, store))
+	svc := NewFileService(&scheduler.Scheduler{}, repo, store)
 	ctx := context.Background()
 
 	graphID, _ := repo.CreateGraph(ctx, models.NewGraphRequest{

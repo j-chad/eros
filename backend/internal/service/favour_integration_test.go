@@ -23,7 +23,7 @@ func setupFavourTest(t *testing.T) (*FavourService, context.Context) {
 		UpdatedAt: time.Now(),
 	})
 
-	return NewFavourService(repo), ctx
+	return NewFavourService(repo, nil), ctx
 }
 
 func TestRequestFavour_Affordable(t *testing.T) {
@@ -48,7 +48,7 @@ func TestRequestFavour_Affordable(t *testing.T) {
 func TestRequestFavour_TooExpensive(t *testing.T) {
 	repo := testdb.New(t)
 	ctx := context.Background()
-	svc := NewFavourService(repo)
+	svc := NewFavourService(repo, nil)
 
 	// 2 total favours, choice costs 5
 	repo.UpdateFavourCount(ctx, 2)
@@ -70,7 +70,7 @@ func TestRequestFavour_TooExpensive(t *testing.T) {
 func TestRequestFavour_ExactlyEnough(t *testing.T) {
 	repo := testdb.New(t)
 	ctx := context.Background()
-	svc := NewFavourService(repo)
+	svc := NewFavourService(repo, nil)
 
 	repo.UpdateFavourCount(ctx, 3)
 	repo.CreateFavourChoice(ctx, &models.FavourChoice{
