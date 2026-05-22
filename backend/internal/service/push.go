@@ -42,7 +42,7 @@ func (p *PushService) Register(ctx context.Context, sub models.PushSubscription)
 		return fmt.Errorf("missing device ID in push subscription")
 	}
 
-	logger.DebugContext(ctx, "registering push subscription", "device_id", deviceID)
+	logger.DebugContext(ctx, "registering push subscription", "endpoint", sub.Endpoint)
 
 	if err := p.validateSubscription(sub); err != nil {
 		logger.WarnContext(ctx, "invalid push subscription", "error", err)

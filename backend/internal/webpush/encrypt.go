@@ -41,7 +41,7 @@ func encrypt(plaintext, uaPublicBytes, authSecret []byte) ([]byte, error) {
 	}
 
 	// prepare content-encoding header
-	header := buildContentCodingHeader(salt, uaPublic.Bytes())
+	header := buildContentCodingHeader(salt, asPrivate.PublicKey().Bytes())
 
 	// encrypt plaintext
 	plaintextCopy := make([]byte, len(plaintext))

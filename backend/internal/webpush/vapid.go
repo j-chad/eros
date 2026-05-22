@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"time"
 )
 
@@ -36,12 +37,12 @@ func GenerateVapidKeys() (private string, public string, err error) {
 func vapidAuthorization(endpoint string, privateKey *ecdsa.PrivateKey, subject string) (string, error) {
 	jwt, err := buildVapidJWT(privateKey, endpoint, subject)
 	if err != nil {
-		return "", fmt.Errorf("failed to build VAPID JWT: %w", err)
+		return "", fmt.Errorf("build VAPID JWT: %w", err)
 	}
 
 	publicKeyBytes, err := privateKey.PublicKey.Bytes()
 	if err != nil {
-		return "", fmt.Errorf("failed to serialize public key: %w", err)
+		return "", fmt.Errorf("serialize public key: %w", err)
 	}
 	publicKey := base64.RawURLEncoding.EncodeToString(publicKeyBytes)
 
@@ -59,23 +60,29 @@ func buildVapidJWT(privateKey *ecdsa.PrivateKey, endpoint string, subject string
 		"alg": "ES256",
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to build JWT header: %w", err)
+		return "", fmt.Errorf("build JWT header: %w", err)
 	}
 
+	u, err := url.Parse(endpoint)
+	if err != nil {
+		return "", fmt.Errorf("parse endpoint URL: %w", err)
+	}
+	aud := fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+
 	body, err := b64JSON(map[string]any{
-		"aud": endpoint,
+		"aud": aud,
 		"exp": time.Now().Add(24 * time.Hour).Unix(),
 		"sub": subject,
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to build JWT payload: %w", err)
+		return "", fmt.Errorf("build JWT payload: %w", err)
 	}
 
 	signingInput := []byte(header + "." + body)
 	hash := sha256.Sum256(signingInput)
 	r, s, err := ecdsa.Sign(rand.Reader, privateKey, hash[:])
 	if err != nil {
-		return "", fmt.Errorf("failed to sign JWT payload: %w", err)
+		return "", fmt.Errorf("sign JWT payload: %w", err)
 	}
 
 	// zero-pad r & s to 32 bytes each
