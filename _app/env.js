@@ -1,0 +1,1 @@
+export const env={"PUBLIC_SERVICE_WORKER":"true","PUBLIC_S3_ORIGIN":"https://s3.eu-central-003.backblazeb2.com/eros-prod/","PUBLIC_MAINTENANCE_MODE":"false","PUBLIC_SERVER_URL":"https://api.eros.jacksonc.dev/api"}
